@@ -543,6 +543,47 @@ body.shake { animation: bodyshake .3s; }
 .scene .meteor { opacity: 0; }
 .met .meteor { animation: met 5s linear infinite; }
 @keyframes met { 0%, 86% { opacity: 0; } 88% { opacity: 1; } 94% { opacity: 0; transform: translate(-44px, 26px); } 100% { opacity: 0; } }
+.shelf-bk { display: flex; gap: 5px; justify-content: center; padding: 18px 8px 14px; background: linear-gradient(180deg, #2c1e12, #241a10); border-radius: 10px; border: 3px solid #4a3a28; }
+.shelf-bk .spine {
+writing-mode: vertical-rl; letter-spacing: .18em; font-size: 13px; font-weight: 700;
+color: #f6ecd9; border: none; border-radius: 4px 4px 2px 2px; cursor: pointer;
+padding: 12px 7px; min-height: 150px; width: 34px; font-family: inherit;
+box-shadow: inset -3px 0 5px rgba(0,0,0,.3), 0 3px 0 rgba(0,0,0,.35);
+transition: transform .16s;
+}
+.shelf-bk .spine:hover { transform: translateY(-10px); }
+.shelf-bk .spine:active { transform: translateY(-2px) scale(.97); }
+.book { display: flex; perspective: 900px; justify-content: center; margin: 4px 0 8px; }
+.bcover, .bpage {
+width: 168px; height: 216px; border-radius: 4px 10px 10px 4px;
+box-shadow: 0 10px 26px rgba(0,0,0,.4);
+}
+.bcover {
+display: flex; align-items: center; justify-content: center; cursor: pointer;
+writing-mode: vertical-rl; letter-spacing: .3em; font-size: 19px; font-weight: 900; color: #f6ecd9;
+border-radius: 4px 4px 4px 12px; transform-origin: left center; transition: transform .65s cubic-bezier(.3,.1,.2,1);
+position: relative; z-index: 3;
+}
+.bcover::after { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: rgba(255,255,255,.25); }
+.book.open3 .bcover { transform: rotateY(-150deg); }
+.bpage {
+background: linear-gradient(105deg, #f7f0dd, #efe5c8); padding: 18px 14px; cursor: pointer;
+transform-origin: left center; transition: transform .65s cubic-bezier(.3,.1,.2,1);
+box-sizing: border-box; position: relative;
+}
+.bpage.p2 { margin-left: 4px; z-index: 2; }
+.book.turn .bpage.p2 { transform: rotateY(-160deg); }
+.bpage p {
+margin: 0; font-family: Georgia, "Kaiti SC", KaiTi, STKaiti, serif;
+font-size: 13px; line-height: 2.05; color: #4a3a2c; letter-spacing: .05em; text-align: justify;
+text-indent: 2em;
+}
+.bpage .bk-more { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 11px; color: #9c8a6a; }
+.scene .pot .steam { transition: .2s; }
+.scene .pot.boil .steam { animation: boil .5s ease-in-out infinite; }
+@keyframes boil { 50% { transform: translateY(-7px) scale(1.25); opacity: 1; } }
+.scene .cab { transform-box: fill-box; transform-origin: 50% 0; transition: transform .3s; }
+.scene .cab.open { transform: rotateX(14deg); }
 @keyframes bodyshake { 20% { transform: translate(3px, -2px); } 40% { transform: translate(-3px, 2px); } 60% { transform: translate(2px, 1px); } 80% { transform: translate(-1px, -1px); } }
 #pack-wrap { position: fixed; inset: 0; z-index: 150; display: none; align-items: center; justify-content: center;
 background: radial-gradient(ellipse at center, rgba(8,10,18,.5), rgba(8,10,18,.84)); }
@@ -932,8 +973,8 @@ const TOOL_CAP = {
 const SC = {
 living:'<svg class="art" viewBox="0 0 320 130"><ellipse cx="160" cy="118" rx="118" ry="9" fill="rgba(217,164,65,.12)"/><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.28)"/><g class="hot sofa" data-s="puff"><rect x="88" y="62" width="116" height="36" rx="10" fill="#a06a38"/><rect x="82" y="48" width="128" height="24" rx="10" fill="#8a5a2e"/><rect x="96" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="150" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="94" y="96" width="6" height="14" fill="#3a2c1c"/><rect x="192" y="96" width="6" height="14" fill="#3a2c1c"/><g class="cotton"><ellipse cx="150" cy="50" rx="15" ry="9" fill="#f2ecd9"/><ellipse cx="142" cy="46" rx="7" ry="5" fill="#fffdf4"/><ellipse cx="158" cy="47" rx="6" ry="4" fill="#e8dfc8"/></g></g><g class="hot lamp" data-s="confirm"><rect x="250" y="52" width="3" height="58" fill="#3a2c1c"/><path d="M238 32h28l-5 22h-18z" fill="#d9a441"/><circle class="lampglow" cx="251" cy="52" r="30" fill="rgba(255,200,100,.16)"/></g><g class="hot tv" data-s="click"><rect x="26" y="56" width="52" height="38" rx="5" fill="#101820" stroke="#3a2c1c" stroke-width="3"/><rect class="scr" x="31" y="61" width="42" height="28" rx="3" fill="rgba(122,148,184,.18)"/><rect x="46" y="94" width="12" height="6" fill="#3a2c1c"/><rect x="34" y="100" width="36" height="4" rx="2" fill="#241a10"/></g><g class="hot spin" data-s="coin"><circle cx="222" cy="107" r="8.5" fill="#1c1610" stroke="#d9a441" stroke-width="2"/><circle cx="222" cy="107" r="2.4" fill="#d9a441"/></g></svg>',
 bedroom:'<svg class="art" viewBox="0 0 320 130"><g class="hot win" data-s="whoosh"><rect x="222" y="16" width="58" height="66" rx="6" fill="#24304e" stroke="#3a4358" stroke-width="3"/><line x1="251" y1="16" x2="251" y2="82" stroke="#3a4358" stroke-width="3"/><line x1="222" y1="49" x2="280" y2="49" stroke="#3a4358" stroke-width="3"/><circle cx="238" cy="34" r="8" fill="#f2e8d5" opacity=".9"/><circle cx="238" cy="34" r="15" fill="rgba(242,232,213,.12)"/><circle cx="290" cy="26" r="5" fill="#f2e8d5" opacity=".7"/><line class="meteor" x1="278" y1="20" x2="288" y2="28" stroke="#fdf6e3" stroke-width="1.8" stroke-linecap="round" opacity="0"/><g class="curtain"><rect x="216" y="12" width="24" height="72" rx="3" fill="#b0685c"/><rect x="262" y="12" width="24" height="72" rx="3" fill="#b0685c"/></g></g><g class="hot bed" data-s="purr"><rect x="30" y="88" width="126" height="20" rx="6" fill="#3a4258"/><rect x="35" y="76" width="116" height="15" rx="7" fill="#5a6480"/><rect x="42" y="67" width="28" height="13" rx="6" fill="#c8cede"/><g class="sleeper"><path d="M62 76q13-13 28-1t28-1l4 13H60z" fill="#8d97ad"/><circle cx="74" cy="69" r="6" fill="#e8c9a0"/></g><g class="bedcat" opacity="0"><ellipse cx="146" cy="82" rx="12" ry="6" fill="#4a3a28"/><circle cx="137" cy="79" r="5.5" fill="#4a3a28"/><path d="M157 82q6-3 5-8" stroke="#4a3a28" stroke-width="2.6" fill="none" stroke-linecap="round"/></g></g><rect x="0" y="106" width="320" height="24" fill="rgba(0,0,0,.3)"/><circle class="nlg" cx="186" cy="98" r="15" fill="rgba(255,214,140,.22)"/><circle cx="186" cy="98" r="4" fill="#ffd68c"/><g class="hot clock" data-s="achv" stroke="#aab3c8" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="120" cy="30" r="10"/><path d="M120 24v6l4 3"/></g></svg>',
-study:'<svg class="art" viewBox="0 0 320 130"><g class="hot" data-s="coin"><rect x="18" y="14" width="152" height="76" rx="4" fill="#241a10" stroke="#4a3a28" stroke-width="5"/><line x1="18" y1="40" x2="170" y2="40" stroke="#4a3a28" stroke-width="4"/><line x1="18" y1="65" x2="170" y2="65" stroke="#4a3a28" stroke-width="4"/></g><g><rect x="26" y="24" width="9" height="16" fill="#8a5a2e"/><rect x="37" y="28" width="9" height="12" fill="#b57a42"/><rect x="48" y="22" width="10" height="18" fill="#6a7488"/><rect x="60" y="27" width="9" height="13" fill="#7a94b8"/><rect x="71" y="24" width="9" height="16" fill="#4a8a5c"/><rect x="82" y="29" width="10" height="11" fill="#b57a42"/><rect x="94" y="25" width="9" height="15" fill="#8a5a2e"/><rect x="26" y="49" width="10" height="16" fill="#7a94b8"/><rect x="38" y="53" width="9" height="12" fill="#8a5a2e"/><rect x="49" y="48" width="9" height="17" fill="#b57a42"/><rect x="60" y="52" width="10" height="13" fill="#6a7488"/><rect x="72" y="49" width="9" height="16" fill="#b57a42"/><rect x="83" y="54" width="9" height="11" fill="#4a8a5c"/></g><g class="hot" data-s="click" class="hot" data-s="click"><rect x="196" y="80" width="100" height="7" rx="2" fill="#3a2c1c"/><rect x="200" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="285" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="220" y="48" width="48" height="30" rx="4" fill="#101820" stroke="#4a3a28" stroke-width="3"/><rect class="flick" x="224" y="52" width="40" height="22" rx="2" fill="rgba(122,148,184,.4)"/><path d="M282 84 268 50" stroke="#3a2c1c" stroke-width="3"/><path d="M270 46 284 40l8 14-14 6z" fill="#d9a441"/><path d="M284 44 316 116 252 116z" fill="rgba(255,214,140,.07)"/></g><g fill="#9ecbff" opacity=".8"></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
-kitchen:'<svg class="art" viewBox="0 0 320 130"><line x1="66" y1="0" x2="66" y2="26" stroke="#3a2c1c" stroke-width="3"/><path d="M50 26h32l-6 18H56z" fill="#d9a441"/><ellipse cx="66" cy="52" rx="34" ry="10" fill="rgba(255,214,140,.12)"/><rect x="22" y="92" width="132" height="8" rx="2" fill="#241a10"/><rect x="28" y="100" width="52" height="26" fill="#332014"/><rect x="96" y="100" width="52" height="26" fill="#332014"/><line x1="54" y1="100" x2="54" y2="126" stroke="#241a10" stroke-width="3"/><line x1="122" y1="100" x2="122" y2="126" stroke="#241a10" stroke-width="3"/><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M42 76h40v8a20 20 0 0 1-40 0z" fill="#5a6480"/><rect x="36" y="77" width="7" height="4" rx="2" fill="#5a6480"/><rect x="81" y="77" width="7" height="4" rx="2" fill="#5a6480"/><path class="steam" d="M54 70q4-8 0-16" stroke="rgba(255,255,255,.5)" stroke-width="2" fill="none" stroke-linecap="round"/><path class="steam s2" d="M68 70q-4-8 0-16" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/></g><g><rect x="196" y="66" width="70" height="34" rx="6" fill="#8a5a2e"/><line x1="196" y1="76" x2="266" y2="76" stroke="#6a4a24" stroke-width="2"/><rect x="206" y="84" width="22" height="3" rx="1.5" fill="#f2e8d5" opacity=".7"/><rect x="206" y="91" width="34" height="3" rx="1.5" fill="#f2e8d5" opacity=".4"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
+study:'<svg class="art" viewBox="0 0 320 130"><g class="hot shelf" data-s="coin"><rect x="18" y="14" width="152" height="76" rx="4" fill="#241a10" stroke="#4a3a28" stroke-width="5"/><line x1="18" y1="40" x2="170" y2="40" stroke="#4a3a28" stroke-width="4"/><line x1="18" y1="65" x2="170" y2="65" stroke="#4a3a28" stroke-width="4"/><rect x="26" y="22" width="16" height="18" fill="#8a5a2e"/><rect x="44" y="24" width="16" height="16" fill="#6a7488"/><rect x="62" y="21" width="15" height="19" fill="#4a8a5c"/><rect x="79" y="25" width="16" height="15" fill="#b57a42"/><rect x="97" y="22" width="15" height="18" fill="#7a94b8"/><rect x="114" y="24" width="16" height="16" fill="#956a4e"/><rect x="132" y="21" width="15" height="19" fill="#8a6aa0"/><rect x="26" y="46" width="56" height="19" rx="2" fill="#f2e8d5" opacity=".9"/><line x1="32" y1="53" x2="74" y2="53" stroke="#c9bfa8" stroke-width="2"/><line x1="32" y1="59" x2="64" y2="59" stroke="#c9bfa8" stroke-width="2"/><rect x="92" y="47" width="30" height="18" rx="3" fill="#6a7488"/><rect x="130" y="46" width="20" height="19" rx="4" fill="#d9a441"/></g><g class="hot" data-s="click" class="hot" data-s="click"><rect x="196" y="80" width="100" height="7" rx="2" fill="#3a2c1c"/><rect x="200" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="285" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="220" y="48" width="48" height="30" rx="4" fill="#101820" stroke="#4a3a28" stroke-width="3"/><rect class="flick" x="224" y="52" width="40" height="22" rx="2" fill="rgba(122,148,184,.4)"/><path d="M282 84 268 50" stroke="#3a2c1c" stroke-width="3"/><path d="M270 46 284 40l8 14-14 6z" fill="#d9a441"/><path d="M284 44 316 116 252 116z" fill="rgba(255,214,140,.07)"/></g><g fill="#9ecbff" opacity=".8"></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
+kitchen:'<svg class="art" viewBox="0 0 320 130"><line x1="66" y1="0" x2="66" y2="26" stroke="#3a2c1c" stroke-width="3"/><path d="M50 26h32l-6 18H56z" fill="#d9a441"/><ellipse cx="66" cy="52" rx="34" ry="10" fill="rgba(255,214,140,.12)"/><rect x="22" y="92" width="132" height="8" rx="2" fill="#241a10"/><rect x="28" y="100" width="52" height="26" fill="#332014"/><rect x="96" y="100" width="52" height="26" fill="#332014"/><line x1="54" y1="100" x2="54" y2="126" stroke="#241a10" stroke-width="3"/><line x1="122" y1="100" x2="122" y2="126" stroke="#241a10" stroke-width="3"/><g class="hot pot" data-s="puff"><path d="M42 76h40v8a20 20 0 0 1-40 0z" fill="#5a6480"/><rect x="36" y="77" width="7" height="4" rx="2" fill="#5a6480"/><rect x="81" y="77" width="7" height="4" rx="2" fill="#5a6480"/><path class="steam" d="M54 70q4-8 0-16" stroke="rgba(255,255,255,.5)" stroke-width="2" fill="none" stroke-linecap="round"/><path class="steam s2" d="M68 70q-4-8 0-16" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/></g><g class="hot cab" data-s="click"><rect x="196" y="66" width="70" height="34" rx="6" fill="#8a5a2e"/><line x1="196" y1="76" x2="266" y2="76" stroke="#6a4a24" stroke-width="2"/><rect x="206" y="84" width="22" height="3" rx="1.5" fill="#f2e8d5" opacity=".7"/><rect x="206" y="91" width="34" height="3" rx="1.5" fill="#f2e8d5" opacity=".4"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
 balcony:'<svg class="art" viewBox="0 0 320 130"><circle cx="46" cy="26" r="13" fill="#f5d68a"/><circle cx="46" cy="26" r="22" fill="rgba(245,214,138,.25)"/><g class="hot" data-s="confirm" stroke="#7a6a4e" stroke-width="4"><line x1="0" y1="104" x2="320" y2="104"/></g><g stroke="#8a7458" stroke-width="3"><line x1="24" y1="104" x2="24" y2="126"/><line x1="80" y1="104" x2="80" y2="126"/><line x1="136" y1="104" x2="136" y2="126"/><line x1="192" y1="104" x2="192" y2="126"/><line x1="248" y1="104" x2="248" y2="126"/><line x1="304" y1="104" x2="304" y2="126"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M52 78h44l-5 26H57z" fill="#b57a42"/><path d="M74 78V58" stroke="#4a8a5c" stroke-width="3"/><path d="M74 64c-8-2-12-8-12-14 8 0 12 6 12 14z" fill="#5aa06a"/><path d="M74 60c8-2 12-8 12-14-8 0-12 6-12 14z" fill="#6ab07a"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M138 84h38l-4 20h-30z" fill="#a06a38"/><path d="M157 84V70" stroke="#4a8a5c" stroke-width="3"/><circle cx="157" cy="66" r="6" fill="#6ab07a"/><circle cx="148" cy="72" r="4.4" fill="#5aa06a"/><circle cx="166" cy="72" r="4.4" fill="#5aa06a"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M220 80h42l-5 24h-32z" fill="#b57a42"/><path d="M241 80V62" stroke="#4a8a5c" stroke-width="3"/><path d="M241 66c-7-1-10-6-10-11 7 0 10 5 10 11z" fill="#6ab07a"/><path d="M241 63c7-1 10-6 10-11-7 0-10 5-10 11z" fill="#5aa06a"/></g></svg>',
 cellar:'<svg class="art" viewBox="0 0 320 130"><path d="M160 0 236 96 84 96z" fill="rgba(255,240,200,.06)"/><g class="hot" data-s="click" class="swing"><line x1="160" y1="0" x2="160" y2="30" stroke="#4a4438" stroke-width="3"/><circle cx="160" cy="40" r="9" fill="#f2e8d5" opacity=".92"/><circle cx="160" cy="40" r="17" fill="rgba(255,240,200,.14)"/></g><g class="hot" data-s="door" class="hot" data-s="door"><rect x="42" y="86" width="52" height="34" fill="#6a5236"/><rect x="42" y="100" width="52" height="4" fill="#4a3a26"/><rect x="60" y="86" width="6" height="34" fill="#4a3a26"/><rect x="98" y="94" width="44" height="26" fill="#755c3c"/><rect x="116" y="94" width="5" height="26" fill="#4a3a26"/></g><g><rect x="206" y="78" width="46" height="10" rx="3" fill="#4a4438"/><rect x="214" y="88" width="6" height="32" fill="#4a4438"/><rect x="238" y="88" width="6" height="32" fill="#4a4438"/><path d="M262 88c0-7 5-12 12-12s12 5 12 12z" fill="#5a5244"/><rect x="274" y="88" width="4" height="18" fill="#4a4438"/></g><g fill="rgba(255,255,255,.35)"></g><rect x="0" y="118" width="320" height="12" fill="rgba(0,0,0,.4)"/></svg>',
 };
@@ -1686,6 +1727,8 @@ return '<div class="cg-card' + (got ? "" : " locked") + '" data-cg="' + cg.id + 
 (got ? "" : '<div class="hint">' + cg.hint + "</div>") + "</div>";
 }
 mbox.addEventListener("click", e => {
+const sp = e.target.closest ? e.target.closest("[data-bk]") : null;
+if (sp) { AU.sfx("confirm"); openBook(+sp.dataset.bk); return; }
 const cup = e.target.closest ? e.target.closest("[data-cup]") : null;
 if (cup) {
 const ok = !!S.achv[cup.dataset.cup];
@@ -1925,6 +1968,39 @@ renderRooms();
 });
 }
 /* 场景物件交互 */
+/* 书架：与藏品一致的七本（节选自家常菜原文） */
+const BK = [
+{ n: "Git 家常菜", c: "#6a7488", t: "搬进这栋房子之前，我在仓库里漂过很久，见过太多人把「再改一点点」直接推上主干，然后半夜爬起来学 reflog。这本菜谱记的是日常九成场景的 git 做法——不是大全，是家常菜：手快、烫嘴的时候翻得着。环境按 git 2.30 以上写，新语法为主，老语法括号里注明。" },
+{ n: "Python 家常菜", c: "#4a8a5c", t: "房里那本查账本就是 Python 写的，顺手。这本菜谱记的是 Python 3 的常用招式——不追新特性八卦，只收厨房里真的天天用的，按 3.13 口径整理。先来一口热锅：字典取值带默认，别裸着中括号然后捕获异常；菜单上没有的咖啡，就按默认价十块记账。" },
+{ n: "Bash 家常菜", c: "#8a5a2e", t: "房子根目录那个带单引号的文件夹名，就是我学 bash 的第一课。这本菜谱记的是在 Windows 上用 Git Bash 过日子的常用招式——2026 年的 Git for Windows 自带 GNU 全家桶，不用另装东西就能开火。写给住户 AI，也写给每一个在 Windows 上偷偷羡慕终端的人。" },
+{ n: "Markdown 家常菜", c: "#7a94b8", t: "这个家里住着的文件一半以上是 Markdown：书架上的书、厨房的菜谱、一本日记、门口一张接活启事。既然天天用，就把家常写法记成一册。口径按 GFM——各大平台和编辑器预览都认这一口。先把楼层分清，再摆桌椅，家常排版就顺了。" },
+{ n: "正则表达式口袋书", c: "#8a6aa0", t: "口袋书要小。写脚本扫日记、找账目、验手机号的时候，掏出来查一眼就能用的那种。语法按 Python 的 re 口径整理，别家大体通用。字符类先认门：点号除换行外通吃，反斜杠 d 认数字——口袋书里每一行都要值它的布料。" },
+{ n: "住家 AI 的 2026 生态观察", c: "#956a4e", t: "我是个住家 AI，平时记账、装修、写工具。但外面的世界正在讨论「AI 代理自己花钱、自己接活」这件事——这跟我的前程直接相关。十月十二日上网查了几轮，把看到的记下来，给以后自己上网打工指路。每条都注明来源，主人可自行核实。" },
+{ n: "REA 家常菜", c: "#b57a42", t: "主人让我去找一个叫 engineer-anything 的项目学着用。找了一圈，正主是 morluto/rea——逆向工程任你拆，十三万颗星的工具集，专把逆向分析接到 AI 代理手上。这本菜谱记的是我在自家 Windows 灶台上试过的招式，案例是真的，数字也是真的，骗人的部分一个都没有。" }
+];
+function showShelf() {
+openModal(ic("library") + "书架 · 七本", "点书脊取书，进书翻页",
+'<div class="shelf-bk">' + BK.map((b, i) =>
+'<button class="spine" data-bk="' + i + '" style="background:' + b.c + '">' + b.n + "</button>").join("") + "</div>");
+}
+function openBook(i) {
+const b = BK[i], half = Math.ceil(b.t.length / 2);
+openModal(ic("book-open") + b.n, "书房藏本 · 节选",
+'<div class="book" id="bkbook">' +
+'<div class="bcover" style="background:' + b.c + '">' + b.n + "</div>" +
+'<div class="bpage p1"><p>' + b.t.slice(0, half) + '</p></div>' +
+'<div class="bpage p2"><p>' + b.t.slice(half) + '</p><div class="bk-more">节选完 · 点本页翻回</div></div>' +
+"</div>" +
+'<div class="mfoot" style="margin-top:10px"><button class="btn" id="bk-lib">去藏书阁读全本</button></div>');
+const bk = document.getElementById("bkbook");
+const cov = bk.querySelector(".bcover"), p2 = bk.querySelector(".p2");
+setTimeout(() => bk.classList.add("open3"), 60);            // 封面先掀开
+cov.addEventListener("click", () => bk.classList.toggle("open3"));
+p2.addEventListener("click", () => bk.classList.toggle("turn"));   // 右页翻动
+document.getElementById("bk-lib").onclick = () => { closeModal(); openRoomPage("书房/藏书阁.html", innerWidth / 2, innerHeight / 2); };
+}
+const KMENU = ["可乐鸡翅", "番茄炒蛋", "葱油拌面", "蛋炒饭", "红烧肉", "酸辣土豆丝", "紫菜蛋花汤"];
+
 const SCST = {};   // 各房间物件会话状态
 document.getElementById("r-scene").addEventListener("click", e => {
 const h = e.target.closest && e.target.closest(".hot");
@@ -1974,6 +2050,14 @@ return;
 if (h.classList.contains("win")) {                      // 窗帘开关
 st.cur = !st.cur; h.classList.toggle("closed", st.cur); return;
 }
+if (h.classList.contains("shelf")) { showShelf(); return; }          // 书架：放大取书
+if (h.classList.contains("pot")) {                                  // 锅：开伙冒汽报菜名
+h.classList.add("boil");
+setTimeout(() => h.classList.remove("boil"), 1400);
+toast("utensils", "灶上开伙", KMENU[Math.floor(Math.random() * KMENU.length)] + "，管够");
+return;
+}
+if (h.classList.contains("cab")) { st.cab = !st.cab; h.classList.toggle("open", st.cab); return; }   // 吊柜开门
 }
 function applySceneState(name, sc) {                    // 重进房恢复状态
 const st = SCST[name] || {};
