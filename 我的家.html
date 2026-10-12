@@ -1620,7 +1620,7 @@ if (it.kind === "theme") { S.equipped.theme = it.id; applyTheme(); }
 		if (it.id === "cat") startCat();
 		if (it.id === "firework") document.getElementById("btn-firework").style.display = "";
 			closeModal();
-			openPack(it, () => { toast("coin", "已购入", it.name); if (S.owned.length >= SHOP.length + 1) unlockCG("cg8"); checkQuests(); save(); showShop(); });
+			openPack(it, () => { if (S.owned.length >= SHOP.length + 1) unlockCG("cg8"); checkQuests(); save(); });
 		} else if (equipBtn) { S.equipped.theme = equipBtn.dataset.equip; applyTheme(); AU.sfx("confirm"); save(); showShop(); }
 		else if (wxBtn) { S.equipped.weather = wxBtn.dataset.weather; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setWx(wxBtn.dataset.weather); AU.sfx("confirm"); save(); showShop(); }
 });
