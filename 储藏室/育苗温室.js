@@ -26,6 +26,7 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--ink);min
 body.night{background:linear-gradient(180deg,#101822,#1a2634)}
 .topbar{position:sticky;top:0;z-index:20;width:100%;display:flex;align-items:center;gap:12px;padding:10px 18px;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:2px solid var(--line)}
 .tbtn{border:2px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:9px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;letter-spacing:1px;text-decoration:none;transition:.15s}
+button:active,.tbtn:active,.ptab:active{transform:scale(.94)}
 .tbtn:hover{border-color:var(--gold);color:var(--gold)}
 .topbar .tt{font-weight:900;letter-spacing:4px;font-size:15px}
 .topbar .sp{flex:1}

@@ -40,6 +40,7 @@ a{color:inherit}
 .topbar .ch-name{font-size:12.5px;color:var(--ink-2);letter-spacing:1px}
 .topbar .sp{flex:1}
 .tbtn{border:2px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:9px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:.15s}
+button:active,.tbtn:active,.ptab:active{transform:scale(.94)}
 .tbtn:hover{border-color:var(--gold);color:var(--gold)}
 .home-link{text-decoration:none}
 .wrap{display:flex;max-width:1060px;margin:0 auto;gap:18px;padding:18px 14px 60px}
