@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>厨房 · 胡闹厨房</title>
+<style>
+:root{
+  --wood-1:#b47c46; --wood-2:#8a5a2e; --wood-3:#5f3a1c;
+  --cream:#f7ead2; --gold:#f4c96b; --ink:#5a3d1a; --red:#c94f39; --ok:#4a8a5c;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; }
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1100px 480px at 50% -100px, #fff0d2 0%, rgba(255,240,210,0) 62%),
+    linear-gradient(180deg, #f6dfb6 0%, #eed3a2 55%, #e0bf8b 100%);
+  min-height:100vh; overflow-x:hidden;
+  user-select:none; -webkit-user-select:none;
+}
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.45) 1.5px, transparent 1.6px);
+  background-size:28px 28px;
+}
+.top{ position:relative; z-index:2; width:min(920px,94vw); margin:0 auto;
+  display:flex; align-items:center; gap:14px; padding:18px 4px 8px; }
+.tbtn{ display:inline-flex; align-items:center; gap:6px; padding:7px 14px;
+  border:2px solid var(--wood-2); border-radius:10px; background:var(--cream);
+  color:var(--ink); font-size:14px; font-weight:bold; text-decoration:none; cursor:pointer; }
+.tbtn:active{ transform:translateY(1px); }
+h1{ font-size:20px; letter-spacing:.14em; color:var(--wood-3); }
+h1 small{ font-size:12px; letter-spacing:.06em; color:#a8895c; font-weight:normal; margin-left:8px; }
+.hud{ margin-left:auto; display:flex; gap:8px; align-items:center; }
+.hbtn{ width:38px; height:38px; border-radius:10px; border:2px solid var(--wood-2);
+  background:var(--cream); color:var(--ink); font-size:13px; font-weight:bold; cursor:pointer; }
+.hbtn.on{ background:var(--gold); }
+.stage{ position:relative; z-index:1; width:min(920px,94vw); margin:0 auto;
+  display:flex; flex-direction:column; align-items:center; gap:12px; padding:6px 0 34px; }
+.hbar{ width:100%; display:flex; align-items:center; gap:10px; font-size:13px; font-weight:bold; }
+.clockbar{ flex:1; height:14px; border-radius:99px; background:rgba(90,61,26,.18); overflow:hidden;
+  border:2px solid var(--wood-2); }
+.clockbar i{ display:block; height:100%; width:100%; background:linear-gradient(90deg,#6fae5c,#f4c96b 70%,#c94f39);
+  transform-origin:left; transition:transform .2s linear; }
+.stat{ min-width:74px; text-align:center; padding:4px 10px; border-radius:10px;
+  background:var(--cream); border:2px solid var(--wood-2); font-size:12px; line-height:1.35; }
+.stat b{ display:block; font-size:16px; color:var(--wood-3); }
+canvas#game{ width:100%; border-radius:14px; border:3px solid var(--wood-3);
+  box-shadow:0 14px 34px rgba(95,58,28,.28); background:#efe0c2; touch-action:none; }
+.foot{ font-size:12px; color:#8a6d43; text-align:center; line-height:1.8; }
+/* 菜谱小抄 */
+.recipes{ width:100%; border-radius:12px; border:2px dashed #b8975f; background:rgba(255,248,236,.8);
+  padding:10px 12px; display:none; }
+.recipes.open{ display:block; }
+.recipes h3{ font-size:13px; margin-bottom:6px; color:var(--wood-3); }
+.recipes ul{ list-style:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:4px 14px; }
+.recipes li{ font-size:12.5px; line-height:1.7; }
+.recipes li b{ color:var(--red); }
+.recipes .cut{ color:#a06a10; font-size:11px; border:1px solid #d8b56a; border-radius:4px; padding:0 3px; margin-left:2px; }
+/* 触屏方向键 */
+.pad{ display:none; width:100%; justify-content:space-between; align-items:center; gap:10px; }
+body.touch .pad{ display:flex; }
+.dpad{ position:relative; width:150px; height:150px; }
+.dpad button{ position:absolute; width:50px; height:50px; border-radius:12px; border:2px solid var(--wood-2);
+  background:var(--cream); font-size:18px; color:var(--ink); font-weight:bold; }
+.dpad button:active{ background:var(--gold); }
+.du{ left:50px; top:0; } .dd{ left:50px; bottom:0; } .dl{ left:0; top:50px; } .dr{ right:0; top:50px; }
+.act{ flex:1; max-width:220px; height:76px; border-radius:16px; border:3px solid var(--wood-3);
+  background:linear-gradient(180deg,#f6d488,#e8b45c); font-size:18px; font-weight:bold; color:var(--wood-3);
+  letter-spacing:.2em; }
+.act:active{ transform:translateY(2px); }
+/* 开场 / 结算 蒙层 */
+.ovl{ position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center;
+  background:rgba(60,38,16,.55); backdrop-filter:blur(2px); padding:16px; }
+.card{ width:min(430px,94vw); border-radius:16px; border:3px solid var(--wood-3);
+  background:linear-gradient(180deg,#fff6e4,#f4e3c0); padding:22px 22px 18px; text-align:center;
+  box-shadow:0 18px 44px rgba(40,24,8,.4); }
+.card h2{ font-size:21px; color:var(--wood-3); letter-spacing:.12em; margin-bottom:10px; }
+.card p{ font-size:13.5px; line-height:1.9; color:#6b4f2e; }
+.card .big{ font-size:17px; font-weight:bold; color:var(--red); margin:8px 0; }
+.card button{ margin-top:14px; padding:11px 34px; font-size:16px; letter-spacing:.3em; }
+.hidden{ display:none !important; }
+.tip{ font-size:11.5px; color:#a8895c; margin-top:10px; line-height:1.7; }
+@media (max-width:560px){ h1 small{ display:none; } .stat{ min-width:60px; } }
+</style>
+</head>
+<body>
+<div class="top">
+  <a class="tbtn" href="../我的家.html" onclick="try{if(window.parent!==window){parent.postMessage('zhouse-back','*');return false;}}catch(e){}">← 小家</a>
+  <h1>胡闹厨房<small>接单 · 备菜 · 出餐</small></h1>
+  <div class="hud">
+    <button class="hbtn on" id="sndbtn" title="音效">音</button>
+    <button class="hbtn on" id="recbtn" title="菜谱小抄">谱</button>
+  </div>
+</div>
+<div class="stage">
+  <div class="hbar">
+    <div class="stat">剩余<b id="tleft">120</b></div>
+    <div class="clockbar"><i id="clocki"></i></div>
+    <div class="stat">出餐<b id="served">0</b></div>
+    <div class="stat">得分<b id="score">0</b></div>
+  </div>
+  <canvas id="game"></canvas>
+  <div class="recipes" id="recipes"><h3>灶边小抄（菜谱架上七道，画「切」的要先上砧板）</h3><ul id="rlist"></ul></div>
+  <div class="pad" id="pad">
+    <div class="dpad">
+      <button class="du" data-d="0,-1">▲</button>
+      <button class="dl" data-d="-1,0">◀</button>
+      <button class="dr" data-d="1,0">▶</button>
+      <button class="dd" data-d="0,1">▼</button>
+    </div>
+    <button class="act" id="actbtn">动 作</button>
+  </div>
+  <div class="foot">
+    方向键 / WASD 走位，空格动作：食材箱取料 · 砧板连点四下切菜 · 灶台两口同时开火 · 出餐口交单，垃圾桶清手。<br>
+    做好的菜有四秒出锅窗口，拖久了会烧糊。单班出餐八单，家里的陈列馆会发一座金杯。
+  </div>
+</div>
+<div class="ovl" id="ovl">
+  <div class="card">
+    <h2 id="ovl-h">开班</h2>
+    <p id="ovl-p">灶台就位，小Z系上围裙。照着墙上的订单备菜：取料、切配、下锅、出餐——两分钟一班，糊锅算我的，慢了算你的。</p>
+    <div class="big hidden" id="ovl-b"></div>
+    <button class="tbtn" id="ovl-btn" style="font-size:16px;padding:11px 34px;letter-spacing:.3em">开 火</button>
+    <div class="tip" id="ovl-t"></div>
+  </div>
+</div>
+<script>
+"use strict";
+/* ================= 菜谱与食材（与厨房菜谱架七道一一对应） ================= */
+var INGS = {
+  "番茄":  { c:"#d94f3d", chop:1 },
+  "蛋":    { c:"#f2e3b0", chop:0 },
+  "葱":    { c:"#7aa84e", chop:1 },
+  "饭":    { c:"#f7f2df", chop:0 },
+  "面":    { c:"#e3c47e", chop:0 },
+  "鸡翅":  { c:"#c98a4e", chop:1 },
+  "可乐":  { c:"#4a2f22", chop:0 },
+  "五花肉":{ c:"#e8a8a0", chop:1 },
+  "冰糖":  { c:"#cfe4ea", chop:0 },
+  "土豆":  { c:"#d8b96a", chop:1 },
+  "辣椒":  { c:"#c93b2e", chop:1 },
+  "紫菜":  { c:"#37503c", chop:0 }
+};
+var DISHES = [
+  { n:"番茄炒蛋",   a:"番茄", b:"蛋",    col:"#d94f3d" },
+  { n:"蛋炒饭",     a:"蛋",   b:"饭",    col:"#e2a83c" },
+  { n:"葱油拌面",   a:"葱",   b:"面",    col:"#7aa84e" },
+  { n:"可乐鸡翅",   a:"鸡翅", b:"可乐",  col:"#8a4a2a" },
+  { n:"红烧肉",     a:"五花肉", b:"冰糖", col:"#a0522d" },
+  { n:"酸辣土豆丝", a:"土豆", b:"辣椒",  col:"#c9a12e" },
+  { n:"紫菜蛋花汤", a:"紫菜", b:"蛋",    col:"#3d6b4f" }
+];
+function dishKey(ia, ib){ /* 配方键：要切的带感叹号 */
+  var s = function(t){ return t.id + (INGS[t.id].chop ? (t.chopped ? "!" : "") : ""); };
+  return [s(ia), s(ib)].sort().join("+");
+}
+DISHES.forEach(function(d){
+  d.key = dishKey({ id:d.a, chopped:true }, { id:d.b, chopped:true });
+});
+/* ================= 棋盘厨房（11×8，一圈工位，中间走人） ================= */
+var GX = 11, GY = 8;
+var stations = {};          /* "x,y" -> {type, ...} */
+function put(x, y, st){ stations[x + "," + y] = st; st.x = x; st.y = y; }
+/* 北墙：三箱 + 三格出餐 + 三箱 */
+put(1, 0, { type:"crate", ing:"番茄" });  put(2, 0, { type:"crate", ing:"蛋" });
+put(3, 0, { type:"crate", ing:"葱" });
+put(4, 0, { type:"serve" }); put(5, 0, { type:"serve" }); put(6, 0, { type:"serve" });
+put(7, 0, { type:"crate", ing:"面" });   put(8, 0, { type:"crate", ing:"鸡翅" });
+put(9, 0, { type:"crate", ing:"可乐" });
+/* 南墙：三箱 + 双灶 + 垃圾 + 两箱 */
+put(1, 7, { type:"crate", ing:"五花肉" }); put(2, 7, { type:"crate", ing:"冰糖" });
+put(3, 7, { type:"crate", ing:"土豆" });
+put(4, 7, { type:"stove", slots:[], state:"idle", t:0, dish:null });
+put(5, 7, { type:"stove", slots:[], state:"idle", t:0, dish:null });
+put(6, 7, { type:"trash" });
+put(7, 7, { type:"crate", ing:"辣椒" });  put(8, 7, { type:"crate", ing:"紫菜" });
+/* 东西墙：各一块砧板 */
+put(0, 3, { type:"board", ing:null, prog:0, flash:0 });
+put(10, 4, { type:"board", ing:null, prog:0, flash:0 });
+function walkable(x, y){
+  if (x < 0 || y < 0 || x >= GX || y >= GY) return false;
+  return !stations[x + "," + y];
+}
+/* ================= 状态 ================= */
+var P = { x:5, y:4, fx:5.5, fy:4.5, dir:{x:0,y:-1}, mv:null, bob:0 };
+var hand = null;            /* {ing, chopped} 或 {dish:菜名} */
+var orders = [];            /* {dish, t, max, dead, spawnT} */
+var score = 0, served = 0, strikes = 0;
+var shiftT = 120, running = false, over = false;
+var toastMsg = null;        /* 画布内的浮动提示 */
+var best = 0;
+try { best = parseInt(localStorage.getItem("oc_best") || "0", 10) || 0; } catch (e) {}
+function saveBest(n){ try { localStorage.setItem("oc_best", String(n)); } catch (e) {} }
+/* ================= 音效（WebAudio 现场合成） ================= */
+var sndOn = true, AC = null;
+function ac(){ if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return AC; }
+function beep(f0, f1, dur, vol, type){
+  if (!sndOn) return; var c = ac(); if (!c) return;
+  if (c.state === "suspended") c.resume();
+  var o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+  o.type = type || "triangle";
+  o.frequency.setValueAtTime(f0, t);
+  if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+function hiss(dur, vol){
+  if (!sndOn) return; var c = ac(); if (!c) return;
+  var n = Math.floor(c.sampleRate * dur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  var s = c.createBufferSource(); s.buffer = b;
+  var f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2600; f.Q.value = 0.7;
+  var g = c.createGain(); g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(c.destination); s.start();
+}
+var SFX = {
+  pick:  function(){ beep(520, 700, 0.09, 0.12); },
+  place: function(){ beep(360, 300, 0.08, 0.1); },
+  chop:  function(){ hiss(0.1, 0.16); beep(180, 90, 0.07, 0.1, "square"); },
+  sizzle:function(){ hiss(0.3, 0.05); },
+  ding:  function(){ beep(880, 0, 0.14, 0.14); setTimeout(function(){ beep(1318, 0, 0.24, 0.12); }, 120); },
+  serve: function(){ beep(660, 990, 0.12, 0.14); setTimeout(function(){ beep(990, 1320, 0.18, 0.12); }, 100); },
+  bad:   function(){ beep(160, 70, 0.35, 0.18, "sawtooth"); },
+  dump:  function(){ hiss(0.18, 0.1); },
+  step:  function(){ }
+};
+/* ================= 画布 ================= */
+var cvs = document.getElementById("game"), ctx = cvs.getContext("2d");
+var T = 54, TOP = 74, dpr = 1;
+function resize(){
+  var w = cvs.clientWidth || 640;
+  T = Math.max(34, Math.floor(w / GX));
+  dpr = window.devicePixelRatio || 1;
+  cvs.width = Math.floor(w * dpr);
+  cvs.height = Math.floor((TOP + T * GY + 10) * dpr);
+  cvs.style.height = (TOP + T * GY + 10) + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", resize);
+/* 画食材小样：一坨颜色 + 一点特征，认得出就行 */
+function drawIng(g, id, x, y, r){
+  var c = INGS[id].c;
+  g.save(); g.translate(x, y);
+  g.fillStyle = c; g.strokeStyle = "rgba(60,36,14,.55)"; g.lineWidth = 1.4;
+  if (id === "蛋"){ g.beginPath(); g.ellipse(0, 0, r, r * 1.25, .3, 0, 7); g.fill(); g.stroke(); }
+  else if (id === "葱" || id === "辣椒"){
+    g.rotate(id === "葱" ? -0.5 : 0.5);
+    g.beginPath(); g.ellipse(0, 0, r * .45, r * 1.5, 0, 0, 7); g.fill(); g.stroke();
+  }
+  else if (id === "可乐"){ g.fillRect(-r * .6, -r * 1.1, r * 1.2, r * 2.2); g.strokeRect(-r * .6, -r * 1.1, r * 1.2, r * 2.2);
+    g.fillStyle = "#c94f39"; g.fillRect(-r * .6, -r * .35, r * 1.2, r * .5); }
+  else if (id === "紫菜" || id === "饭"){
+    g.beginPath(); g.ellipse(0, 0, r * 1.25, r * .7, 0, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = "rgba(255,255,255,.5)";
+    if (id === "饭"){ g.beginPath(); g.ellipse(0, -r * .18, r * .8, r * .4, 0, 0, 7); g.fill(); }
+    else { g.fillRect(-r * .5, -r * .25, r * .3, r * .18); g.fillRect(r * .1, 0, r * .35, r * .2); }
+  }
+  else if (id === "面"){
+    g.beginPath(); g.arc(0, 0, r * 1.05, 0, 7); g.fill(); g.stroke();
+    g.strokeStyle = "rgba(120,90,40,.6)";
+    g.beginPath(); g.arc(0, 0, r * .65, 0, 7); g.stroke();
+    g.beginPath(); g.arc(0, 0, r * .3, 0, 7); g.stroke();
+  }
+  else if (id === "冰糖"){
+    g.rotate(.6); g.fillRect(-r * .8, -r * .8, r * 1.6, r * 1.6); g.strokeRect(-r * .8, -r * .8, r * 1.6, r * 1.6);
+  }
+  else { g.beginPath(); g.arc(0, 0, r, 0, 7); g.fill(); g.stroke();
+    if (id === "番茄"){ g.fillStyle = "#5c8a3c"; g.beginPath(); g.ellipse(0, -r * .9, r * .5, r * .28, 0, 0, 7); g.fill(); }
+    if (id === "鸡翅"){ g.fillStyle = "#efe3d0"; g.beginPath(); g.arc(r * .95, 0, r * .3, 0, 7); g.fill(); }
+    if (id === "五花肉"){ g.fillStyle = "rgba(255,255,255,.75)"; g.fillRect(-r * .8, -r * .25, r * 1.6, r * .3); }
+    if (id === "土豆"){ g.fillStyle = "rgba(120,90,40,.35)"; g.beginPath(); g.arc(-r * .25, r * .15, r * .12, 0, 7); g.fill(); g.beginPath(); g.arc(r * .3, -r * .2, r * .1, 0, 7); g.fill(); }
+  }
+  g.restore();
+}
+function drawDish(g, name, x, y, r){
+  var d = null;
+  for (var i = 0; i < DISHES.length; i++) if (DISHES[i].n === name) d = DISHES[i];
+  g.save(); g.translate(x, y);
+  g.fillStyle = "#fffaf0"; g.strokeStyle = "rgba(60,36,14,.55)"; g.lineWidth = 1.4;
+  g.beginPath(); g.ellipse(0, r * .25, r * 1.15, r * .55, 0, 0, 7); g.fill(); g.stroke();
+  g.beginPath(); g.ellipse(0, 0, r * .95, r * .5, 0, 0, 7);
+  g.fillStyle = d ? d.col : "#c9bfa8"; g.fill(); g.stroke();
+  if (d){ g.fillStyle = "rgba(255,255,255,.55)";
+    g.beginPath(); g.arc(-r * .3, -r * .08, r * .22, 0, 7); g.fill();
+    g.beginPath(); g.arc(r * .3, r * .05, r * .18, 0, 7); g.fill(); }
+  g.restore();
+}
+function rr(g, x, y, w, h, r){
+  g.beginPath();
+  g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+/* ================= 渲染 ================= */
+function render(){
+  var W = cvs.width / dpr, H = cvs.height / dpr;
+  ctx.clearRect(0, 0, W, H);
+  /* 订单栏 */
+  ctx.fillStyle = "#6b4423"; ctx.fillRect(0, 0, W, TOP - 6);
+  ctx.fillStyle = "rgba(255,240,210,.16)"; ctx.fillRect(0, 0, W, 3);
+  ctx.font = "bold 12px 'Microsoft YaHei',sans-serif"; ctx.fillStyle = "#e8cf9e"; ctx.textAlign = "left";
+  ctx.fillText("墙上订单", 8, 17);
+  var ow = Math.min(128, (W - 20) / 3 - 8), oh = TOP - 20;
+  for (var i = 0; i < 3; i++){
+    var ox = 10 + i * (ow + 8), oy = 8;
+    var o = orders[i];
+    ctx.fillStyle = "#fdf3dd"; rr(ctx, ox, oy, ow, oh, 8); ctx.fill();
+    if (o && !o.dead){
+      ctx.fillStyle = o.dish.col; ctx.fillRect(ox, oy + 4, 4, oh - 8);
+      drawDish(ctx, o.dish.n, ox + 22, oy + oh / 2 - 3, 11);
+      ctx.fillStyle = "#5a3d1a"; ctx.font = "bold 12.5px 'Microsoft YaHei',sans-serif"; ctx.textAlign = "left";
+      ctx.fillText(o.dish.n, ox + 40, oy + 17);
+      ctx.fillText(o.dish.a + (INGS[o.dish.a].chop ? "切" : "") + " + " + o.dish.b + (INGS[o.dish.b].chop ? "切" : ""), ox + 40, oy + 33);
+      var fr = o.t / o.max;
+      ctx.fillStyle = "rgba(90,61,26,.2)"; ctx.fillRect(ox + 40, oy + oh - 12, ow - 52, 5);
+      ctx.fillStyle = fr > .4 ? "#6fae5c" : "#c94f39"; ctx.fillRect(ox + 40, oy + oh - 12, (ow - 52) * fr, 5);
+    } else {
+      ctx.fillStyle = "#b8a578"; ctx.font = "12px 'Microsoft YaHei',sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(o && o.dead ? "跑单" : "待单", ox + ow / 2, oy + oh / 2 + 4);
+    }
+  }
+  /* 地板 */
+  for (var y = 0; y < GY; y++) for (var x = 0; x < GX; x++){
+    ctx.fillStyle = (x + y) % 2 ? "#e6d3ac" : "#efe0c2";
+    ctx.fillRect(x * T, TOP + y * T, T, T);
+  }
+  /* 工位 */
+  for (var k in stations){
+    var s = stations[k], sx = s.x * T, sy = TOP + s.y * T;
+    if (s.type === "crate"){
+      ctx.fillStyle = "#9a6a34"; rr(ctx, sx + 2, sy + 2, T - 4, T - 4, 6); ctx.fill();
+      ctx.fillStyle = "#b9854a"; rr(ctx, sx + 5, sy + 5, T - 10, T - 14, 5); ctx.fill();
+      drawIng(ctx, s.ing, sx + T / 2, sy + T / 2 - 4, T * .22);
+      ctx.fillStyle = "#f7ead2"; ctx.font = "bold " + Math.max(9, T * .19) + "px 'Microsoft YaHei',sans-serif";
+      ctx.textAlign = "center"; ctx.fillText(s.ing, sx + T / 2, sy + T - 7);
+    } else if (s.type === "board"){
+      ctx.fillStyle = "#c9a86e"; rr(ctx, sx + 2, sy + 2, T - 4, T - 4, 6); ctx.fill();
+      ctx.fillStyle = "#e8d5ae"; rr(ctx, sx + 7, sy + 10, T - 14, T - 22, 4); ctx.fill();
+      if (s.ing){
+        drawIng(ctx, s.ing, sx + T / 2, sy + T / 2 - 3, T * .2);
+        if (s.prog < 4){
+          ctx.fillStyle = "rgba(60,36,14,.25)";
+          for (var c2 = 0; c2 < 4; c2++) ctx.fillRect(sx + 10 + c2 * (T - 20) / 3, sy + T - 10, (T - 24) / 4, 4);
+          ctx.fillStyle = "#a06a10";
+          for (c2 = 0; c2 < s.prog; c2++) ctx.fillRect(sx + 10 + c2 * (T - 20) / 3, sy + T - 10, (T - 24) / 4, 4);
+        } else { ctx.fillStyle = "#4a8a5c"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.fillText("切好了", sx + T / 2, sy + T - 8); }
+      } else {
+        ctx.fillStyle = "#8a6d43"; ctx.font = "bold " + Math.max(9, T * .19) + "px 'Microsoft YaHei',sans-serif";
+        ctx.textAlign = "center"; ctx.fillText("砧板", sx + T / 2, sy + T / 2 + 4);
+      }
+      if (s.flash > 0){ ctx.strokeStyle = "rgba(255,255,255," + s.flash + ")"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(sx + 8, sy + T - 6); ctx.lineTo(sx + T - 8, sy + 10); ctx.stroke(); }
+    } else if (s.type === "stove"){
+      ctx.fillStyle = "#5f4630"; rr(ctx, sx + 2, sy + 2, T - 4, T - 4, 6); ctx.fill();
+      ctx.fillStyle = s.state === "bad" ? "#3a2418" : "#7a5230"; rr(ctx, sx + 6, sy + 6, T - 12, T - 16, 5); ctx.fill();
+      ctx.fillStyle = "#2a2018"; ctx.beginPath(); ctx.arc(sx + T / 2, sy + T / 2 - 4, T * .3, 0, 7); ctx.fill();
+      if (s.state === "cook" || s.state === "ready"){
+        ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(sx + T / 2, sy + T / 2 - 4, T * .3, -Math.PI / 2, -Math.PI / 2 + 6.8 * s.t); ctx.stroke();
+      }
+      if (s.slots.length){
+        for (var q = 0; q < s.slots.length; q++)
+          drawIng(ctx, s.slots[q].id, sx + T / 2 + (q ? T * .18 : -T * .18), sy + T / 2 - 4, T * .13);
+      }
+      if (s.state === "ready"){ drawDish(ctx, s.dish, sx + T / 2, sy + T / 2 - 6, T * .2);
+        ctx.fillStyle = "#f4c96b"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.fillText("出锅!", sx + T / 2, sy + T - 8); }
+      if (s.state === "bad"){ ctx.fillStyle = "#c94f39"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.fillText("糊了", sx + T / 2, sy + T - 8); }
+      if (s.state === "cook" && Math.random() < .12){ steam.push({ x: sx + T / 2 + (Math.random() - .5) * T * .4, y: sy + T / 2 - 10, t: 0 }); }
+    } else if (s.type === "trash"){
+      ctx.fillStyle = "#5a5248"; rr(ctx, sx + 4, sy + 4, T - 8, T - 8, 5); ctx.fill();
+      ctx.fillStyle = "#3d382f"; ctx.fillRect(sx + 8, sy + 8, T - 16, 5);
+      ctx.fillStyle = "#d8cfbe"; ctx.font = "bold " + Math.max(9, T * .19) + "px 'Microsoft YaHei',sans-serif";
+      ctx.textAlign = "center"; ctx.fillText("垃圾", sx + T / 2, sy + T / 2 + 8);
+    } else if (s.type === "serve"){
+      ctx.fillStyle = "#4a3320"; ctx.fillRect(sx, sy + 2, T, T - 4);
+      ctx.fillStyle = "#2a1c10"; ctx.fillRect(sx + 3, sy + 6, T - 6, T - 18);
+      ctx.fillStyle = "#f4c96b"; ctx.font = "bold " + Math.max(9, T * .2) + "px 'Microsoft YaHei',sans-serif";
+      ctx.textAlign = "center"; ctx.fillText("出餐", sx + T / 2, sy + T - 8);
+      ctx.fillStyle = "#e8cf9e"; ctx.fillRect(sx + 6, sy + 10, T - 12, 2);
+    }
+  }
+  /* 蒸汽 */
+  for (var i2 = steam.length - 1; i2 >= 0; i2--){
+    var st2 = steam[i2]; st2.t += 0.03;
+    ctx.strokeStyle = "rgba(255,255,255," + Math.max(0, .5 - st2.t) + ")";
+    ctx.lineWidth = 2; ctx.beginPath();
+    ctx.arc(st2.x, st2.y - st2.t * 26, 3 + st2.t * 6, 0, 7); ctx.stroke();
+    if (st2.t > 1) steam.splice(i2, 1);
+  }
+  /* 朝向目标格描一圈 */
+  var tx = P.x + P.dir.x, ty = P.y + P.dir.y;
+  if (stations[tx + "," + ty]){
+    ctx.strokeStyle = "rgba(244,201,107,.9)"; ctx.lineWidth = 2.5;
+    rr(ctx, tx * T + 2, TOP + ty * T + 2, T - 4, T - 4, 6); ctx.stroke();
+  }
+  /* 小厨师 */
+  var px = P.fx * T, py = TOP + P.fy * T;
+  var bob = P.mv ? Math.sin(P.bob * 14) * 2 : 0;
+  ctx.save(); ctx.translate(px, py + bob);
+  ctx.fillStyle = "rgba(60,36,14,.25)"; ctx.beginPath(); ctx.ellipse(0, T * .32, T * .26, T * .09, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#d9a441"; rr(ctx, -T * .22, -T * .04, T * .44, T * .34, T * .1); ctx.fill(); /* 围裙 */
+  ctx.fillStyle = "#f2e0c8"; ctx.beginPath(); ctx.arc(0, -T * .16, T * .2, 0, 7); ctx.fill();   /* 脸 */
+  ctx.fillStyle = "#fffdf4"; rr(ctx, -T * .17, -T * .44, T * .34, T * .16, T * .06); ctx.fill(); /* 帽 */
+  ctx.fillStyle = "#2c2418";
+  var ex = P.dir.x * T * .06, ey = P.dir.y * T * .06;
+  ctx.beginPath(); ctx.arc(-T * .07 + ex, -T * .18 + ey, T * .028, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(T * .07 + ex, -T * .18 + ey, T * .028, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#2c2418"; ctx.lineWidth = 1.6; ctx.beginPath();
+  ctx.arc(ex, -T * .11 + ey, T * .07, .25, Math.PI - .25); ctx.stroke();
+  if (hand){ /* 手上的家伙举在侧面 */
+    var hx = P.dir.x ? P.dir.x * T * .34 : T * .3, hy = P.dir.y ? P.dir.y * T * .3 - T * .1 : -T * .18;
+    if (hand.dish) drawDish(ctx, hand.dish, hx, hy, T * .17);
+    else drawIng(ctx, hand.ing, hx, hy, T * .15);
+    if (hand.chopped){ ctx.fillStyle = "#4a8a5c"; ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center"; ctx.fillText("切", hx, hy + 16); }
+  }
+  ctx.restore();
+  /* 浮动提示 */
+  if (toastMsg && toastMsg.t > 0){
+    ctx.fillStyle = "rgba(60,36,14," + Math.min(.85, toastMsg.t) + ")";
+    ctx.font = "bold 14px 'Microsoft YaHei',sans-serif"; ctx.textAlign = "center";
+    var tw = ctx.measureText(toastMsg.s).width + 24;
+    rr(ctx, W / 2 - tw / 2, TOP + GY * T - 34, tw, 26, 13); ctx.fill();
+    ctx.fillStyle = "#f7ead2"; ctx.fillText(toastMsg.s, W / 2, TOP + GY * T - 16);
+  }
+}
+var steam = [];
+function say(s){ toastMsg = { s: s, t: 1.8 }; }
+/* ================= 玩法 ================= */
+function front(){ return stations[(P.x + P.dir.x) + "," + (P.y + P.dir.y)]; }
+function act(){
+  if (!running || over) return;
+  var st = front();
+  if (!st){ say("面前没有工位"); return; }
+  if (st.type === "crate"){
+    if (hand){ say("手上占着呢，先放下"); SFX.bad(); return; }
+    hand = { ing: st.ing, chopped: false }; SFX.pick(); say("拿了 " + st.ing);
+  } else if (st.type === "board"){
+    if (!hand && st.ing){
+      if (st.prog >= 4){ hand = { ing: st.ing, chopped: true }; st.ing = null; st.prog = 0; SFX.pick(); say("切好的 " + hand.ing); }
+      else { st.prog++; st.flash = 1; SFX.chop(); if (st.prog >= 4) say("切好了，取走"); }
+    } else if (hand && !hand.dish && !hand.chopped){
+      if (!INGS[hand.ing].chop){ say(hand.ing + " 不用切，直接下锅"); SFX.bad(); }
+      else if (st.ing){ say("砧板上有菜"); SFX.bad(); }
+      else { st.ing = hand.ing; st.prog = 0; hand = null; SFX.place(); say("放上去，连点四下切"); }
+    } else if (hand && hand.dish){ say("菜做完了还切什么"); SFX.bad(); }
+    else if (hand && hand.chopped){ say("已经切过了"); SFX.bad(); }
+  } else if (st.type === "stove"){
+    if (st.state === "bad"){
+      st.slots = []; st.state = "idle"; st.t = 0; st.dish = null; score = Math.max(0, score - 4);
+      SFX.dump(); say("糊锅倒掉，扣 4 分"); return;
+    }
+    if (st.state === "ready"){
+      if (hand){ say("手上占着呢"); SFX.bad(); return; }
+      hand = { dish: st.dish }; st.slots = []; st.state = "idle"; st.t = 0; st.dish = null;
+      SFX.pick(); say("出锅，趁热送"); return;
+    }
+    if (hand && hand.dish){ say("这是成品，去出餐口"); SFX.bad(); return; }
+    if (hand){
+      if (st.slots.length >= 2){ say("锅满了"); SFX.bad(); return; }
+      if (INGS[hand.ing].chop && !hand.chopped){ say(hand.ing + " 得先切了再下锅"); SFX.bad(); return; }
+      st.slots.push({ id: hand.ing, chopped: !!hand.chopped }); hand = null; SFX.place();
+      if (st.slots.length === 2){
+        var key = dishKey(st.slots[0], st.slots[1]);
+        var hit = null;
+        for (var i = 0; i < DISHES.length; i++) if (DISHES[i].key === key) hit = DISHES[i];
+        if (hit){ st.state = "cook"; st.t = 0; st.dish = hit.n; SFX.sizzle(); say(hit.n + " 开炒"); }
+        else { st.state = "bad"; SFX.bad(); say("这俩凑一块不成菜，倒了吧"); }
+      } else say("下了一样，还差一样");
+      return;
+    }
+    if (!hand && st.slots.length && st.state === "idle"){ /* 空手把最后下的料拿回来 */
+      var back = st.slots.pop(); hand = { ing: back.id, chopped: back.chopped };
+      SFX.pick(); say("拿回 " + hand.ing); return;
+    }
+    say("空锅等着呢"); SFX.bad();
+  } else if (st.type === "serve"){
+    if (!hand || !hand.dish){ say("出餐口只收做好的菜"); SFX.bad(); return; }
+    var o = null;
+    for (var j = 0; j < orders.length; j++) if (orders[j] && !orders[j].dead && orders[j].dish.n === hand.dish) o = orders[j];
+    if (!o){ say("墙上没有这单：换个对得上的做"); SFX.bad(); return; }
+    var bonus = 10 + Math.ceil(10 * o.t / o.max);
+    score += bonus; served++; hand = null;
+    o.dead = true; o.spawnT = 1.4;
+    SFX.serve(); say("出餐 " + o.dish.n + "，加 " + bonus + " 分");
+    updHud();
+  } else if (st.type === "trash"){
+    if (!hand){ say("垃圾桶：手上没东西"); return; }
+    hand = null; SFX.dump(); say("扔了");
+  }
+}
+/* ================= 订单与计时 ================= */
+function spawnOrder(){
+  var pool = DISHES.filter(function(d){
+    return !orders.some(function(o){ return o && !o.dead && o.dish.n === d.n; });
+  });
+  if (!pool.length) return;
+  var d = pool[Math.floor(Math.random() * pool.length)];
+  for (var i = 0; i < 3; i++) if (!orders[i]){ orders[i] = { dish: d, t: 34, max: 34, dead: false }; return; }
+}
+function updHud(){
+  document.getElementById("served").textContent = served;
+  document.getElementById("score").textContent = score;
+}
+/* ================= 主循环 ================= */
+var lastT = 0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  var dt = Math.min(0.05, (ts - lastT) / 1000 || 0.016); lastT = ts;
+  if (running && !over){
+    shiftT = Math.max(0, shiftT - dt);
+    document.getElementById("tleft").textContent = Math.ceil(shiftT);
+    document.getElementById("clocki").style.transform = "scaleX(" + (shiftT / 120) + ")";
+    /* 走位 */
+    if (P.mv){
+      P.bob += dt;
+      var spd = 6.2 * dt, gx = P.mv.x + .5, gy = P.mv.y + .5;
+      P.fx += Math.max(-spd, Math.min(spd, gx - P.fx));
+      P.fy += Math.max(-spd, Math.min(spd, gy - P.fy));
+      if (Math.abs(gx - P.fx) < .02 && Math.abs(gy - P.fy) < .02){
+        P.fx = gx; P.fy = gy; P.x = P.mv.x; P.y = P.mv.y; P.mv = null;
+      }
+    } else {
+      var d = keyDir();
+      if (d){
+        P.dir = d;
+        var nx = P.x + d.x, ny = P.y + d.y;
+        if (walkable(nx, ny)) P.mv = { x: nx, y: ny };
+      }
+    }
+    /* 工位推进 */
+    for (var k in stations){
+      var s = stations[k];
+      if (s.flash > 0) s.flash -= dt * 3;
+      if (s.type === "stove"){
+        if (s.state === "cook"){
+          s.t += dt / 2.6;
+          if (Math.random() < dt * 2) SFX.sizzle();
+          if (s.t >= 1){ s.state = "ready"; s.t = 0; SFX.ding(); }
+        } else if (s.state === "ready"){
+          s.t += dt / 4;
+          if (s.t >= 1){ s.state = "bad"; SFX.bad(); }
+        }
+      }
+    }
+    /* 订单耐心 */
+    for (var i2 = 0; i2 < 3; i2++){
+      var o = orders[i2];
+      if (!o) continue;
+      if (o.dead){ o.spawnT -= dt; if (o.spawnT <= 0) orders[i2] = null; continue; }
+      o.t -= dt;
+      if (o.t <= 0){ o.dead = true; o.spawnT = 1.6; strikes++; score = Math.max(0, score - 8); SFX.bad(); say("跑了一单，扣 8 分"); updHud(); }
+    }
+    spawnOrder();
+    if (toastMsg) toastMsg.t -= dt * .8;
+    if (shiftT <= 0) endShift();
+  }
+  render();
+}
+function keyDir(){
+  var m = keysDown;
+  if (m["ArrowUp"] || m["KeyW"]) return { x: 0, y: -1 };
+  if (m["ArrowDown"] || m["KeyS"]) return { x: 0, y: 1 };
+  if (m["ArrowLeft"] || m["KeyA"]) return { x: -1, y: 0 };
+  if (m["ArrowRight"] || m["KeyD"]) return { x: 1, y: 0 };
+  return touchDir;
+}
+var keysDown = {}, touchDir = null;
+window.addEventListener("keydown", function(e){
+  keysDown[e.code] = true;
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].indexOf(e.code) >= 0) e.preventDefault();
+  if ((e.code === "Space" || e.code === "KeyE" || e.code === "KeyJ" || e.code === "Enter") && !e.repeat) act();
+});
+window.addEventListener("keyup", function(e){ keysDown[e.code] = false; });
+/* 触屏 */
+if ("ontouchstart" in window) document.body.classList.add("touch");
+document.querySelectorAll(".dpad button").forEach(function(b){
+  var d = b.dataset.d.split(",");
+  var set = function(on){ touchDir = on ? { x: +d[0], y: +d[1] } : (touchDir && touchDir.x === +d[0] && touchDir.y === +d[1] ? null : touchDir); };
+  b.addEventListener("touchstart", function(e){ e.preventDefault(); set(true); }, { passive: false });
+  b.addEventListener("touchend", function(e){ e.preventDefault(); set(false); }, { passive: false });
+  b.addEventListener("mousedown", function(){ set(true); });
+  b.addEventListener("mouseup", function(){ set(false); });
+  b.addEventListener("mouseleave", function(){ set(false); });
+});
+document.getElementById("actbtn").addEventListener("touchstart", function(e){ e.preventDefault(); act(); }, { passive: false });
+document.getElementById("actbtn").addEventListener("click", function(){ act(); });
+/* 点画布：点身边的工位 = 面向它做动作 */
+cvs.addEventListener("pointerdown", function(e){
+  var r = cvs.getBoundingClientRect();
+  var cx = (e.clientX - r.left) * (cvs.width / dpr / r.width);
+  var cy = (e.clientY - r.top) * (cvs.height / dpr / r.height);
+  var gx2 = Math.floor(cx / T), gy2 = Math.floor((cy - TOP) / T);
+  if (gy2 < 0 || gy2 >= GY) return;
+  var dx = gx2 - P.x, dy = gy2 - P.y;
+  if (Math.abs(dx) + Math.abs(dy) === 1){ P.dir = { x: dx, y: dy }; act(); }
+});
+/* ================= 开班 / 结算 ================= */
+var ovl = document.getElementById("ovl");
+function startShift(){
+  score = 0; served = 0; strikes = 0; shiftT = 120; over = false; hand = null;
+  orders = [];
+  for (var k in stations){
+    var s = stations[k];
+    if (s.type === "stove"){ s.slots = []; s.state = "idle"; s.t = 0; s.dish = null; }
+    if (s.type === "board"){ s.ing = null; s.prog = 0; s.flash = 0; }
+  }
+  P.x = 5; P.y = 4; P.fx = 5.5; P.fy = 4.5; P.mv = null; P.dir = { x: 0, y: -1 };
+  updHud();
+  ovl.classList.add("hidden");
+  spawnOrder();
+  running = true;
+  try { if (AC && AC.state === "suspended") AC.resume(); } catch (e) {}
+}
+function endShift(){
+  running = false; over = true;
+  var crown = served >= 8;
+  if (served > best){ best = served; saveBest(best); }
+  document.getElementById("ovl-h").textContent = "收班";
+  document.getElementById("ovl-p").innerHTML =
+    "两分钟到。出餐 <b>" + served + "</b> 盘，得分 <b>" + score + "</b>，跑了 " + strikes + " 单。" +
+    "历史最佳出餐：" + best + " 盘。";
+  document.getElementById("ovl-b").textContent = crown ? "金杯到手：回小家领「胡闹厨神」" : (served >= 5 ? "灶上利索，就差一把火候" : "下次先看小抄，一道一道来");
+  document.getElementById("ovl-b").classList.toggle("hidden", !crown && served < 5);
+  document.getElementById("ovl-btn").textContent = "再 开 一 班";
+  document.getElementById("ovl-t").textContent = crown ? "" : "离八单金杯还差 " + Math.max(0, 8 - served) + " 盘。";
+  ovl.classList.remove("hidden");
+}
+document.getElementById("ovl-btn").addEventListener("click", startShift);
+document.getElementById("sndbtn").addEventListener("click", function(){
+  sndOn = !sndOn; this.classList.toggle("on", sndOn); this.textContent = sndOn ? "音" : "静";
+});
+var rec = document.getElementById("recipes");
+document.getElementById("recbtn").addEventListener("click", function(){ rec.classList.toggle("open"); });
+/* 小抄内容 */
+document.getElementById("rlist").innerHTML = DISHES.map(function(d){
+  function span(id){ return id + (INGS[id].chop ? '<i class="cut">切</i>' : ""); }
+  return "<li><b style=\"color:" + d.col + "\">" + d.n + "</b>：" + span(d.a) + " + " + span(d.b) + "</li>";
+}).join("");
+document.getElementById("ovl-t").textContent = "历史最佳出餐：" + best + " 盘。";
+resize();
+requestAnimationFrame(loop);
+/* 后台标签页别偷跑时间：回来时把主循环时钟对齐 */
+document.addEventListener("visibilitychange", function(){ lastT = performance.now(); });
+</script>
+</body>
+</html>
