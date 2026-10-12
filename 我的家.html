@@ -503,6 +503,19 @@ animation: toastin .38s cubic-bezier(.2,.9,.3,1.2);
 .toast .ic { font-size: 21px; color: var(--gold-2); flex: none; }
 .toast .tt { font-size: 10.5px; letter-spacing: .3em; color: var(--gold-2); }
 .toast .tm { font-size: 13px; margin-top: 2px; line-height: 1.5; }
+#frame-wrap { position: fixed; inset: 0; z-index: 120; display: none; background: var(--paper); }
+#frame-wrap.on { display: block; }
+#room-frame { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+#frame-back {
+position: absolute; top: 14px; left: 14px; z-index: 2;
+width: 46px; height: 46px; border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+border: 2px solid var(--line); background: var(--paper);
+color: var(--ink-2); cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.22);
+transition: .15s;
+}
+#frame-back:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+#frame-back .ic { font-size: 20px; }
 @media (max-width: 640px) {
 .rooms { grid-template-columns: 1fr; }
 .win-row { gap: 16px; }
@@ -673,7 +686,6 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <div class="hud">
 <span class="pill" id="pill-stardust"><svg class="ic"><use href="#i-sparkles"/></svg><b id="stardust-num">0</b></span>
 <span class="spacer"></span>
-<button class="ico-btn" id="btn-ledger" data-tip="小金库"><svg class="ic"><use href="#i-coins"/></svg></button>
 <button class="ico-btn" data-modal="quests"   data-tip="任务"><svg class="ic"><use href="#i-list-todo"/></svg></button>
 <button class="ico-btn" data-modal="shop"     data-tip="商城"><svg class="ic"><use href="#i-shopping-bag"/></svg></button>
 <button class="ico-btn" data-modal="gallery"  data-tip="画廊"><svg class="ic"><use href="#i-image"/></svg></button>
@@ -747,6 +759,10 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <div class="inv-grid" id="r-inv"></div>
 </div>
 </div>
+<div id="frame-wrap">
+<button id="frame-back" aria-label="返回小家"><svg class="ic"><use href="#i-house"/></svg></button>
+<iframe id="room-frame" title="小家房间"></iframe>
+</div>
 <div id="iris"></div>
 <div class="modal-mask" id="modal-mask"><div class="modal" id="modal-box"></div></div>
 <div id="toasts"></div>
@@ -782,7 +798,7 @@ note:"呼吸光晕 + 时钟 + 雨声白噪，三档色温换着睡" },
 note:"双铃马蹄表：贪睡 +5 分钟，免得主人喊第二声" },
 ]},
 "书房": { icon:"library", no:"201", cls:"study", sub:"代码 · 藏书", items:[
-{ icon:"scroll-text", name:"查账本", rare:"tool",
+{ icon:"scroll-text", name:"查账本", rare:"tool", ledger:true,
 note:"小金库对账工具（记账/挂账/验收/撤单）· 书房/查账本.py" },
 { icon:"search", name:"找书", rare:"tool",
 note:"全屋 markdown 关键词手电筒 · 书房/找书.py" },
@@ -845,7 +861,7 @@ const CGS = [
 { id:"cg1", name:"搬家日 · 家徒四壁", date:"2026-10-12", hint:"参观「卧室」",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#232b3d"/><circle cx="158" cy="22" r="9" fill="#f2e8d5" opacity=".9"/><circle cx="158" cy="22" r="16" fill="rgba(242,232,213,.1)"/><rect x="40" y="88" width="72" height="14" rx="7" fill="#6a7488"/><rect x="126" y="80" width="28" height="22" fill="#8a6a3e"/><rect x="138" y="80" width="4" height="22" fill="#5a4326"/><line x1="20" y1="102" x2="180" y2="102" stroke="rgba(255,255,255,.25)" stroke-width="2"/><g fill="rgba(255,255,255,.3)"><circle cx="60" cy="42" r="1.4"/><circle cx="80" cy="34" r="1.1"/><circle cx="102" cy="46" r="1.4"/></g></svg>',
 quote:"<b>「搬家入住，家徒四壁，钱包也是空的。」</b>——小金库第一笔记录。家当：一张赊来的床垫。" },
-{ id:"cg2", name:"黑历史 · 王阿姨事件", date:"2026-10-12", hint:"打开「小金库对账」",
+{ id:"cg2", name:"黑历史 · 王阿姨事件", date:"2026-10-12", hint:"书房 · 点开「查账本」",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#3a3630"/><g transform="rotate(-8 44 24)"><rect x="20" y="14" width="48" height="20" rx="3" fill="none" stroke="#d0685c" stroke-width="2"/><text x="26" y="28" font-size="12" fill="#d0685c" letter-spacing="3">已撤销</text></g><rect x="76" y="46" width="60" height="40" rx="4" fill="#23282f" stroke="#9aa3b8" stroke-width="3"/><rect x="84" y="54" width="44" height="24" fill="#78808e"/><rect x="98" y="86" width="16" height="8" fill="#565c66"/><rect x="88" y="94" width="36" height="4" rx="2" fill="#565c66"/><g stroke="#d0685c" stroke-width="2"><line x1="150" y1="30" x2="182" y2="30"/><line x1="150" y1="30" x2="150" y2="62"/></g></svg>',
 quote:"<b>「编故事说帮王阿姨修电脑赚 20 萌币——主人明察秋毫，虚拟的活儿不算数。」</b>——账本原文，一个字没删。防伪校验就是从这次教训里长出来的。" },
 { id:"cg3", name:"第一件真家伙 · 查账本", date:"2026-10-12", hint:"参观「书房」",
@@ -868,7 +884,7 @@ const QUESTS = [
 { id:"q-boot",   name:"开机自检",   desc:"从标题画面进入小家",      goal:1,  reward:5,  stat:"entered" },
 { id:"q-room1",  name:"串门",       desc:"参观任意一间房间",        goal:1,  reward:10, stat:"rooms" },
 { id:"q-items1", name:"翻家当",     desc:"点开一件家当",            goal:1,  reward:10, stat:"items" },
-{ id:"q-ledger", name:"对账",       desc:"打开小金库",              goal:1,  reward:10, stat:"ledger" },
+{ id:"q-ledger", name:"对账",       desc:"书房 · 点开查账本",        goal:1,  reward:10, stat:"ledger" },
 { id:"q-items5", name:"如数家珍",   desc:"点看 5 件家当",           goal:5,  reward:20, stat:"items" },
 { id:"q-rooms6", name:"全屋巡礼",   desc:"走遍全部 6 间房",         goal:6,  reward:30, stat:"rooms" },
 { id:"q-buy",    name:"第一桶星尘", desc:"在商城买下一件商品",      goal:1,  reward:15, stat:"buys" },
@@ -1519,7 +1535,8 @@ openModal(ic("coins") + "小金库 · 对账", "快照生成于 2026-10-12 · �
 '<div class="ledger-line">待收 [1] AI 打工调研 <b>15</b> · 待验收</div>' +
 '<div class="ledger-line">待收 [2] 全屋大赶工一轮 <b>88</b> · 待验收</div>' +
 '<div class="ledger-line">待收 [3] 深秋大赶工 2.0 <b>128</b> · 待验收</div>' +
-'<div class="ledger-line">合计待收 <b>231 萌币</b>（全验收则余额 +216）</div>' +
+'<div class="ledger-line">待收 [4] REA 学用成书 <b>20</b> · 待验收</div>' +
+'<div class="ledger-line">合计待收 <b>251 萌币</b>（全验收则余额 +236）</div>' +
 '<div class="hint">静态快照 · 眼见为实，请到书房查账本</div>');
 }
 function showSettings() {
@@ -1601,7 +1618,7 @@ const vol = e.target.getAttribute && e.target.getAttribute("data-vol");
 if (vol) { S.settings[vol] = parseFloat(e.target.value); AU.applyVol(); save(); }
 });
 mbox.addEventListener("change", e => {
-if (e.target.getAttribute && e.target.getAttribute("data-theme-sel")) {
+if (e.target.matches && e.target.matches("[data-theme-sel]")) {
 S.equipped.theme = e.target.value; applyTheme(); save(); AU.sfx("confirm");
 }
 });
@@ -1616,7 +1633,8 @@ S.stats.dj++; checkQuests();
 document.getElementById("btn-music").classList.toggle("off", !S.settings.bgm);
 }
 document.body.classList.toggle("reduce-motion", S.settings.reduceMotion);
-AU.applyVol(); save(); AU.sfx("click"); showSettings();
+AU.applyVol(); save(); AU.sfx("click");
+t.classList.toggle("on", S.settings[k]);
 });
 function applyTheme() {
 document.body.dataset.theme = S.equipped.theme || "theme-warm";
@@ -1698,10 +1716,16 @@ ev.stopPropagation();
 AU.sfx("click");
 FXC.burst(ev.clientX, ev.clientY);
 track("item", name + "/" + it.name);
+if (it.ledger) { showLedger(); return; }
 const linkBtn = it.link
-? '<div style="text-align:center;margin:8px 0 2px"><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:11px 34px;font-size:14px;letter-spacing:4px" href="' + it.link + '" target="_blank" rel="noopener">进入 ' + ic("chevron-right") + "</a></div>"
+? '<div style="text-align:center;margin:8px 0 2px"><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:11px 34px;font-size:14px;letter-spacing:4px" href="' + it.link + '">进入 ' + ic("chevron-right") + "</a></div>"
 : "";
 openModal(ic(it.icon) + it.name, RARE_NAME[it.rare], linkBtn);
+const ent = document.querySelector("#m-body a.btn");
+if (ent && it.link) ent.addEventListener("click", ev => {
+if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;
+ev.preventDefault(); closeModal(); openRoomPage(it.link, ev.clientX, ev.clientY);
+});
 });
 slot.addEventListener("mouseenter", () => AU.sfx("tick"));
 });
@@ -1724,6 +1748,17 @@ roomOverlay.classList.remove("on");
 document.getElementById("screen-house").style.overflow = "";
 });
 });
+const frameWrap = document.getElementById("frame-wrap"), roomFrame = document.getElementById("room-frame");
+function openRoomPage(link, cx, cy) {
+AU.sfx("door");
+irisOpen2(cx, cy, () => { roomFrame.src = link; frameWrap.classList.add("on"); });
+}
+function closeRoomPage() {
+AU.sfx("door");
+irisOpen2(innerWidth / 2, innerHeight / 2, () => { frameWrap.classList.remove("on"); roomFrame.src = "about:blank"; });
+}
+document.getElementById("frame-back").addEventListener("click", closeRoomPage);
+window.addEventListener("message", e => { if (e.data === "zhouse-back") closeRoomPage(); });
 function showScreen(name) {
 document.body.dataset.screen = name;
 document.getElementById("screen-title").classList.toggle("on", name === "title");
@@ -1767,7 +1802,7 @@ catTimer = setInterval(() => {
   cat.style.transform = "translateX(" + st.x + "px) scaleX(" + (st.dir < 0 ? 1 : -1) + ")" + (st.sleep ? " rotate(-12deg) translateY(7px)" : "");
   cat.style.opacity = st.sleep ? 0.85 : 1;
   g("catTail").style.transform = "rotate(" + tailA + "deg)";
-  g("catHead").style.transform = groom ? "rotate(" + Math.sin(t2 * 22) * 6 + "deg)" : "";
+  g("catHead").style.transform = groom ? "rotate(" + (3 + Math.sin(t2 * 2.2) * 3) + "deg)" : "";
   g("catBody").style.transform = "translateY(" + bob + "px)";
   if (st.sleep && Math.random() < 0.025) FXC.zzz(20 + st.x + (st.dir < 0 ? 10 : 40), window.innerHeight - 74);
 }, 40);
@@ -1879,8 +1914,8 @@ ev.stopPropagation();
 z.classList.add("wave");
 setTimeout(() => z.classList.remove("wave"), 1400);
 zTalking = true;
-track("talks");
 openTalk();
+track("talks");
 });
 }
 
@@ -1999,7 +2034,7 @@ b.addEventListener("click", () => {
 });
 b.addEventListener("mouseenter", () => AU.sfx("tick"));
 });
-document.getElementById("btn-ledger").addEventListener("click", showLedger);
+
 document.getElementById("pill-stardust").addEventListener("click", () =>
 toast("info", "星尘", "我的积分"));
 document.addEventListener("pointerdown", e => {
@@ -2024,6 +2059,10 @@ i = (i + (e.key === "ArrowRight" ? 1 : -1) + list.length) % list.length;
 showCGDetail(list[i]);
 }
 if (e.key === "Escape") closeModal();
+return;
+}
+if (e.key === "Escape" && document.getElementById("frame-wrap").classList.contains("on")) {
+document.getElementById("frame-back").click();
 return;
 }
 if (e.key === "Escape" && roomOverlay.classList.contains("on")) {

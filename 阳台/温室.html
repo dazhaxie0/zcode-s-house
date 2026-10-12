@@ -55,7 +55,7 @@ canvas.drag{cursor:grabbing}
 </head>
 <body>
 <div class="topbar">
-<a class="tbtn" href="../我的家.html">← 小家</a>
+<a class="tbtn" href="../我的家.html" onclick="try{if(window.parent!==window){parent.postMessage('zhouse-back','*');return false;}}catch(e){}">← 小家</a>
 <span class="tt">温 室</span>
 <span class="sp"></span>
 <div class="windrow">风 <input type="range" id="wind" min="0" max="100" value="30"></div>
