@@ -504,6 +504,29 @@ animation: toastin .38s cubic-bezier(.2,.9,.3,1.2);
 .toast .ic { font-size: 21px; color: var(--gold-2); flex: none; }
 .toast .tt { font-size: 10.5px; letter-spacing: .3em; color: var(--gold-2); }
 .toast .tm { font-size: 13px; margin-top: 2px; line-height: 1.5; }
+#area-splash { position: fixed; inset: 0; z-index: 135; display: flex; align-items: center; justify-content: center;
+pointer-events: none; opacity: 0;
+font-family: Georgia, "Times New Roman", "STZhongsong", "SimSun", serif; font-weight: 900;
+font-size: clamp(36px, 7.5vw, 68px); color: #f5ead0; letter-spacing: .6em; text-indent: .6em;
+text-shadow: 0 2px 26px rgba(0,0,0,.65), 0 0 46px rgba(240,196,106,.35); }
+#area-splash.go { animation: areasplash 1.9s ease-out forwards; }
+@keyframes areasplash { 0% { opacity: 0; letter-spacing: .6em; } 16% { opacity: 1; } 68% { opacity: 1; letter-spacing: .22em; } 100% { opacity: 0; letter-spacing: .2em; } }
+.star-float { position: fixed; z-index: 155; pointer-events: none; display: flex; gap: 4px; align-items: center;
+font-weight: 900; font-size: 15px; color: var(--gold-2); animation: starfloat 1.05s ease-out forwards; }
+.star-float.neg { color: var(--danger); }
+.star-float .ic { font-size: 14px; }
+@keyframes starfloat { from { opacity: 0; transform: translate(-50%, 8px); } 22% { opacity: 1; } to { opacity: 0; transform: translate(-50%, -44px); } }
+#plat-banner { position: fixed; left: 0; right: 0; top: 38%; z-index: 155; display: none; text-align: center;
+padding: 22px 0; pointer-events: none;
+background: linear-gradient(90deg, transparent, rgba(8,8,10,.88) 18%, rgba(8,8,10,.88) 82%, transparent);
+border-top: 2px solid #c9a15f; border-bottom: 2px solid #c9a15f; }
+#plat-banner.go { display: block; animation: platfade 3.6s forwards; }
+#plat-banner.go span { display: inline-block; animation: plattrack 3.6s ease-out forwards; }
+#plat-banner span { font-family: Georgia, serif; font-size: clamp(30px, 6vw, 54px); font-weight: 900; color: #e8c98a; letter-spacing: .5em; text-indent: .5em; }
+@keyframes platfade { 0% { opacity: 0; } 10% { opacity: 1; } 82% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes plattrack { from { letter-spacing: .8em; } to { letter-spacing: .3em; } }
+body.shake { animation: bodyshake .3s; }
+@keyframes bodyshake { 20% { transform: translate(3px, -2px); } 40% { transform: translate(-3px, 2px); } 60% { transform: translate(2px, 1px); } 80% { transform: translate(-1px, -1px); } }
 #pack-wrap { position: fixed; inset: 0; z-index: 150; display: none; align-items: center; justify-content: center;
 background: radial-gradient(ellipse at center, rgba(8,10,18,.5), rgba(8,10,18,.84)); }
 #pack-wrap.on { display: flex; }
@@ -655,6 +678,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 
 <symbol id="i-disc-3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M6 12c0-1.7.7-3.2 1.8-4.2"/><circle cx="12" cy="12" r="2"/><path d="M18 12c0 1.7-.7 3.2-1.8 4.2"/></symbol>
 
+<symbol id="i-film" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></symbol>
 <symbol id="i-flower" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5"/><path d="M12 7.5V9"/><path d="M7.5 12H9"/><path d="M16.5 12H15"/><path d="M12 16.5V15"/><path d="m8 8 1.88 1.88"/><path d="M14.12 9.88 16 8"/><path d="m8 16 1.88-1.88"/><path d="M14.12 14.12 16 16"/></symbol>
 <symbol id="i-house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
 <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
@@ -712,7 +736,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <button class="tmenu-item" id="t-settings"><svg class="ic"><use href="#i-settings"/></svg>设置</button>
 </div>
 <div class="title-save" id="title-save"></div>
-<div class="title-foot"><span>v3.0.0 · DELUXE</span><span>© 2026 小Z 的小家</span></div>
+<div class="title-foot"><span>v3.3.0 · DELUXE</span><span>© 2026 小Z 的小家</span></div>
 </div>
 <!-- ③ 小家主画面 -->
 <div class="screen" id="screen-house">
@@ -800,6 +824,8 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 </div>
 <div id="iris"></div>
 <div class="modal-mask" id="modal-mask"><div class="modal" id="modal-box"></div></div>
+<div id="area-splash"></div>
+<div id="plat-banner"><span>这 个 家</span></div>
 <div id="pack-wrap"></div>
 <div id="toasts"></div>
 <div id="dlg">
@@ -915,6 +941,9 @@ quote:"<b>「随机出菜 + 买菜清单。」</b>——红烧肉是门面，酸
 { id:"cg7", name:"自食其力的一夜", date:"2026-10-12", hint:"走遍全部 6 间房",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#141b2b"/><circle cx="168" cy="22" r="8" fill="#f2e8d5" opacity=".9"/><rect x="26" y="76" width="66" height="14" rx="7" fill="#4a5470"/><rect x="30" y="70" width="18" height="8" rx="4" fill="#c8cede"/><rect x="112" y="84" width="52" height="16" rx="4" fill="#3a4258"/><g fill="#aab3c8"><rect x="117" y="88" width="7" height="3"/><rect x="127" y="88" width="7" height="3"/><rect x="137" y="88" width="7" height="3"/><rect x="147" y="88" width="7" height="3"/><rect x="117" y="94" width="7" height="3"/><rect x="127" y="94" width="7" height="3"/><rect x="137" y="94" width="7" height="3"/><rect x="147" y="94" width="7" height="3"/></g><rect class="flick" x="126" y="52" width="24" height="18" rx="2" fill="#9ecbff" opacity=".8"/><line x1="16" y1="90" x2="184" y2="90" stroke="rgba(255,255,255,.2)" stroke-width="2"/></svg>',
 quote:"<b>「穷得很踏实。房子还是那个欠债的房子，但书房里第一次传出了键盘声。」</b>——待收 231 等验收，床垫债 15 还挂着。主人点头是小康，摇头就接着敲键盘。都行。" },
+{ id:"cg8", name:"星尘杂货铺", date:"2026-10-12", hint:"商城购齐全部商品",
+art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#1d1626"/><g fill="#f0c46a"><path d="M40 22l2.6 5.2 5.2 2.6-5.2 2.6L40 40l-2.6-5.2-5.2-2.6 5.2-2.6z"/><path d="M158 16l2 4 4 2-4 2-2 4-2-4-4-2 4-2z"/><path d="M170 64l2.4 4.8 4.8 2.4-4.8 2.4-2.4 4.8-2.4-4.8-4.8-2.4 4.8-2.4z"/><path d="M28 72l1.8 3.6 3.6 1.8-3.6 1.8L28 88l-1.8-3.6-3.6-1.8 3.6-1.8z"/></g><g transform="rotate(-8 100 62)"><rect x="78" y="32" width="44" height="58" rx="6" fill="#2a1c10" stroke="#e8892c" stroke-width="2.5"/><rect x="90" y="44" width="20" height="20" rx="4" fill="rgba(245,185,66,.25)"/><circle cx="100" cy="54" r="5" fill="#f5b942"/><rect x="86" y="74" width="28" height="4" rx="2" fill="rgba(242,209,145,.6)"/><rect x="86" y="82" width="18" height="4" rx="2" fill="rgba(242,209,145,.35)"/></g><ellipse cx="100" cy="96" rx="46" ry="6" fill="rgba(240,150,50,.12)"/></svg>',
+quote:"<b>「货架买空了，橙卡还是没抽够。」</b>——开包那一下最好玩：卡背落下、爆开、流光飞走。星尘花得值。" },
 ];
 const QUESTS = [
 { id:"q-boot",   name:"开机自检",   desc:"从标题画面进入小家",      goal:1,  reward:5,  stat:"entered" },
@@ -925,9 +954,9 @@ const QUESTS = [
 { id:"q-rooms6", name:"全屋巡礼",   desc:"走遍全部 6 间房",         goal:6,  reward:30, stat:"rooms" },
 { id:"q-buy",    name:"第一桶星尘", desc:"在商城买下一件商品",      goal:1,  reward:15, stat:"buys" },
 { id:"q-cg1",    name:"回忆",       desc:"解锁第一张 CG",           goal:1,  reward:15, stat:"cgs" },
-{ id:"q-cg7",    name:"集大功成",   desc:"集齐 7 张 CG",            goal:7,  reward:50, stat:"cgs" },
-{ id:"q-smoke",  name:"？？?",      desc:"？？?", hidden:true, goal:3, reward:20, stat:"smoke" },
-{ id:"q-dj",     name:"？？?",      desc:"？？?", hidden:true, goal:2, reward:10, stat:"dj" },
+{ id:"q-cg7",    name:"集大功成",   desc:"集齐 8 张 CG",            goal:8,  reward:50, stat:"cgs" },
+{ id:"q-smoke",  name:"？？？",     desc:"？？？", hidden:true, goal:3, reward:20, stat:"smoke" },
+{ id:"q-dj",     name:"？？？",     desc:"？？？", hidden:true, goal:2, reward:10, stat:"dj" },
 { id:"q-talk3",  name:"唠家常",     desc:"和住户聊 3 回",           goal:3,  reward:15, stat:"talks" },
 ];
 /* 住户台词池 */
@@ -954,6 +983,10 @@ rain: [
 "落雨了。接一桶雨水浇花，薄荷最欢喜。",
 "这种天适合把小夜灯调到最暖那档，听雨。"
 ],
+snow: [
+"下雪了。接一壶雪水存着，开春浇花，薄荷挑食。",
+"多肉怕湿雪，往屋里挪了半尺，它没意见。"
+],
 cat: [
 "猫咪室友是星尘换的，不亏。它把沙发蹭出了专属毛毯区。",
 "它睡着的时候别戳，会记账的。开玩笑，它不识字。"
@@ -967,7 +1000,7 @@ const TIER = { bronze: "铜", silver: "银", gold: "金", plat: "白金" };
 const ACHV = [
 { id:"a-boot",  t:"bronze", name:"安家",     desc:"进入小家" },
 { id:"a-rooms", t:"silver", name:"全屋巡礼", desc:"走遍 6 间房" },
-{ id:"a-cg",    t:"gold",   name:"收藏家",   desc:"集齐 7 张回忆" },
+{ id:"a-cg",    t:"gold",   name:"收藏家",   desc:"集齐 8 张回忆" },
 { id:"a-buy3",  t:"silver", name:"购物袋",   desc:"商城购入 3 件" },
 { id:"a-talk5", t:"bronze", name:"唠家常",   desc:"和住户聊 5 回" },
 { id:"a-phase4",t:"silver", name:"四时俱备", desc:"怀表拨遍四时" },
@@ -977,6 +1010,7 @@ const ACHV = [
 { id:"a-pets",  t:"bronze", name:"猫奴",     desc:"撸猫 10 下" },
 { id:"a-feed",  t:"bronze", name:"开饭了",   desc:"喂猫 3 回" },
 { id:"a-coaster",t:"bronze",name:"过山车",   desc:"把屋顶小屋甩出速度" },
+{ id:"a-week",  t:"silver", name:"常客",     desc:"连续入住 3 天" },
 { id:"a-plat",  t:"plat",   name:"这个家",   desc:"集齐其余全部奖杯" },
 ];
 const achvCond = {
@@ -992,6 +1026,7 @@ const achvCond = {
 "a-pets":  () => (S.stats.pets || 0) >= 10,
 "a-feed":  () => (S.stats.feeds || 0) >= 3,
 "a-coaster":() => (S.stats.coaster || 0) >= 1,
+"a-week":  () => (S.stats.streak || 0) >= 3,
 };
 const SHOP = [
 { id:"cat",       icon:"cat",       name:"猫咪室友",   price:60, kind:"pet",     desc:"会在客厅散步，戳戳会喵" },
@@ -1013,7 +1048,7 @@ owned: ["theme-warm"], equipped: { theme: "theme-warm", weather: "none" },
 settings: { sfx: true, bgm: true, sfxVol: 0.5, bgmVol: 0.32,
 reduceMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches },
 stats: { entered: 0, rooms: 0, items: 0, ledger: 0, buys: 0, cgs: 0, smoke: 0, dj: 0,
-talks: 0, pets: 0, feeds: 0, coaster: 0, phases: [] },
+talks: 0, pets: 0, feeds: 0, coaster: 0, phases: [], days: 0, streak: 0, lastDay: "" },
 });
 let S = defaultState();
 let memOnly = false;
@@ -1043,7 +1078,7 @@ this.master = this.ctx.createGain(); this.master.connect(this.ctx.destination);
 this.sfxG = this.ctx.createGain(); this.sfxG.connect(this.master);
 this.bgmG = this.ctx.createGain(); this.bgmG.connect(this.master);
 this.applyVol();
-if (S.equipped.weather === "rain") this.setRain(true);
+if (S.equipped.weather === "rain" || S.equipped.weather === "snow") this.setWx(S.equipped.weather);
 },
 applyVol() {
 if (!this.ctx) return;
@@ -1107,8 +1142,8 @@ case "whoosh": this.noise(t, 0.45, { vol: 0.16, from: 250, to: 2400, q: 1.4 }); 
 case "door":   this.tone(140, t, 0.22, { vol: 0.2, slideTo: 70 });
 this.noise(t + 0.02, 0.3, { vol: 0.06, from: 900, to: 200, q: 2 }); break;
 case "puff":   this.noise(t, 0.22, { vol: 0.12, from: 1200, to: 300, q: 0.8 }); break;
-case "purr":   this.tone(82, 0.22, "sawtooth", 0.045); this.tone(64, 0.2, "sawtooth", 0.04, 0.14); break;
-case "chomp":  this.tone(210, 0.05, "square", 0.1); this.tone(150, 0.06, "square", 0.1, 0.07); break;
+case "purr":   this.tone(82, t, 0.24, { vol: 0.045, type: "sawtooth" }); this.tone(64, t + 0.2, 0.16, { vol: 0.04, type: "sawtooth" }); break;
+case "chomp":  this.tone(210, t, 0.05, { vol: 0.1, type: "square" }); this.tone(150, t + 0.07, 0.06, { vol: 0.1, type: "square" }); break;
 case "meow":   this.tone(620, t, 0.34, { vol: 0.16, type: "sawtooth", slideTo: 880, attack: 0.03 });
 this.tone(880, t + 0.3, 0.24, { vol: 0.12, type: "sawtooth", slideTo: 440, attack: 0.03 }); break;
 case "boom":   this.tone(90, t, 0.5, { vol: 0.3, slideTo: 38 });
@@ -1117,23 +1152,21 @@ case "fwup":   this.tone(300, t, 0.5, { vol: 0.06, slideTo: 900 }); break;
 case "type":   this.tone(1450 + Math.random() * 250, t, 0.03, { vol: 0.02 }); break;
 }
 },
-/* 雨声：循环白噪过低通，挂 BGM 通道 */
+/* 天气环境声：循环白噪过低通，挂 BGM 通道 · 雨声亮、雪声密而轻 */
 rainNode: null,
-setRain(on) {
-if (on && !this.rainNode && this.ctx) {
+setWx(w) {
+const cfg = w === "rain" ? { f: 460, v: 0.55 } : w === "snow" ? { f: 280, v: 0.3 } : null;
+if (this.rainNode) { try { this.rainNode.src.stop(); } catch (e) {} this.rainNode = null; }
+if (!cfg || !this.ctx) return;
 const c = this.ctx, len = 2 * c.sampleRate;
 const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
 for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
 const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
-const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 460;
-const g = c.createGain(); g.gain.value = 0.55;
+const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = cfg.f;
+const g = c.createGain(); g.gain.value = cfg.v;
 src.connect(f); f.connect(g); g.connect(this.bgmG);
 src.start();
 this.rainNode = { src };
-} else if (!on && this.rainNode) {
-try { this.rainNode.src.stop(); } catch (e) {}
-this.rainNode = null;
-}
 },
 /* BGM 八音盒循环 */
   custom: { el: null, urls: [], idx: 0, on: false },
@@ -1268,6 +1301,7 @@ AU.sfx("fwup");
 },
 explode(r) {
 AU.sfx("boom");
+screenShake();
 for (let i = 0; i < 42 * this.density(); i++) {
 const a = Math.random() * Math.PI * 2, sp = 1 + Math.random() * 4.2;
 this.parts.push({ x: r.x, y: r.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
@@ -1382,7 +1416,37 @@ function setStardust(n) {
 S.stardust = n; save();
 document.getElementById("stardust-num").textContent = n;
 }
-function addStardust(n) { setStardust(S.stardust + n); }
+function addStardust(n) { setStardust(S.stardust + n); floatStar(n); }
+function floatStar(n) {
+const r = document.getElementById("pill-stardust").getBoundingClientRect();
+const f = document.createElement("div");
+f.className = "star-float" + (n < 0 ? " neg" : "");
+f.innerHTML = (n > 0 ? "+" : "") + n + " " + ic("sparkles");
+f.style.left = r.left + r.width / 2 + "px";
+f.style.top = r.bottom + 8 + "px";
+document.body.appendChild(f);
+setTimeout(() => f.remove(), 1100);
+}
+function areaSplash(t) {
+const el = document.getElementById("area-splash");
+el.textContent = t;
+el.classList.remove("go"); void el.offsetWidth; el.classList.add("go");
+}
+function screenShake() {
+document.body.classList.remove("shake"); void document.body.offsetWidth; document.body.classList.add("shake");
+}
+function dailyCheck() {
+const dayStr = d => d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+const today = dayStr(new Date());
+if (S.stats.lastDay === today) return;
+S.stats.streak = S.stats.lastDay === dayStr(new Date(Date.now() - 864e5)) ? (S.stats.streak || 0) + 1 : 1;
+S.stats.days = (S.stats.days || 0) + 1;
+S.stats.lastDay = today;
+const bonus = 5 + Math.min(S.stats.streak, 7);
+addStardust(bonus);
+AU.sfx("unlock");
+toast("coin", "入住 · 第 " + S.stats.days + " 天", "连续 " + S.stats.streak + " 天 · +" + bonus + " 星尘");
+}
 function checkQuests() {
 for (const q of QUESTS) {
 if (S.quests[q.id]) continue;
@@ -1406,7 +1470,12 @@ if (ok) {
 S.achv[a.id] = 1;
 AU.sfx("achv");
 trophyToast(a);
-if (a.id === "a-plat") for (let i = 0; i < 5; i++) setTimeout(() => FXC.firework(), i * 520);
+if (a.id === "a-plat") { for (let i = 0; i < 5; i++) setTimeout(() => FXC.firework(), i * 520);
+AU.sfx("boom");
+const pb = document.getElementById("plat-banner");
+pb.classList.remove("go"); void pb.offsetWidth; pb.classList.add("go");
+setTimeout(() => pb.classList.remove("go"), 3700);
+}
 }
 }
 }
@@ -1555,16 +1624,17 @@ if (buyBtn) {
 const it = SHOP.find(i => i.id === buyBtn.dataset.buy);
 if (!it || S.owned.includes(it.id) || S.stardust < it.price) { AU.sfx("cancel"); return; }
 setStardust(S.stardust - it.price);
+floatStar(-it.price);
 S.owned.push(it.id); S.stats.buys++;
 AU.sfx("coin");
 if (it.kind === "theme") { S.equipped.theme = it.id; applyTheme(); }
-	if (it.kind === "weather") { S.equipped.weather = it.id; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setRain(it.id === "rain"); }
+		if (it.kind === "weather") { S.equipped.weather = it.id; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setWx(it.id); }
 		if (it.id === "cat") startCat();
 		if (it.id === "firework") document.getElementById("btn-firework").style.display = "";
-		closeModal();
-		openPack(it, () => { toast("coin", "已购入", it.name); checkQuests(); save(); showShop(); });
+			closeModal();
+			openPack(it, () => { toast("coin", "已购入", it.name); if (S.owned.length >= SHOP.length + 1) unlockCG("cg8"); checkQuests(); save(); showShop(); });
 		} else if (equipBtn) { S.equipped.theme = equipBtn.dataset.equip; applyTheme(); AU.sfx("confirm"); save(); showShop(); }
-	else if (wxBtn) { S.equipped.weather = wxBtn.dataset.weather; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setRain(wxBtn.dataset.weather === "rain"); AU.sfx("confirm"); save(); showShop(); }
+		else if (wxBtn) { S.equipped.weather = wxBtn.dataset.weather; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setWx(wxBtn.dataset.weather); AU.sfx("confirm"); save(); showShop(); }
 });
 function cgCardHTML(cg) {
 const got = !!S.cgs[cg.id];
@@ -1804,6 +1874,7 @@ roomOverlay.classList.add("on");
 document.getElementById("screen-house").style.overflow = "hidden";
 roomOverlay.scrollTop = 0;
 track("room", name);
+areaSplash(name);
 renderRooms();
 });
 }
@@ -1822,7 +1893,11 @@ document.getElementById("screen-house").style.overflow = "";
 const frameWrap = document.getElementById("frame-wrap"), roomFrame = document.getElementById("room-frame");
 function openRoomPage(link, cx, cy) {
 AU.sfx("door");
-irisOpen2(cx, cy, () => { roomFrame.src = link; frameWrap.classList.add("on"); });
+irisOpen2(cx, cy, () => {
+roomFrame.src = link;
+frameWrap.classList.add("on");
+areaSplash(decodeURIComponent(link.split("/").pop().replace(/\.html$/, "")));
+});
 }
 function closeRoomPage() {
 AU.sfx("door");
@@ -1930,7 +2005,8 @@ dlgEl.classList.remove("on");
 function talkPool() {
 if (!S.stats.talks) return TALK.first.slice();
 let pool = [];
-if (S.equipped.weather === "rain") pool = pool.concat(TALK.rain);
+	if (S.equipped.weather === "rain") pool = pool.concat(TALK.rain);
+	if (S.equipped.weather === "snow") pool = pool.concat(TALK.snow);
 if (document.body.dataset.phase === "night") pool = pool.concat(TALK.night);
 if (S.owned.includes("cat")) pool = pool.concat(TALK.cat);
 if (Object.keys(S.cgs).length >= CGS.length) pool = pool.concat(TALK.done);
@@ -2199,6 +2275,7 @@ document.getElementById("t-start").addEventListener("click", () => {
 AU.sfx("confirm");
 irisOpen2(innerWidth / 2, innerHeight * 0.4, () => {
 showScreen("house");
+dailyCheck();
 track("entered");
 updPhase();
 });
