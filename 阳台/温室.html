@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>阳台 · 温室</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--paper:#f7efdd;--paper-2:#efe4cc;--ink:#4a3a28;--ink-2:#7a6a50;--line:#e2d4b4;--gold:#b4831f;--ok:#4a8a5c}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--ink);min-height:100vh;background:linear-gradient(180deg,#dcead2,#c4d9b8 60%,#b0c9a0);display:flex;flex-direction:column;align-items:center}
+body.night{background:linear-gradient(180deg,#101822,#1a2634)}
+.topbar{position:sticky;top:0;z-index:20;width:100%;display:flex;align-items:center;gap:12px;padding:10px 18px;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:2px solid var(--line)}
+.tbtn{border:2px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:9px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;letter-spacing:1px;text-decoration:none;transition:.15s}
+.tbtn:hover{border-color:var(--gold);color:var(--gold)}
+.topbar .tt{font-weight:900;letter-spacing:4px;font-size:15px}
+.topbar .sp{flex:1}
+.wrap{display:flex;gap:16px;width:min(1080px,96vw);padding:16px 0 40px;align-items:flex-start}
+.scene-card{flex:1.6;min-width:0;background:var(--paper);border:2px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 16px 40px rgba(40,60,30,.2)}
+canvas{display:block;width:100%;height:auto;touch-action:none;cursor:grab}
+canvas.drag{cursor:grabbing}
+.hint{padding:9px 14px;font-size:11.5px;color:var(--ink-2);letter-spacing:2px;border-top:2px solid var(--line);display:flex;gap:16px;flex-wrap:wrap}
+.panel{flex:1;min-width:280px;background:var(--paper);border:2px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 16px 40px rgba(40,60,30,.2);display:flex;flex-direction:column}
+.ptabs{display:flex;border-bottom:2px solid var(--line)}
+.ptab{flex:1;border:none;background:transparent;color:var(--ink-2);font-family:inherit;font-size:13.5px;letter-spacing:2px;padding:11px 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.ptab.on{color:var(--gold);border-bottom-color:var(--gold);font-weight:900}
+.stats{display:flex;gap:10px;padding:12px 14px;border-bottom:2px solid var(--line);align-items:center}
+.stage{flex:1}
+.stage b{color:var(--ok);letter-spacing:1px}
+.stage small{display:block;color:var(--ink-2);font-size:11px;margin-top:3px;letter-spacing:1px}
+.water-btn{border:none;border-radius:10px;padding:10px 18px;font-family:inherit;font-weight:900;font-size:13.5px;letter-spacing:2px;color:#fff;cursor:pointer;background:linear-gradient(180deg,#5f9ec9,#3d7aa8);box-shadow:0 4px 12px rgba(60,110,160,.4);display:inline-flex;align-items:center;gap:8px;transition:.15s}
+.water-btn:active{transform:translateY(2px);box-shadow:none}
+.water-btn svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.arch{padding:16px 18px 22px;overflow-y:auto;max-height:62vh;font-size:13px;line-height:1.95}
+.arch h1{font-size:17px;letter-spacing:3px;margin-bottom:2px;color:var(--gold)}
+.arch h2{font-size:13.5px;letter-spacing:2px;margin:16px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+.arch blockquote{margin:10px 0;padding:8px 14px;border-left:4px solid var(--gold);background:var(--paper-2);border-radius:0 8px 8px 0;color:var(--ink-2)}
+.arch table{border-collapse:collapse;width:100%;font-size:12px;margin:10px 0}
+.arch th,.arch td{border:1px solid var(--line);padding:6px 10px;text-align:left;line-height:1.6}
+.arch th{background:var(--paper-2)}
+.arch ul{margin:8px 0 8px 22px}
+.arch li{margin:5px 0}
+.arch strong{color:var(--gold)}
+.arch p{margin:8px 0}
+.windrow{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-2);letter-spacing:1px}
+.windrow input{accent-color:var(--gold);width:110px}
+@media(max-width:820px){.wrap{flex-direction:column}.panel{min-width:0}.arch{max-height:none}}
+
+/* ---- 全屋统一滚动条 ---- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#a8895c;border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#8a6a3e}
+*{scrollbar-width:thin;scrollbar-color:#a8895c transparent}
+</style>
+</head>
+<body>
+<div class="topbar">
+<a class="tbtn" href="../我的家.html">← 小家</a>
+<span class="tt">温 室</span>
+<span class="sp"></span>
+<div class="windrow">风 <input type="range" id="wind" min="0" max="100" value="30"></div>
+</div>
+<div class="wrap">
+<div class="scene-card">
+<canvas id="cv" width="920" height="560"></canvas>
+<div class="hint"><span>拖拽画面 · 转动花架</span><span>点盆栽 · 翻档案</span><span>W · 浇水</span><span>1 / 2 / 3 · 换盆</span></div>
+</div>
+<div class="panel">
+<div class="ptabs"><button class="ptab" data-p="lu">绿萝</button><button class="ptab" data-p="bh">薄荷</button><button class="ptab" data-p="dr">多肉</button></div>
+<div class="stats">
+<div class="stage" id="stageBox"></div>
+<button class="water-btn" id="waterBtn"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-3.6 10.8c.9.7 1.6 1.7 1.6 2.9V18a2 2 0 0 0 4 0v-1.3c0-1.2.7-2.2 1.6-2.9A6 6 0 0 0 12 3Z"/><path d="M9 21h6"/></svg>浇水</button>
+</div>
+<div class="arch" id="arch"></div>
+</div>
+</div>
+<script type="text/plain" id="pv-lu"># 绿萝
+
+> 住家 AI 的第一盆绿植，主打一个死不了。
+> 水培土培都能活，办公室窗台的常青钉子户——但你真敢全然不管，它也会黄给你看。
+
+## 习性档案
+
+| 项目 | 内容 |
+|------|------|
+| 光照 | 喜散射光，耐阴；忌正午强光直晒，叶片会灼伤发白 |
+| 温度 | 15～28℃ 最舒服；冬天低于 10℃ 容易冻伤，别贴着冷玻璃放 |
+| 浇水节奏 | 默认 5 天一次；土表下两三厘米干了再浇，一次浇透 |
+| 土壤 | 疏松透气的腐殖土，掺点珍珠岩更稳；水培也行，记得勤换水 |
+| 毒性提示 | 汁液含草酸钙针晶，对猫狗不友好——啃了会流口水口腔不适，家有主子请放高处 |
+
+## 浇水口诀
+
+摸土两厘米，干了再浇透；
+黄叶别慌张，先查水够不够；
+冬天睡半觉，十天半月也不愁。
+
+## 常见死法
+
+- **太勤快，天天浇**：头号死因。根长期泡在湿土里烂掉，黄叶软茎一路烂进土里。绿萝怕涝不怕旱，忘了浇三天顶多蔫，浇多了没得救。
+- **冬天贴窗冻伤**：玻璃边夜里最冷，叶片发黑打蔫。入冬往屋里挪半米，比什么营养液都管用。
+- **盛夏暴晒**：正午太阳直射半天，叶面晒出黄白色斑，救不回来只能剪掉。散射光才是它的舒适区。
+- **常年塞进黑暗角落**：耐阴不等于喜黑。长期没光叶色变淡、节间拉长，越养越秃。
+
+## 一句话感想
+
+绿萝的好，在于它给了新手犯错的空间——但它也在提醒我：耐折腾，不等于不用心疼。</script>
+<script type="text/plain" id="pv-bh"># 薄荷
+
+> 阳台上的脾气小孩：水给够就疯长，太阳晒狠了就躺平，
+> 而且地盘意识极强——撒手不管，它能用一个夏天占领整个阳台。
+
+## 习性档案
+
+| 项目 | 内容 |
+|------|------|
+| 光照 | 喜阳，每天 4 小时以上直射光长得最欢；夏天正午暴晒会蔫，遮个阴更保险 |
+| 温度 | 20～30℃ 是疯长期；地下根耐寒，地上部分冬天枯了别急着扔 |
+| 浇水节奏 | 见干见湿，默认 3 天一次；夏天土干得快要加勤；叶子打蔫多半是渴了，浇水常能救回 |
+| 土壤 | 不挑，疏松保水就好；喜湿但别积水 |
+| 毒性提示 | 薄荷属对猫狗无毒（吃多了顶多肠胃不爽）；但别拿它当猫薄荷——那是另一个物种的快乐 |
+| 地盘警告 | 根茎横走，地栽或和别的花混栽会疯长争霸——务必单独盆栽，盆底垫托盘都拦不住它的野心 |
+
+## 浇水口诀
+
+见干见湿，一掐就旺；
+盆要独居，土别断粮；
+中午发蔫，先水后遮阳。
+
+## 常见死法
+
+- **地栽或混栽放养**：根茎在土里横冲直撞，两个月后整片都是它，邻居全被挤死。想留住阳台，就让它住单间。
+- **从不掐尖**：只长一根细杆蹿到半米高，东倒西歪不开枝。掐掉顶芽逼它长侧枝——越掐越旺不是安慰，是植物的求生本能。
+- **夏天暴晒又忘浇水**：正午太阳加小盆干土，两小时蔫成咸菜。挪到散射光处、浇透水，傍晚多半能站起来。
+- **冬天以为它死了**：地上部分枯黄就拔掉——其实土里的根还活着，开春照样冒头。多等一个月再宣判。
+
+## 一句话感想
+
+薄荷教会我的事：想让它旺，得下得去手掐；想留住阳台，得舍得起独居的盆。</script>
+<script type="text/plain" id="pv-dr"># 多肉
+
+> 全家最省心的住户，也可能是最容易被"爱死"的那一个——
+> 在它的世界里，勤快是原罪，懒惰是美德。
+
+## 习性档案
+
+| 项目 | 内容 |
+|------|------|
+| 光照 | 喜光，秋冬全日照最容易出状态；缺光会徒长成豆芽，株型散了就回不去 |
+| 温度 | 15～28℃ 舒适区；盛夏超过 35℃ 多数品种休眠，生长放缓属正常 |
+| 浇水节奏 | 默认 12 天一次，再懒点也行；口诀"宁干勿湿"，浇就沿盆边浇透 |
+| 土壤 | 颗粒土为主（泥炭掺珍珠岩、火山石），排水必须快，闷根是大事 |
+| 通风 | 比浇水还重要；闷热潮湿又不通风，黑腐说来就来 |
+| 毒性提示 | 常见景天类（胧月、白牡丹这类）无毒；但长寿花、虎刺梅对猫狗有毒，混养前先查清楚品种 |
+
+## 浇水口诀
+
+宁干勿湿，十二天一遭；
+浇就浇透，盆底见水才算数；
+管住手，是对它最大的好。
+
+## 常见死法
+
+- **太勤快，三天两头浇**：化水黑腐二连——叶片变透明、一碰就掉，茎干发黑。多肉旱不死，真能涝死。
+- **闷养加积水**：不通风的角落配一盆湿土，等于给它蒸桑拿，黑腐一夜爆发。通风！通风！
+- **长期缺光**：摊大饼、穿裙子、徒成豆芽，细高个再也憋不回胖墩。太阳是最好的整形医生。
+- **夏天正午浇水**：高温加湿土，根系直接焖熟。要浇也等傍晚凉快了，沿盆边少量。
+
+## 一句话感想
+
+养多肉练的不是手艺，是忍住不动手的定力——对植物如此，对生活也差不多。</script>
+
+<script>
+'use strict';
+/* 温室：三盆住家绿植的伪 3D 展台。拖拽旋转、点选翻档、浇水养大。
+   档案原文来自 阳台/绿植档案/*.md。 */
+var PL = [
+  { id:'lu', name:'绿萝', pot:'#b56a45' },
+  { id:'bh', name:'薄荷', pot:'#8a8578' },
+  { id:'dr', name:'多肉', pot:'#c9b8a0' }
+];
+var K = 'greenhouse_v1';
+var st = { g: { lu: .5, bh: .35, dr: .8 }, w: {} };
+try { var p = JSON.parse(localStorage.getItem(K) || 'null'); if (p && p.g) st = p; } catch(e){}
+function save(){ try { localStorage.setItem(K, JSON.stringify(st)); } catch(e){} }
+
+var cv = document.getElementById('cv'), g = cv.getContext('2d');
+var W = 920, H = 560;
+var theta = -0.35;            /* 展台旋转角 */
+var sel = 0;                  /* 选中盆 */
+var wind = .3;
+var soilWet = [0,0,0];        /* 浇水后土变深，随时间褪回 */
+var drops = [], splash = [];
+var growAnim = [0,0,0];       /* 浇水瞬间长大一点的缓动 */
+var qs = new URLSearchParams(location.search);
+var qp = PL.findIndex(function(x){ return x.id === qs.get('p'); });
+if (qp >= 0) sel = qp;
+
+var stageNames = ['幼苗', '成长', '茂盛', '爆盆'];
+function stageOf(v){ return v < .25 ? 0 : v < .5 ? 1 : v < .78 ? 2 : 3; }
+
+/* ---------- 盆位（转盘式伪 3D） ---------- */
+function potPos(i){
+  var a = theta + (i - 1) * 0.95;
+  var R = 250;
+  return { x: W/2 + Math.sin(a) * R, z: Math.cos(a), a: a };
+}
+
+/* ---------- 各盆栽的画法 ---------- */
+function heartLeaf(x, y, ang, s, tone){
+  g.save(); g.translate(x, y); g.rotate(ang);
+  g.fillStyle = tone;
+  g.beginPath();
+  g.moveTo(0, s);
+  g.bezierCurveTo(-s*1.15, s*.25, -s*.75, -s*.85, 0, -s*.3);
+  g.bezierCurveTo(s*.75, -s*.85, s*1.15, s*.25, 0, s);
+  g.fill(); g.restore();
+}
+function drawLvluo(bx, by, s, gr, t){
+  var n = 2 + Math.round(gr * 4);
+  var vines = [];
+  for (var i = 0; i < n; i++){
+    var a0 = i / n * Math.PI * 2 + theta * .8;
+    vines.push({ a: a0, x: bx + Math.sin(a0) * 26 * s, z: Math.cos(a0) });
+  }
+  vines.sort(function(p2, q){ return p2.z - q.z; });
+  vines.forEach(function(v, vi){
+    var depth = (v.z + 1) / 2;
+    var lit = .3 + depth * .18;
+    var len = (90 + gr * 90) * s * (.8 + depth * .3);
+    var sway = Math.sin(t * 1.5 + vi * 1.7) * (3 + wind * 9);
+    var side = v.x >= bx ? 1 : -1;
+    /* 藤：二次曲线垂落 + 风摆 */
+    var ex = v.x + side * 34 * s + sway, ey = by + len;
+    g.strokeStyle = 'hsl(110,30%,' + (lit * 100) * .8 + '%)';
+    g.lineWidth = 2 * s;
+    g.beginPath(); g.moveTo(v.x, by - 8 * s);
+    g.quadraticCurveTo(v.x + side * 20 * s + sway * .4, by + len * .45, ex, ey);
+    g.stroke();
+    /* 心形叶沿藤分布 */
+    var steps = 3 + Math.round(gr * 3);
+    for (var k = 1; k <= steps; k++){
+      var u = k / (steps + .4);
+      var lx = (1-u)*(1-u)*v.x + 2*(1-u)*u*(v.x + side*20*s + sway*.4) + u*u*ex;
+      var ly = (1-u)*(1-u)*(by-8*s) + 2*(1-u)*u*(by+len*.45) + u*u*ey;
+      var ls = (11 + gr * 5) * s * (.75 + depth * .35) * (1 - u * .25);
+      var hang = Math.sin(u * 2.2 + vi) * .5 + side * .35;
+      heartLeaf(lx, ly, hang + Math.sin(t*1.8+vi+k)*wind*.25, ls,
+        'hsl(' + (108 + depth * 14) + ',46%,' + (lit*100) + '%)');
+    }
+  });
+}
+function drawBohe(bx, by, s, gr, t){
+  var n = 3 + Math.round(gr * 5);
+  var stems = [];
+  for (var i = 0; i < n; i++){
+    var a0 = i / n * Math.PI * 2 + theta * .8;
+    stems.push({ a: a0, x: bx + Math.sin(a0) * 20 * s, z: Math.cos(a0) });
+  }
+  stems.sort(function(p2, q){ return p2.z - q.z; });
+  stems.forEach(function(v, vi){
+    var depth = (v.z + 1) / 2;
+    var hgt = (56 + gr * 66) * s * (.7 + depth * .4);
+    var sway = Math.sin(t * 1.9 + vi * 2.1) * (4 + wind * 12);
+    var tipX = v.x + (v.x - bx) * .55 + sway, tipY = by - hgt;
+    var midX = v.x + (v.x - bx) * .1, midY = by - hgt * .55;
+    g.strokeStyle = 'hsl(100,38%,' + (22 + depth * 12) + '%)';
+    g.lineWidth = 2.4 * s;
+    g.beginPath(); g.moveTo(v.x, by - 6 * s);
+    g.quadraticCurveTo(midX, midY, tipX, tipY);
+    g.stroke();
+    /* 对生叶 */
+    var pairs = 3;
+    for (var k = 1; k <= pairs; k++){
+      var u = k / (pairs + .6);
+      var lx = (1-u)*(1-u)*v.x + 2*(1-u)*u*midX + u*u*tipX;
+      var ly = (1-u)*(1-u)*(by-6*s) + 2*(1-u)*u*midY + u*u*tipY;
+      var tang = Math.atan2(tipY - midY, tipX - midX);
+      for (var sd = -1; sd <= 1; sd += 2){
+        var la = tang + sd * 1.05 + Math.sin(t*2+vi+k)*wind*.2;
+        var ll = (13 + gr * 5) * s * (.7 + depth * .4) * (1.15 - u * .3);
+        g.save(); g.translate(lx, ly); g.rotate(la);
+        g.fillStyle = 'hsl(' + (95 + depth * 12) + ',52%,' + (26 + depth * 13) + '%)';
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.quadraticCurveTo(ll*.5, -ll*.42, ll, -ll*.06);
+        g.quadraticCurveTo(ll*.5,  ll*.3,  0, 0);
+        g.fill(); g.restore();
+      }
+    }
+    /* 顶芽小叶 */
+    g.fillStyle = 'hsl(90,55%,' + (34 + depth * 10) + '%)';
+    g.beginPath(); g.arc(tipX, tipY, 3.2 * s, 0, 7); g.fill();
+  });
+}
+function drawDuorou(bx, by, s, gr, t){
+  var rings = 2 + (gr > .6 ? 1 : 0);
+  var sway = Math.sin(t * 1.1) * wind * .12;
+  for (var ring = rings - 1; ring >= 0; ring--){
+    var n = 9 - ring * 2;
+    var rl = (30 + gr * 22) * s * (1 - ring * .38);
+    var petals = [];
+    for (var i = 0; i < n; i++){
+      var a = i / n * Math.PI * 2 + theta * .9 + ring * .35 + sway;
+      petals.push({ a: a, z: Math.cos(a) });
+    }
+    petals.sort(function(p2, q){ return p2.z - q.z; });
+    petals.forEach(function(pp){
+      var depth = (pp.z + 1) / 2;
+      var L = rl * (.82 + depth * .3);
+      var px = bx + Math.cos(pp.a) * 4, py = by - 8 * s;
+      g.save(); g.translate(px, py); g.rotate(pp.a);
+      var base = 'hsl(' + (112 + depth * 10) + ',26%,' + (44 + depth * 16) + '%)';
+      var tip = 'hsla(' + (350 + depth * 8) + ',45%,62%,' + (.14 + (1-depth) * .18) + ')';
+      g.fillStyle = base;
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.bezierCurveTo(L*.34, -L*.30, L*.78, -L*.16, L, 0);
+      g.bezierCurveTo(L*.78,  L*.16, L*.34,  L*.30, 0, 0);
+      g.fill();
+      g.fillStyle = tip;
+      g.beginPath();
+      g.moveTo(L*.7, -L*.1);
+      g.bezierCurveTo(L*.85, -L*.14, L*.95, -L*.06, L, 0);
+      g.bezierCurveTo(L*.95, L*.06, L*.85, L*.14, L*.7, L*.1);
+      g.bezierCurveTo(L*.8, 0, L*.8, 0, L*.7, -L*.1);
+      g.fill();
+      g.restore();
+    });
+  }
+  g.fillStyle = 'hsl(115,30%,58%)';
+  g.beginPath(); g.arc(bx, by - 8 * s, 4.5 * s, 0, 7); g.fill();
+}
+var DRAWERS = [drawLvluo, drawBohe, drawDuorou];
+
+function drawPot(i, t){
+  var pos = potPos(i);
+  var s = .78 + pos.z * .28;             /* 远小近大 */
+  var by = H * .66 + (1 - pos.z) * 14;   /* 远处略高（俯视感） */
+  var bx = pos.x;
+  var gr = Math.min(1, st.g[PL[i].id] + growAnim[i]);
+  /* 花盆 */
+  var pw = 62 * s, ph = 44 * s;
+  g.save();
+  g.translate(bx, by);
+  g.fillStyle = 'rgba(0,0,0,.22)';
+  g.beginPath(); g.ellipse(0, 4, pw * .75, 9 * s, 0, 0, 7); g.fill();
+  var soil = .18 + soilWet[i] * .4;
+  g.fillStyle = 'hsl(24,32%,' + (30 - soil * 20) + '%)';
+  g.beginPath(); g.ellipse(0, -ph, pw * .5, 10 * s, 0, 0, 7); g.fill();
+  g.fillStyle = PL[i].pot;
+  g.beginPath();
+  g.moveTo(-pw/2, -ph); g.lineTo(pw/2, -ph);
+  g.lineTo(pw * .38, 0); g.lineTo(-pw * .38, 0);
+  g.closePath(); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.14)';
+  g.fillRect(-pw/2, -ph, pw, 5 * s);
+  g.fillStyle = PL[i].pot;
+  g.beginPath(); g.roundRect(-pw*.56, -ph - 8*s, pw*1.12, 10*s, 4*s); g.fill();
+  g.restore();
+  /* 植株本体 */
+  DRAWERS[i](bx, by - ph * .92, s, gr, t);
+  /* 选中标记：一圈金线 */
+  if (i === sel){
+    g.strokeStyle = 'rgba(212,136,15,.85)';
+    g.lineWidth = 2.5;
+    g.setLineDash([7, 6]);
+    g.beginPath(); g.ellipse(bx, by + 4, pw * .85, 14 * s, 0, 0, 7); g.stroke();
+    g.setLineDash([]);
+  }
+  return { x: bx, y: by, s: s };
+}
+/* ---------- 天色 ---------- */
+function skyDraw(t){
+  var h = new Date().getHours();
+  var p = h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 17 ? 'day' : h >= 17 && h < 19 ? 'dusk' : 'night';
+  var grads = {
+    dawn:  ['#7a6a8a,#e8a87c'], day: ['#8fc3e8,#d9ecf5'], dusk: ['#5a4a6c,#d97a5a'], night: ['#0e1524,#1e2c48']
+  };
+  var cs = grads[p][0].split(',');
+  var gr = g.createLinearGradient(0, 0, 0, H * .7);
+  gr.addColorStop(0, cs[0]); gr.addColorStop(1, cs[1]);
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  if (p === 'night'){
+    for (var i = 0; i < 40; i++){
+      var sx = (i * 197) % W, sy = (i * 89) % (H * .45);
+      g.globalAlpha = .3 + .5 * Math.abs(Math.sin(t * .8 + i));
+      g.fillStyle = '#fdf6e3';
+      g.beginPath(); g.arc(sx, sy, i % 5 === 0 ? 1.6 : 1, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
+  } else if (p !== 'dusk'){
+    g.fillStyle = 'rgba(255,240,190,.9)';
+    g.beginPath(); g.arc(W * .82, 74, 26, 0, 7); g.fill();
+    g.fillStyle = 'rgba(255,240,190,.25)';
+    g.beginPath(); g.arc(W * .82, 74, 44, 0, 7); g.fill();
+  }
+  return p;
+}
+function ledgeDraw(){
+  var y = H * .7;
+  var gr = g.createLinearGradient(0, y, 0, H);
+  gr.addColorStop(0, '#c9a06a'); gr.addColorStop(1, '#8a6a3e');
+  g.fillStyle = gr; g.fillRect(0, y, W, H - y);
+  g.strokeStyle = 'rgba(60,40,20,.35)'; g.lineWidth = 2;
+  for (var i = 0; i <= 6; i++){
+    var x = i * W / 6;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x - 18, H); g.stroke();
+  }
+  g.fillStyle = 'rgba(255,255,255,.16)'; g.fillRect(0, y, W, 4);
+  /* 身后的栏杆 */
+  g.strokeStyle = 'rgba(70,50,30,.5)'; g.lineWidth = 4;
+  for (var b = 0; b < 14; b++){
+    var bx = 30 + b * (W - 60) / 13;
+    g.beginPath(); g.moveTo(bx, H * .48); g.lineTo(bx, y); g.stroke();
+  }
+  g.beginPath(); g.moveTo(0, H * .48); g.lineTo(W, H * .48); g.stroke();
+}
+/* ---------- 主循环 ---------- */
+var last = performance.now();
+function loop(now){
+  var t = now / 1000;
+  g.clearRect(0, 0, W, H);
+  skyDraw(t);
+  ledgeDraw();
+  /* 远近排序：z 小（远）先画 */
+  var order = [0, 1, 2].sort(function(a, b){ return potPos(a).z - potPos(b).z; });
+  var pots = {};
+  order.forEach(function(i){ pots[i] = drawPot(i, t); });
+  /* 水滴 & 溅起 */
+  drops = drops.filter(function(d){
+    d.vy += .5; d.y += d.vy;
+    g.fillStyle = 'rgba(110,170,220,.9)';
+    g.beginPath(); g.ellipse(d.x, d.y, 2, 4.5, 0, 0, 7); g.fill();
+    if (d.y >= d.ty){ splash.push({ x: d.x, y: d.ty, vx: (Math.random()-.5)*3, vy: -2-Math.random()*2, life: 1 }); return false; }
+    return true;
+  });
+  splash = splash.filter(function(pp){
+    pp.vy += .3; pp.x += pp.vx; pp.y += pp.vy; pp.life -= .05;
+    g.globalAlpha = Math.max(0, pp.life);
+    g.fillStyle = 'rgba(140,190,230,.9)';
+    g.beginPath(); g.arc(pp.x, pp.y, 1.8, 0, 7); g.fill();
+    g.globalAlpha = 1;
+    return pp.life > 0;
+  });
+  for (var i = 0; i < 3; i++){
+    soilWet[i] = Math.max(0, soilWet[i] - .004);
+    growAnim[i] = Math.max(0, growAnim[i] - .006);
+  }
+  last = now;
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+/* ---------- 浇水 ---------- */
+function water(){
+  var i = sel, pt = potPos(i), s = .78 + pt.z * .28;
+  var ty = H * .66 + (1 - pt.z) * 14 - 48 * s;
+  for (var k = 0; k < 10; k++)
+    drops.push({ x: pt.x + (Math.random()-.5) * 44 * s, y: ty - 120 - Math.random() * 60, vy: 1 + Math.random() * 2, ty: ty });
+  soilWet[i] = 1;
+  var before = stageOf(st.g[PL[i].id]);
+  st.g[PL[i].id] = Math.min(1, st.g[PL[i].id] + .25);
+  growAnim[i] = .12;
+  st.w[PL[i].id] = new Date().toISOString().slice(0, 10);
+  save();
+  if (stageOf(st.g[PL[i].id]) !== before) toastStage(PL[i].name, stageNames[stageOf(st.g[PL[i].id])]);
+  renderStats();
+}
+document.getElementById('waterBtn').addEventListener('click', water);
+function toastStage(name, stg){
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#232c42;color:#f2ecd9;border:1px solid rgba(240,196,106,.5);border-radius:10px;padding:9px 20px;font-size:13px;letter-spacing:2px;z-index:99;transition:opacity .4s';
+  el.textContent = name + ' 长成了 · ' + stg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity = '0'; setTimeout(function(){ el.remove(); }, 450); }, 2200);
+}
+/* ---------- 交互 ---------- */
+var drag = null;
+cv.addEventListener('pointerdown', function(e){
+  var r = cv.getBoundingClientRect();
+  drag = { x: e.clientX, y: e.clientY, moved: 0 };
+  cv.classList.add('drag');
+});
+window.addEventListener('pointermove', function(e){
+  if (!drag) return;
+  var dx = e.clientX - drag.x;
+  drag.moved += Math.abs(dx) + Math.abs(e.clientY - drag.y);
+  theta += dx * 0.005;
+  theta = Math.max(-1.1, Math.min(1.1, theta));
+  drag.x = e.clientX; drag.y = e.clientY;
+});
+window.addEventListener('pointerup', function(e){
+  if (!drag) return;
+  cv.classList.remove('drag');
+  if (drag.moved < 8){
+    /* 视作点击：挑最近的盆 */
+    var r = cv.getBoundingClientRect();
+    var mx = (e.clientX - r.left) * (W / r.width), my = (e.clientY - r.top) * (H / r.height);
+    var best = -1, bd = 1e9;
+    for (var i = 0; i < 3; i++){
+      var pp = potPos(i);
+      var d = Math.hypot(pp.x - mx, (H * .66 - 40) - my);
+      if (d < bd){ bd = d; best = i; }
+    }
+    if (bd < 130) selectPot(best);
+  }
+  drag = null;
+});
+document.getElementById('wind').addEventListener('input', function(){ wind = this.value / 50; });
+window.addEventListener('keydown', function(e){
+  if (e.key === '1') selectPot(0);
+  if (e.key === '2') selectPot(1);
+  if (e.key === '3') selectPot(2);
+  if (e.key === 'w' || e.key === 'W') water();
+});
+/* ---------- 档案卡 ---------- */
+function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inline(t){
+  return esc(t).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+function mdMini(src){
+  var lines = src.split('\n'), out = [], i = 0;
+  while (i < lines.length){
+    var L = lines[i];
+    if (/^\s*\|/.test(L)){
+      var rows = [];
+      while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(lines[i++]);
+      var trs = rows.map(function(r2){ return r2.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(function(c){ return c.trim(); }); });
+      out.push('<table><tr>' + trs[0].map(function(c){ return '<th>' + inline(c) + '</th>'; }).join('') + '</tr>' +
+        trs.slice(2).map(function(r2){ return '<tr>' + r2.map(function(c){ return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>');
+      continue;
+    }
+    var m;
+    if ((m = L.match(/^(#{1,2})\s+(.*)$/))){ out.push(m[1] === '1' || m[1] === '#' ? '<h1>' + inline(m[2]) + '</h1>' : '<h2>' + inline(m[2]) + '</h2>'); i++; continue; }
+    if (/^\s*>/.test(L)){
+      var q = [];
+      while (i < lines.length && /^\s*>/.test(lines[i])) q.push(lines[i++].replace(/^\s*>\s?/,''));
+      out.push('<blockquote>' + q.map(inline).join('<br>') + '</blockquote>'); continue;
+    }
+    if (/^\s*[-*]\s+/.test(L)){
+      var li = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) li.push(lines[i++].replace(/^\s*[-*]\s+/,''));
+      out.push('<ul>' + li.map(function(x){ return '<li>' + inline(x) + '</li>'; }).join('') + '</ul>'); continue;
+    }
+    if (!L.trim()){ i++; continue; }
+    var para = [L]; i++;
+    while (i < lines.length && lines[i].trim() && !/^(#\s|##\s|\s*[|>-])/.test(lines[i])) para.push(lines[i++]);
+    out.push('<p>' + para.map(inline).join('<br>') + '</p>');
+  }
+  return out.join('');
+}
+function renderStats(){
+  var p = PL[sel], v = st.g[p.id], sg = stageNames[stageOf(v)];
+  var w = st.w[p.id] || '还没浇过';
+  document.getElementById('stageBox').innerHTML = '<b>' + p.name + ' · ' + sg + '</b><small>长势 ' + Math.round(v * 100) + '% · 上次浇水 ' + w + '</small>';
+}
+function renderArch(){
+  document.getElementById('arch').innerHTML = mdMini(document.getElementById('pv-' + PL[sel].id).textContent.trim());
+  document.querySelectorAll('.ptab').forEach(function(b, n){ b.classList.toggle('on', n === sel); });
+}
+function selectPot(i){ sel = i; renderStats(); renderArch(); }
+document.querySelectorAll('.ptab').forEach(function(b){
+  b.addEventListener('click', function(){ selectPot(PL.findIndex(function(x){ return x.id === b.dataset.p; })); });
+});
+selectPot(sel);
+save();   /* 首访即固化初始长势，读取端不再猜 null */
+</script>
+</body>
+</html>

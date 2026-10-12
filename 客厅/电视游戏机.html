@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客厅 · 萌牌电视游戏机</title>
+<style>
+  /* ============================================================
+     萌牌电视 · 外观样式
+     整体思路：一台 70 年代木质外壳的 CRT 电视，
+     暖色调、圆角、有点旧但被擦得很亮的感觉。
+     ============================================================ */
+  :root{
+    --wood-1:#b47c46;      /* 木壳亮面 */
+    --wood-2:#8a5a2e;      /* 木壳主色 */
+    --wood-3:#5f3a1c;      /* 木壳暗部 */
+    --bezel:#241a12;       /* 屏幕外圈深色框 */
+    --cream:#f7ead2;       /* 奶油色（标牌、说明书） */
+    --gold:#f4c96b;        /* 旋钮指针、装饰线 */
+    --ink:#5a3d1a;         /* 深棕文字 */
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 480px at 50% -100px, #fff0d2 0%, rgba(255,240,210,0) 62%),
+      linear-gradient(180deg, #f6dfb6 0%, #eed3a2 55%, #e0bf8b 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  /* 墙纸：淡淡的圆点，像老房子的糊墙纸 */
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,.45) 1.5px, transparent 1.6px);
+    background-size:28px 28px;
+  }
+
+  .stage{
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px; padding:56px 14px 40px;
+  }
+
+  /* ---------- 天线（电视顶上两根，可爱担当） ---------- */
+  .antenna-box{ position:relative; width:min(640px,92vw); height:0; cursor:pointer; }
+  .antenna{
+    position:absolute; bottom:-6px; width:5px; border-radius:3px;
+    background:linear-gradient(180deg,#c9c9cf,#6f6f78);
+    transform-origin:bottom center;
+  }
+  .antenna::before{ content:''; }
+  .antenna::after{ /* 天线顶上的小球 */
+    content:''; position:absolute; top:-15px; left:-6.5px;
+    width:18px; height:18px; border-radius:50%;
+    background:radial-gradient(circle at 34% 30%, #ececf2, #8b8b96 70%);
+  }
+  .antenna.left { left:20%; height:88px; transform:rotate(-26deg); }
+  .antenna.right{ right:20%; height:70px; transform:rotate(20deg); }
+
+  /* ---------- 木质机身 ---------- */
+  .tv{
+    position:relative;
+    width:min(640px,92vw);
+    padding:16px 22px 20px;
+    border-radius:30px;
+    background:
+      /* 细木纹：一条条半透明竖线叠在木色渐变上 */
+      repeating-linear-gradient(90deg,
+        rgba(0,0,0,.07) 0 2px, rgba(255,255,255,0) 2px 6px,
+        rgba(0,0,0,.04) 6px 9px, rgba(255,255,255,0) 9px 14px),
+      linear-gradient(180deg, var(--wood-1) 0%, var(--wood-2) 58%, var(--wood-3) 100%);
+    box-shadow:
+      inset 0 3px 0 rgba(255,255,255,.28),   /* 上缘高光 */
+      inset 0 -8px 14px rgba(0,0,0,.35),     /* 下缘阴影 */
+      inset 3px 0 6px rgba(255,255,255,.08),
+      0 26px 46px rgba(60,32,8,.45);         /* 投在地板上的影子 */
+  }
+  /* 机身装饰：一圈金色细线 */
+  .tv::before{
+    content:''; position:absolute; inset:8px;
+    border:2px solid rgba(244,201,107,.28);
+    border-radius:24px; pointer-events:none;
+  }
+  /* 电视小脚 */
+  .feet{ display:flex; justify-content:space-between; padding:0 70px; margin-top:2px; }
+  .feet span{
+    width:74px; height:16px; border-radius:0 0 12px 12px;
+    background:linear-gradient(180deg,#4c2f14,#331e0c);
+    box-shadow:0 6px 10px rgba(50,28,8,.4);
+  }
+
+  /* ---------- 顶部品牌条 ---------- */
+  .tv-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:2px 6px 10px;
+  }
+  .brand{
+    font-size:22px; font-weight:900; letter-spacing:4px; color:#ffedd0;
+    text-shadow:0 2px 0 rgba(0,0,0,.35), 0 0 14px rgba(255,214,140,.35);
+  }
+  .brand i{
+    font-style:normal; font-size:11px; letter-spacing:2px;
+    color:rgba(255,240,214,.75); margin-left:10px; font-weight:400;
+  }
+  .model{
+    font-size:12px; letter-spacing:2px; color:rgba(255,240,214,.7);
+    background:rgba(0,0,0,.18); padding:3px 10px; border-radius:99px;
+  }
+
+  /* ---------- 屏幕：深色外框 + CRT 屏幕 ---------- */
+  .bezel{
+    background:linear-gradient(180deg,#2c2118,#1b130c);
+    border-radius:22px;
+    padding:16px;
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,.8),
+      inset 0 -1px 2px rgba(255,255,255,.06);
+  }
+  .screen{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    border-radius:18px;
+    overflow:hidden;
+    background:#0a0705;
+    box-shadow:
+      inset 0 0 34px rgba(0,0,0,.85),   /* 屏幕四周暗角 */
+      inset 0 0 4px rgba(0,0,0,.9);
+  }
+  .screen canvas{
+    display:block; width:100%; height:100%;
+    image-rendering:pixelated;          /* 像素味 */
+    touch-action:none;                  /* 触屏滑动留给游戏，不滚页面 */
+  }
+  /* 扫描线：盖在画面上的细横线 + 一条慢慢下移的亮带 */
+  .scanlines{
+    position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg,
+      rgba(0,0,0,.22) 0 1px, rgba(0,0,0,0) 1px 3px);
+  }
+  .scanlines::after{
+    content:''; position:absolute; left:0; right:0; height:24%;
+    background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,246,220,.05) 50%, rgba(255,255,255,0));
+    animation:band 7s linear infinite;
+  }
+  @keyframes band{ from{ top:-26%; } to{ top:106%; } }
+  /* 玻璃反光：左上一块高光 + 边缘弧面暗角 */
+  .glass{
+    position:absolute; inset:0; pointer-events:none;
+    border-radius:inherit;
+    background:
+      radial-gradient(ellipse 62% 46% at 27% 20%, rgba(255,255,255,.15), rgba(255,255,255,0) 60%),
+      radial-gradient(ellipse at center, rgba(0,0,0,0) 58%, rgba(0,0,0,.34) 100%);
+  }
+
+  /* ---------- 控制面板 ---------- */
+  .panel{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px; margin-top:16px; padding:0 6px;
+  }
+  .pgroup{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .plabel{
+    font-size:11px; letter-spacing:2px; color:#ffe9c4;
+    text-shadow:0 1px 0 rgba(0,0,0,.4);
+  }
+
+  /* 旋钮 */
+  .knob{
+    width:52px; height:52px; border-radius:50%;
+    border:none; cursor:pointer; position:relative;
+    background:radial-gradient(circle at 34% 28%, #565660, #23232b 68%, #101014 100%);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,.35),
+      inset 0 -3px 5px rgba(0,0,0,.6),
+      0 4px 8px rgba(0,0,0,.45);
+    transition:transform .28s cubic-bezier(.34,1.5,.64,1);
+  }
+  .knob::after{ /* 指针刻线 */
+    content:''; position:absolute; top:5px; left:50%; width:4px; height:15px;
+    transform:translateX(-50%); border-radius:2px;
+    background:linear-gradient(180deg,var(--gold),#c79a3e);
+    box-shadow:0 0 5px rgba(244,201,107,.65);
+  }
+  .knob:active{ transform:scale(.94); }
+  .knob.small{ width:42px; height:42px; }
+  .knob.small::after{ height:12px; top:4px; }
+
+  /* 电源指示灯 */
+  .light{
+    width:10px; height:10px; border-radius:50%;
+    background:#ff5b4d;
+    box-shadow:0 0 8px #ff5b4d, inset 0 -2px 3px rgba(120,0,0,.6);
+    animation:breath 2.4s ease-in-out infinite;
+  }
+  @keyframes breath{ 0%,100%{ opacity:1; } 50%{ opacity:.45; } }
+
+  /* 频道按钮（老电视那种一排大按键） */
+  .channels{ display:flex; gap:12px; }
+  .chbtn{
+    min-width:64px; padding:8px 10px 7px;
+    border:none; cursor:pointer; border-radius:12px;
+    font-family:inherit; font-weight:900; font-size:20px; color:var(--ink);
+    background:linear-gradient(180deg,#f9dfae,#e6b877);
+    box-shadow:0 4px 0 #9c7434, 0 6px 10px rgba(0,0,0,.3);
+    display:flex; flex-direction:column; align-items:center; gap:1px;
+    transition:transform .06s, box-shadow .06s, filter .15s;
+  }
+  .chbtn small{ font-size:10px; font-weight:700; letter-spacing:1px; opacity:.8; }
+  .chbtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #9c7434, 0 2px 5px rgba(0,0,0,.3); }
+  .chbtn.active{
+    background:linear-gradient(180deg,#ffd27a,#f0a942);
+    box-shadow:0 2px 0 #9c7434, inset 0 2px 4px rgba(255,255,255,.55);
+    transform:translateY(2px);
+  }
+  .chbtn.reset{ background:linear-gradient(180deg,#f3c3ae,#df9370); box-shadow:0 4px 0 #9a4b2c, 0 6px 10px rgba(0,0,0,.3); }
+  .chbtn.reset:active{ box-shadow:0 1px 0 #9a4b2c; }
+
+  /* 喇叭格栅：斜纹布面 */
+  .speaker{ cursor:pointer;
+    width:120px; height:64px; border-radius:12px;
+    background:
+      repeating-linear-gradient(45deg, #35200f 0 3px, #6b4527 3px 8px);
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.15);
+  }
+  @media (max-width:560px){
+    .speaker{ display:none; }        /* 小屏塞不下喇叭就收起来 */
+    .brand{ letter-spacing:2px; font-size:18px; }
+  }
+
+  /* ---------- 屏上十字键：没键盘也能玩 ---------- */
+  .padwrap{ display:flex; justify-content:center; }
+  .dpad{
+    display:grid; grid-template-columns:repeat(3,58px); grid-template-rows:repeat(3,58px);
+    gap:7px; padding:12px; border-radius:22px; touch-action:none;
+    background:linear-gradient(180deg,var(--wood-2),var(--wood-3));
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,.22),
+      inset 0 -6px 10px rgba(0,0,0,.35),
+      0 14px 26px rgba(60,32,8,.4);
+  }
+  .dbtn{
+    border:none; cursor:pointer; position:relative; border-radius:14px;
+    background:radial-gradient(circle at 36% 30%, #3d2716, #1d0f05 78%);
+    box-shadow:0 4px 0 #120a04, 0 6px 10px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.14);
+    transition:transform .05s, box-shadow .05s;
+  }
+  .dbtn:active, .dbtn.hit{ transform:translateY(3px); box-shadow:0 1px 0 #120a04, inset 0 1px 0 rgba(255,255,255,.1); }
+  .dbtn i{ /* 方向三角（金色小箭头） */
+    position:absolute; left:50%; top:50%; width:0; height:0;
+    transform:translate(-50%,-50%);
+    border-left:9px solid transparent; border-right:9px solid transparent;
+    border-bottom:12px solid rgba(244,201,107,.85);
+  }
+  .dbtn.left i{ transform:translate(-50%,-50%) rotate(-90deg); }
+  .dbtn.right i{ transform:translate(-50%,-50%) rotate(90deg); }
+  .dbtn.down i{ transform:translate(-50%,-50%) rotate(180deg); }
+  .dbtn.mid{ border-radius:50%; background:radial-gradient(circle at 36% 30%, #6a4a24, #38220c 78%); }
+  .dbtn.mid::after{ content:''; position:absolute; inset:14px; border-radius:50%;
+    background:radial-gradient(circle at 36% 30%, var(--gold), #a87e2e);
+    box-shadow:0 0 8px rgba(244,201,107,.5);
+  }
+  .dbtn.up{ grid-area:1/2; } .dbtn.left{ grid-area:2/1; } .dbtn.mid{ grid-area:2/2; }
+  .dbtn.right{ grid-area:2/3; } .dbtn.down{ grid-area:3/2; }
+
+  /* ---------- 说明书小卡片（贴在电视下方） ---------- */
+  .manual{
+    position:relative; width:min(560px,92vw);
+    background:var(--cream);
+    border-radius:6px;
+    padding:16px 20px 14px;
+    box-shadow:0 10px 22px rgba(90,61,26,.28);
+    transform:rotate(-.6deg);
+    line-height:1.9; font-size:13.5px;
+  }
+  .manual::before{ /* 顶部一截胶带 */
+    content:''; position:absolute; top:-12px; left:50%;
+    width:96px; height:26px; transform:translateX(-50%) rotate(1.5deg);
+    background:rgba(255,255,255,.5);
+    border-left:1px dashed rgba(0,0,0,.12);
+    border-right:1px dashed rgba(0,0,0,.12);
+    box-shadow:0 2px 5px rgba(0,0,0,.12);
+  }
+  .manual h3{ font-size:14px; letter-spacing:3px; margin-bottom:6px; color:#7a5326; }
+  .manual b{ color:#b4651d; }
+  .manual kbd{
+    display:inline-block; padding:0 7px; margin:0 2px;
+    border-radius:5px; border:1px solid #c9a06a; border-bottom-width:3px;
+    background:#fffaf0; font-family:inherit; font-size:12px; font-weight:700; color:#8a5a2e;
+  }
+
+/* ---- 全屋统一滚动条 ---- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#a8895c;border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#8a6a3e}
+*{scrollbar-width:thin;scrollbar-color:#a8895c transparent}
+</style>
+</head>
+<body>
+  <div class="stage">
+
+    <!-- 天线 -->
+    <div class="antenna-box" aria-hidden="true">
+      <span class="antenna left"></span>
+      <span class="antenna right"></span>
+    </div>
+
+    <!-- 电视本体 -->
+    <div class="tv">
+      <div class="tv-head">
+        <span class="brand">萌牌电视<i>MAENG · TV 1972</i></span>
+        <span class="model">温馨客厅限定款</span>
+      </div>
+
+      <div class="bezel">
+        <div class="screen">
+          <!-- 所有画面（开机动画 / 雪花 / 贪吃蛇 / 2048）都画在这一块 canvas 上 -->
+          <canvas id="crt" width="480" height="360"></canvas>
+          <div class="scanlines"></div>
+          <div class="glass"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pgroup">
+          <button class="knob small" id="powerKnob" title="电源：重新开机（看一遍开机动画）"></button>
+          <span class="plabel">电源</span>
+          <span class="light" id="powerLight" title="电源灯"></span>
+        </div>
+
+        <div class="channels">
+          <button class="chbtn" id="ch1" title="换到频道 1：贪吃蛇">1<small>贪吃蛇</small></button>
+          <button class="chbtn" id="ch2" title="换到频道 2：2048">2<small>2048</small></button>
+          <button class="chbtn reset" id="resetBtn" title="重新开始当前频道的游戏">R<small>重来</small></button>
+        </div>
+
+        <div class="pgroup">
+          <button class="knob" id="soundKnob" title="音效开关（默认关闭，怕吵到家里人）"></button>
+          <span class="plabel" id="soundLabel">音效 · 关</span>
+        </div>
+
+        <div class="speaker" title="喇叭（装饰）"></div>
+      </div>
+
+      <div class="feet"><span></span><span></span></div>
+    </div>
+
+    <!-- 屏上十字键：触屏 / 没键盘也能玩 -->
+    <div class="padwrap">
+      <div class="dpad" aria-label="方向键">
+        <button class="dbtn up"    data-dir="0,-1" aria-label="上"><i></i></button>
+        <button class="dbtn left"  data-dir="-1,0" aria-label="左"><i></i></button>
+        <button class="dbtn mid"   id="padMid" aria-label="出发或暂停"></button>
+        <button class="dbtn right" data-dir="1,0"  aria-label="右"><i></i></button>
+        <button class="dbtn down"  data-dir="0,1"  aria-label="下"><i></i></button>
+      </div>
+    </div>
+
+    <!-- 使用小卡 -->
+    <div class="manual">
+      <h3>使用小卡 · 萌牌电视</h3>
+      <p>
+        按面板 <b>1 / 2</b> 换台（也可直接按键盘 <kbd>1</kbd><kbd>2</kbd>），换台时会有一点雪花，属正常现象。<br>
+        <b>没有键盘？</b>用电视下方的<b>十字键</b>，或直接在屏幕上<b>滑动</b>。<br>
+        <b>频道 1 贪吃蛇</b>：方向键（或 WASD）控制，<kbd>空格</kbd> 暂停 / 继续，撞墙撞自己会结束。<br>
+        <b>频道 2 · 2048</b>：方向键滑动合并，相同数字碰一起会变大，合出 2048 就赢啦。<br>
+        <kbd>R</kbd> 或面板 <b>重来</b> 键：重新开始当前游戏；<kbd>M</kbd> 或音效旋钮：开关音效（默认安静）。<br>
+        最高分记在电视肚子里（浏览器本地），下次打开还在。
+      </p>
+    </div>
+
+  </div>
+
+<script>
+'use strict';
+/* ============================================================
+   萌牌电视 · 游戏机主程序
+   结构：
+     1. 小工具 & 本地存档
+     2. 纯逻辑函数（不碰 DOM，方便单独测试）
+     3. 音效（WebAudio 现场合成，默认静音）
+     4. 电视状态机（开机 → 雪花换台 → 频道1/频道2）
+     5. 贪吃蛇
+     6. 2048
+     7. 画面绘制（全部画在一块 canvas 上）
+     8. 输入（键盘 + 面板按钮）
+   ============================================================ */
+
+/* ---------- 1. 小工具 & 本地存档 ---------- */
+var W = 480, H = 360;                 // 屏幕逻辑分辨率（4:3）
+var K_SNAKE = 'mengtv_snake_high';    // 存档键：贪吃蛇最高分
+var K_2048  = 'mengtv_2048_high';     // 存档键：2048 最高分
+var K_SOUND = 'mengtv_sound';         // 存档键：音效开关
+
+// localStorage 在个别环境（比如某些 file:// 安全设置）会抛异常，包一层稳一点
+var store = {
+  get: function (k, dft) {
+    try { var v = localStorage.getItem(k); return v === null ? dft : v; }
+    catch (e) { return dft; }
+  },
+  set: function (k, v) {
+    try { localStorage.setItem(k, String(v)); } catch (e) { /* 存不下就算了，游戏照玩 */ }
+  }
+};
+
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+function easeOutBack(t) { var c = 1.70158; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+
+/* ---------- 2. 纯逻辑函数（单测就测这一片） ---------- */
+
+/**
+ * 2048 的核心：一行数字"朝左滑"会变成什么。
+ * 规则：先去掉空位，从左往右扫，相邻且相等就合并成两倍，
+ *       每个格子一次滑动只参与一次合并。
+ * 例子：[2,2,2,2] -> [4,4,0,0]；[4,2,2] -> [4,4,0,0]（4 不跟后面的凑）
+ * 返回 { line: 新的一行, gained: 这次涨的分, maxMerged: 最大合并出的数 }
+ */
+function slideLine(line) {
+  var tiles = line.filter(function (v) { return v !== 0; });
+  var out = [], gained = 0, maxMerged = 0;
+  for (var i = 0; i < tiles.length; i++) {
+    if (i + 1 < tiles.length && tiles[i] === tiles[i + 1]) {
+      var merged = tiles[i] * 2;
+      out.push(merged);
+      gained += merged;
+      if (merged > maxMerged) maxMerged = merged;
+      i++; // 被合并掉的那个直接跳过，防止一串 2 2 2 变 8
+    } else {
+      out.push(tiles[i]);
+    }
+  }
+  while (out.length < line.length) out.push(0); // 尾部补空
+  return { line: out, gained: gained, maxMerged: maxMerged };
+}
+
+/** 矩阵转置（行列互换），上下移的时候把列当行处理 */
+function transpose(g) {
+  var n = g.length, t = [];
+  for (var r = 0; r < n; r++) {
+    t.push([]);
+    for (var c = 0; c < n; c++) t[r].push(g[c][r]);
+  }
+  return t;
+}
+
+/**
+ * 2048 走一步棋。dir：0左 1上 2右 3下。
+ * 思路：任何方向都转成"每一行朝左滑"——
+ *   上下移：先转置，处理完再转回去；
+ *   右/下移：把行反过来，滑完再反回去。
+ */
+function moveGrid(grid, dir) {
+  var n = grid.length;
+  var work = grid.map(function (row) { return row.slice(); });
+  var vertical = (dir === 1 || dir === 3);
+  var reverse = (dir === 2 || dir === 3);
+  if (vertical) work = transpose(work);
+  var gained = 0, maxMerged = 0;
+  for (var i = 0; i < n; i++) {
+    var line = work[i].slice();
+    if (reverse) line.reverse();
+    var res = slideLine(line);
+    gained += res.gained;
+    if (res.maxMerged > maxMerged) maxMerged = res.maxMerged;
+    var out = res.line;
+    if (reverse) out.reverse();
+    work[i] = out;
+  }
+  if (vertical) work = transpose(work);
+  return { grid: work, gained: gained, maxMerged: maxMerged };
+}
+
+/** 还能不能走：有空格，或者任意相邻相等，就还有救 */
+function hasMoves(grid) {
+  var n = grid.length;
+  for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) {
+    var v = grid[r][c];
+    if (v === 0) return true;
+    if (c + 1 < n && grid[r][c + 1] === v) return true;
+    if (r + 1 < n && grid[r + 1][c] === v) return true;
+  }
+  return false;
+}
+
+/** 两个棋盘是否一模一样（用来判断"这一步是不是白按了"） */
+function gridsEqual(a, b) {
+  for (var r = 0; r < a.length; r++) for (var c = 0; c < a[r].length; c++)
+    if (a[r][c] !== b[r][c]) return false;
+  return true;
+}
+
+/** 贪吃蛇：按方向算出下一个头在哪 */
+function nextHead(head, dir) { return { x: head.x + dir.x, y: head.y + dir.y }; }
+
+/** 贪吃蛇：下一格会不会出事（出界，或撞上身体里任意一节） */
+function willCollide(body, head, cols, rows) {
+  if (head.x < 0 || head.y < 0 || head.x >= cols || head.y >= rows) return true;
+  for (var i = 0; i < body.length; i++)
+    if (body[i].x === head.x && body[i].y === head.y) return true;
+  return false;
+}
+
+/** 两个方向是不是正好相反（贪吃蛇不能一步掉头） */
+function isOpposite(a, b) { return a.x === -b.x && a.y === -b.y; }
+
+/* ---------- 3. 音效：WebAudio 现场合成，默认静音 ---------- */
+var Sfx = {
+  ctx: null,
+  on: false,
+
+  // 浏览器规定：AudioContext 得在用户点过什么之后才能出声，所以用到时才建
+  ensure: function () {
+    if (!this.ctx) {
+      try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { this.ctx = null; }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    return !!this.ctx;
+  },
+
+  /** 一个简单音符：freq 频率，dur 时长，type 波形，vol 音量，when 延迟几秒，slideTo 滑到某频率 */
+  tone: function (freq, dur, type, vol, when, slideTo) {
+    if (!this.on || !this.ensure()) return;
+    dur = dur || 0.08; type = type || 'square'; vol = vol || 0.12; when = when || 0;
+    var t0 = this.ctx.currentTime + when;
+    var osc = this.ctx.createOscillator();
+    var g = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g); g.connect(this.ctx.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.03);
+  },
+
+  /** 一小段白噪声（换台雪花声就用它） */
+  noise: function (dur, vol) {
+    if (!this.on || !this.ensure()) return;
+    dur = dur || 0.15; vol = vol || 0.08;
+    var len = Math.floor(this.ctx.sampleRate * dur);
+    var buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    var ch = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / len); // 尾音渐弱
+    var src = this.ctx.createBufferSource();
+    var g = this.ctx.createGain();
+    src.buffer = buf; g.gain.value = vol;
+    src.connect(g); g.connect(this.ctx.destination);
+    src.start();
+  },
+
+  /* 语义化音效（都是小音符拼的，够用且不吵） */
+  eat:    function () { this.tone(660, .05); this.tone(990, .06, 'square', .12, .05); },
+  die:    function () { this.tone(300, .5, 'sawtooth', .14, 0, 60); },
+  merge:  function (v) { this.tone(280 + 90 * Math.log2(v || 2), .07, 'triangle', .12); },
+  click:  function () { this.tone(1400, .02, 'square', .05); },
+  snow:   function () { this.noise(.26, .10); },
+  lose:   function () { this.tone(220, .4, 'sawtooth', .1, 0, 90); },
+  win:    function () { var fs = [523, 659, 784, 1047]; for (var i = 0; i < fs.length; i++) this.tone(fs[i], .12, 'triangle', .12, i * .09); },
+  bootUp: function () { this.tone(70, .7, 'sine', .15, 0, 240); this.tone(140, .7, 'sine', .07, .05, 480); }
+};
+
+/* ---------- 4. 电视状态机 ---------- */
+var cv = document.getElementById('crt');
+var ctx = cv.getContext('2d');
+
+var state = 'boot';     // boot（开机动画）| snow（换台雪花）| snake | g2048
+var channel = 1;        // 当前频道号
+var bootT0 = 0;         // 开机动画开始时刻
+var snowT0 = 0;         // 雪花开始时刻
+var SNOW_MS = 480;      // 雪花时长
+
+// 雪花用低分辨率画布生成再放大，颗粒感更足，也省性能
+var noiseCv = document.createElement('canvas');
+noiseCv.width = 160; noiseCv.height = 120;
+var noiseCtx = noiseCv.getContext('2d');
+var noiseImg = noiseCtx.createImageData(160, 120);
+
+var FONT = '"Courier New","Microsoft YaHei","PingFang SC",monospace';
+
+/* ---------- 5. 贪吃蛇 ---------- */
+var COLS = 24, ROWS = 16, CELL = 20, TOP = 34;   // 网格：24列 x 16行，格 20px，顶部 34px 留给计分条
+
+var S = {
+  snake: [], dir: { x: 1, y: 0 }, queue: [],
+  food: { x: 0, y: 0 }, score: 0, high: 0,
+  running: false, paused: false, dead: false,
+  acc: 0, interval: 160, lastStep: 0, shakeT: 0
+};
+
+function initSnake(keepScore) {
+  S.snake = [{ x: 6, y: 8 }, { x: 5, y: 8 }, { x: 4, y: 8 }]; // 开局一小条，朝右
+  S.dir = { x: 1, y: 0 };
+  S.queue = [];
+  S.score = 0;
+  S.running = false; S.paused = false; S.dead = false;
+  S.acc = 0; S.interval = 160;
+  if (!keepScore) { /* 最高分常驻，不清 */ }
+  spawnFood();
+}
+
+/** 在蛇没占的格子里随机放一颗果子；蛇要是占满了全场，就算通关 */
+function spawnFood() {
+  var empty = [];
+  for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+    var occupied = S.snake.some(function (s) { return s.x === c && s.y === r; });
+    if (!occupied) empty.push({ x: c, y: r });
+  }
+  if (empty.length === 0) return false; // 满了：外层会判定通关
+  S.food = empty[Math.floor(Math.random() * empty.length)];
+  return true;
+}
+
+/** 走一步：取方向、算新头、判碰撞、吃果子或挪尾巴 */
+function stepSnake() {
+  // 从输入队列里取一个合法方向（跳过"原地不动"和"一步掉头"）
+  while (S.queue.length) {
+    var d = S.queue.shift();
+    if (!isOpposite(d, S.dir) && (d.x !== S.dir.x || d.y !== S.dir.y)) { S.dir = d; break; }
+  }
+  var head = nextHead(S.snake[0], S.dir);
+  var eating = (head.x === S.food.x && head.y === S.food.y);
+
+  // 关键细节：这步要是没吃果子，尾巴会跟着让出去，
+  // 所以新头撞上"现在的尾巴"其实没事——判碰撞时把尾巴排除掉。
+  // 吃果子时尾巴不动，就得整条蛇都算障碍。
+  var body = eating ? S.snake : S.snake.slice(0, S.snake.length - 1);
+  if (willCollide(body, head, COLS, ROWS)) {
+    S.dead = true;
+    S.shakeT = performance.now();
+    if (S.score > S.high) { S.high = S.score; store.set(K_SNAKE, S.high); }
+    Sfx.die();
+    return;
+  }
+  S.snake.unshift(head);
+  if (eating) {
+    S.score += 10;
+    S.interval = Math.max(70, S.interval - 3); // 每吃一颗快 3ms，最快 70ms 一步
+    Sfx.eat();
+    if (!spawnFood()) { // 整屏吃满：通关！
+      S.dead = true;
+      if (S.score > S.high) { S.high = S.score; store.set(K_SNAKE, S.high); }
+    }
+  } else {
+    S.snake.pop();
+  }
+}
+
+/** 固定步长推进（用累积时间，帧率忽快忽慢也不影响手感） */
+function updateSnake(now) {
+  S.acc += now - S.lastStep;
+  S.lastStep = now;
+  while (S.acc >= S.interval) {
+    S.acc -= S.interval;
+    stepSnake();
+    if (S.dead) { S.acc = 0; break; }
+  }
+}
+
+/* ---------- 6. 2048 ---------- */
+var G = {
+  grid: [], age: [],          // age 记每个格子"变成现在这个值"的时刻，用于弹跳动画
+  score: 0, high: 0,
+  won: false, over: false, justWon: false
+};
+
+function init2048() {
+  G.grid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+  G.age  = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+  G.score = 0; G.won = false; G.over = false; G.justWon = false;
+  spawnTile(); spawnTile();
+}
+
+/** 随机空格里放一个新数字：90% 放 2，10% 放 4 */
+function spawnTile() {
+  var empty = [];
+  for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++)
+    if (G.grid[r][c] === 0) empty.push([r, c]);
+  if (!empty.length) return;
+  var spot = empty[Math.floor(Math.random() * empty.length)];
+  G.grid[spot[0]][spot[1]] = Math.random() < 0.9 ? 2 : 4;
+  G.age[spot[0]][spot[1]] = performance.now();
+}
+
+/** 玩家按了一个方向：能动就动、加分、生成新块、判定输赢 */
+function tryMove(dir) {
+  if (G.over) return;
+  if (G.justWon) G.justWon = false; // 赢了之后按方向键 = 选择"继续挑战"
+  var old = G.grid;
+  var res = moveGrid(G.grid, dir);
+  if (gridsEqual(old, res.grid)) return;   // 这一步啥也没动，不算
+
+  G.grid = res.grid;
+  G.score += res.gained;
+  if (res.gained > 0) Sfx.merge(res.maxMerged || 2);
+  if (G.score > G.high) { G.high = G.score; store.set(K_2048, G.high); }
+
+  // 值发生变化的格子记下时刻，绘制时做"啵"地弹一下
+  var now = performance.now();
+  for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++)
+    if (G.grid[r][c] !== old[r][c] && G.grid[r][c] !== 0) G.age[r][c] = now;
+
+  // 第一次合出 2048：弹胜利提示（还可以继续玩）
+  if (!G.won && res.maxMerged >= 2048) { G.won = true; G.justWon = true; Sfx.win(); }
+
+  spawnTile();
+  if (!hasMoves(G.grid)) { G.over = true; Sfx.lose(); }
+}
+
+/* ---------- 7. 绘制（全部画在 crt 这块 canvas 上） ---------- */
+
+/** 圆角矩形路径（自己画，兼容所有浏览器） */
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/** 顶部计分条：左边得分、右边最高分、中间频道名 */
+function drawHudBar(left, right, tag) {
+  ctx.fillStyle = '#1a0f09';
+  ctx.fillRect(0, 0, W, 34);
+  ctx.fillStyle = 'rgba(255,217,138,.16)';
+  ctx.fillRect(0, 33, W, 1);
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 15px ' + FONT;
+  ctx.textAlign = 'left';  ctx.fillStyle = '#ffd98a'; ctx.fillText(left, 12, 18);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#e8b77a'; ctx.fillText(right, W - 12, 18);
+  ctx.textAlign = 'center';ctx.fillStyle = 'rgba(255,217,138,.5)';
+  ctx.font = 'bold 12px ' + FONT; ctx.fillText(tag, W / 2, 18);
+}
+
+/** 居中的标题 + 副标题（暂停、结束等提示都用它） */
+function overlay(title, sub) {
+  ctx.fillStyle = 'rgba(12,7,3,.66)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = 'bold 34px ' + FONT;
+  ctx.fillStyle = '#ffd98a';
+  ctx.shadowColor = 'rgba(255,180,90,.55)'; ctx.shadowBlur = 16;
+  ctx.fillText(title, W / 2, H / 2 - 14);
+  ctx.shadowBlur = 0;
+  ctx.font = 'bold 15px ' + FONT;
+  ctx.fillStyle = '#e8b77a';
+  ctx.fillText(sub, W / 2, H / 2 + 24);
+}
+
+/** 像素小爱心（开机画面用） */
+function drawPixelHeart(cx0, cy0, s, color) {
+  var rows = ['0110110', '1111111', '1111111', '0111110', '0011100', '0001000'];
+  ctx.fillStyle = color;
+  for (var r = 0; r < rows.length; r++)
+    for (var c = 0; c < rows[r].length; c++)
+      if (rows[r][c] === '1') ctx.fillRect(cx0 + c * s, cy0 + r * s, s, s);
+}
+
+/** 一颗小苹果（贪吃蛇的果子）：红果 + 绿叶 + 高光 */
+function drawApple(px, py, t) {
+  var bob = Math.sin(t / 300) * 1.6;         // 轻轻上下浮动，显得活
+  var x = px + CELL / 2, y = py + CELL / 2 + bob;
+  ctx.fillStyle = '#e63946';
+  ctx.beginPath(); ctx.arc(x, y + 1, 6.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.beginPath(); ctx.arc(x - 2.2, y - 1.4, 1.8, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#7cb342'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.quadraticCurveTo(x + 2, y - 9, x + 5, y - 9); ctx.stroke();
+}
+
+/** 贪吃蛇画面 */
+function drawSnake(now) {
+  // 撞死瞬间画面抖两下，像电视被拍了一巴掌
+  var ox = 0, oy = 0;
+  if (S.dead) {
+    var e = (now - S.shakeT) / 1000;
+    if (e < 0.35) { var m = (0.35 - e) * 22; ox = (Math.random() * 2 - 1) * m; oy = (Math.random() * 2 - 1) * m; }
+  }
+  ctx.save();
+  ctx.translate(ox, oy);
+
+  // 游戏区底色 + 极淡的格线
+  ctx.fillStyle = '#241610'; ctx.fillRect(-8, -8, W + 16, H + 16);
+  ctx.strokeStyle = 'rgba(255,235,200,.045)'; ctx.lineWidth = 1;
+  for (var c = 0; c <= COLS; c++) { ctx.beginPath(); ctx.moveTo(c * CELL + .5, TOP); ctx.lineTo(c * CELL + .5, TOP + ROWS * CELL); ctx.stroke(); }
+  for (var r = 0; r <= ROWS; r++) { ctx.beginPath(); ctx.moveTo(0, TOP + r * CELL + .5); ctx.lineTo(W, TOP + r * CELL + .5); ctx.stroke(); }
+
+  drawHudBar('得分 ' + S.score, '最高 ' + S.high, '频道 1 · 贪吃蛇');
+  drawApple(S.food.x * CELL, TOP + S.food.y * CELL, now);
+
+  // 蛇身：头最亮（橙），往尾巴越来越暗（红棕）
+  for (var i = S.snake.length - 1; i >= 0; i--) {
+    var seg = S.snake[i];
+    var p = S.snake.length === 1 ? 0 : i / (S.snake.length - 1);
+    var hue = 28 - 10 * p, sat = 78 - 12 * p, lit = 62 - 24 * p;
+    ctx.fillStyle = 'hsl(' + hue + ',' + sat + '%,' + lit + '%)';
+    var pad = 2;
+    rr(seg.x * CELL + pad, TOP + seg.y * CELL + pad, CELL - pad * 2, CELL - pad * 2, 5);
+    ctx.fill();
+  }
+
+  // 蛇头：画两只眼睛，看向前进方向，呆呆的
+  var hd = S.snake[0];
+  var hx = hd.x * CELL, hy = TOP + hd.y * CELL;
+  var cxh = hx + CELL / 2, cyh = hy + CELL / 2;
+  var fx = S.dir.x, fy = S.dir.y;              // 前进方向
+  var sx = -fy, sy = fx;                       // 与前进方向垂直：两只眼睛左右分开
+  [[1, 1], [-1, -1]].forEach(function (side) {
+    var ex = cxh + sx * 4 * side[0] + fx * 3.5;
+    var ey = cyh + sy * 4 * side[0] + fy * 3.5;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(ex, ey, 3.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2a1508';
+    ctx.beginPath(); ctx.arc(ex + fx * 1.4, ey + fy * 1.4, 1.7, 0, Math.PI * 2); ctx.fill();
+  });
+
+  ctx.restore();
+
+  // 各种状态提示
+  if (!S.running && !S.dead) overlay('贪吃蛇', '按 方向键 出发 · 空格 暂停 · 撞墙撞自己会结束');
+  else if (S.paused && !S.dead) overlay('暂停中', '空格 继续 · R 重来');
+  else if (S.dead) overlay(S.score >= S.high && S.score > 0 ? '新纪录！' : '游戏结束', '本局 ' + S.score + ' 分 · 最高 ' + S.high + ' · 空格 / R 再来一局');
+}
+
+/** 2048 数字块的配色（数字越大越红润，2048 金光闪闪） */
+function tileStyle(v) {
+  var map = {
+    2:    ['#f6ecd9', '#6b4f2e'],
+    4:    ['#f3dfa8', '#6b4f2e'],
+    8:    ['#f5b971', '#5a3d1a'],
+    16:   ['#f09a4b', '#fff6e8'],
+    32:   ['#ec7a35', '#fff6e8'],
+    64:   ['#e85a33', '#fff6e8'],
+    128:  ['#f2c950', '#5a3d1a'],
+    256:  ['#f0b429', '#fff6e8'],
+    512:  ['#eec33f', '#5a3d1a'],
+    1024: ['#f3d968', '#5a3d1a'],
+    2048: ['#ffd769', '#7a2d12']
+  };
+  return map[v] || ['#e8e0cc', '#5a3d1a'];
+}
+
+/** 2048 画面 */
+function draw2048(now) {
+  ctx.fillStyle = '#241610'; ctx.fillRect(0, 0, W, H);
+  drawHudBar('得分 ' + G.score, '最高 ' + G.high, '频道 2 · 2048');
+
+  var gap = 8, cell = 66, board = cell * 4 + gap * 5;   // 304px 见方
+  var bx = (W - board) / 2, by = 50;
+
+  // 棋盘底 + 空格
+  rr(bx - 4, by - 4, board + 8, board + 8, 12);
+  ctx.fillStyle = '#3a2a1c'; ctx.fill();
+  for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
+    var ex = bx + gap + c * (cell + gap), ey = by + gap + r * (cell + gap);
+    rr(ex, ey, cell, cell, 8);
+    ctx.fillStyle = '#4b3725'; ctx.fill();
+  }
+
+  // 数字块：刚出生/刚合并的会"啵"地弹一下
+  for (var r2 = 0; r2 < 4; r2++) for (var c2 = 0; c2 < 4; c2++) {
+    var v = G.grid[r2][c2];
+    if (!v) continue;
+    var age = now - G.age[r2][c2];
+    var scale = age < 170 ? 0.55 + 0.45 * easeOutBack(clamp(age / 170, 0, 1)) : 1;
+    var x = bx + gap + c2 * (cell + gap), y = by + gap + r2 * (cell + gap);
+    var w2 = cell * scale, off = (cell - w2) / 2;
+    var st = tileStyle(v);
+    ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+    rr(x + off, y + off, w2, w2, 8);
+    ctx.fillStyle = st[0]; ctx.fill();
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    if (v >= 2048) { // 大数字给一圈金边
+      rr(x + off, y + off, w2, w2, 8);
+      ctx.strokeStyle = 'rgba(255,235,150,.9)'; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+    ctx.fillStyle = st[1];
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var fs = v < 100 ? 30 : v < 1000 ? 25 : v < 10000 ? 19 : 15;  // 位数多了字就小一号
+    ctx.font = 'bold ' + Math.round(fs * scale) + 'px ' + FONT;
+    ctx.fillText(String(v), x + cell / 2, y + cell / 2 + 1);
+  }
+
+  // 底部小提示
+  ctx.font = 'bold 11px ' + FONT;
+  ctx.fillStyle = 'rgba(232,183,122,.55)';
+  ctx.textAlign = 'center';
+  ctx.fillText('方向键滑动 · 相同数字合并 · R 新游戏', W / 2, H - 12);
+
+  if (G.justWon) overlay('合出 2048 啦！', '按任意方向键继续挑战 · R 开新局');
+  else if (G.over) overlay('无路可走啦', '本局 ' + G.score + ' 分 · 最高 ' + G.high + ' · 按 R 重来');
+}
+
+/** 开机动画：黑屏 → 一条亮线 → 展开成白光 → 品牌字淡入 → 进频道 1 */
+function drawBoot(now) {
+  var t = (now - bootT0) / 1000;
+  ctx.fillStyle = '#050403'; ctx.fillRect(0, 0, W, H);
+
+  if (t < 0.55) {                     // 阶段一：中央亮线渐亮、横向拉开
+    var p = t / 0.55;
+    var lw = W * easeOutCubic(Math.min(1, p * 1.5));
+    ctx.fillStyle = 'rgba(255,250,230,' + (0.3 + 0.7 * p) + ')';
+    ctx.fillRect((W - lw) / 2, H / 2 - 1.5, lw, 3);
+  } else if (t < 1.0) {               // 阶段二：亮线纵向撑开成整屏白光
+    var p2 = (t - 0.55) / 0.45;
+    var lh = H * easeOutCubic(p2);
+    ctx.fillStyle = 'rgba(255,248,225,' + (0.95 - 0.3 * p2) + ')';
+    ctx.fillRect(0, (H - lh) / 2, W, lh);
+  } else if (t < 2.7) {               // 阶段三：白光褪去，品牌字登场
+    var p3 = clamp((t - 1.0) / 0.5, 0, 1);
+    ctx.globalAlpha = p3;
+    drawPixelHeart(W / 2 - 28, 84, 8, '#e8635a');
+    drawPixelHeart(W / 2 + 28 - 8 * 7 + 8, 84, 8, '#e8973e');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 46px ' + FONT;
+    ctx.fillStyle = '#ffd98a';
+    ctx.shadowColor = 'rgba(255,180,90,.6)'; ctx.shadowBlur = 22;
+    ctx.fillText('萌牌电视', W / 2, 168);
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 14px ' + FONT;
+    ctx.fillStyle = '#e8b77a';
+    ctx.fillText('MAENG · TV — 温馨客厅限定款', W / 2, 208);
+    // "正在进入频道1"一闪一闪
+    if (t > 1.6) {
+      ctx.globalAlpha = p3 * (0.55 + 0.45 * Math.sin(t * 7));
+      ctx.font = 'bold 16px ' + FONT;
+      ctx.fillStyle = '#fff3d6';
+      ctx.fillText('正在进入 频道 1 · 贪吃蛇 …', W / 2, 288);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  if (t >= 2.7) switchChannel(1, true);  // 开机完成，带一小段雪花进频道 1
+}
+
+/** 换台雪花：随机噪点 + 后半段闪现频道号 */
+function drawSnow(now) {
+  var d = noiseImg.data;
+  for (var i = 0; i < d.length; i += 4) {
+    var v = (Math.random() * 235) | 0;
+    d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255;
+  }
+  noiseCtx.putImageData(noiseImg, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(noiseCv, 0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+
+  // 一条慢慢横移的暗带，更像信号不稳
+  var bandX = ((now - snowT0) * 0.6) % (W + 200) - 100;
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.fillRect(bandX, 0, 70, H);
+
+  var el = now - snowT0;
+  if (el > SNOW_MS * 0.5) {           // 雪花下到一半，新频道露脸
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 30px ' + FONT;
+    ctx.fillStyle = 'rgba(10,6,3,.75)';
+    ctx.fillText('— 频道 ' + channel + ' —', W / 2 + 2, H / 2 + 2);
+    ctx.fillStyle = '#fff3d6';
+    ctx.fillText('— 频道 ' + channel + ' —', W / 2, H / 2);
+    ctx.font = 'bold 14px ' + FONT;
+    ctx.fillText(channel === 1 ? '贪吃蛇' : '2048', W / 2, H / 2 + 34);
+  }
+  if (el >= SNOW_MS) {                // 雪花放完，正式切过去
+    state = channel === 1 ? 'snake' : 'g2048';
+    if (state === 'snake') S.lastStep = performance.now(); // 蛇的计时从现在起算，防止恢复时猛跳一步
+  }
+}
+
+/* ---------- 主循环 ---------- */
+function loop(t) {
+  if (state === 'boot') drawBoot(t);
+  else if (state === 'snow') drawSnow(t);
+  else if (state === 'snake') {
+    var active = S.running && !S.paused && !S.dead;
+    if (active) updateSnake(t);
+    else S.lastStep = t;              // 暂停时也把时钟往前拨，恢复瞬间不会突进
+    drawSnake(t);
+  }
+  else if (state === 'g2048') draw2048(t);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- 8. 换台 / 重开 / 电源 / 音效 ---------- */
+
+/**
+ * 换台。force 用于"开机完成后强制进频道1"这种场景。
+ * 同频道再按一次：轻轻"咔哒"一下，不重复放雪花。
+ */
+function switchChannel(ch, force) {
+  if (!force && (state === 'boot' || state === 'snow')) return;
+  if (!force && ch === channel) { Sfx.click(); return; }
+  channel = ch;
+  updateChannelUI();
+  state = 'snow';
+  snowT0 = performance.now();
+  Sfx.snow();
+}
+
+/** 重开当前频道的游戏（面板 R 键 / 键盘 R） */
+function resetCurrent() {
+  Sfx.click();
+  if (state === 'snake' || (state === 'snow' && channel === 1)) initSnake();
+  else if (state === 'g2048' || (state === 'snow' && channel === 2)) init2048();
+}
+
+/** 电源：从开机动画重新来一遍 */
+function reboot() {
+  state = 'boot';
+  bootT0 = performance.now();
+  initSnake(); init2048();            // 两个游戏都回到初始状态
+  Sfx.bootUp();
+}
+
+/** 更新面板上频道按钮的高亮和频道旋钮的角度 */
+function updateChannelUI() {
+  document.getElementById('ch1').classList.toggle('active', channel === 1);
+  document.getElementById('ch2').classList.toggle('active', channel === 2);
+}
+
+/** 音效开关（旋钮 / M 键） */
+function toggleSound() {
+  Sfx.on = !Sfx.on;
+  store.set(K_SOUND, Sfx.on ? '1' : '0');
+  updateSoundUI();
+  if (Sfx.on) { Sfx.ensure(); Sfx.eat(); }  // 打开时"叮"一声作确认
+}
+
+function updateSoundUI() {
+  document.getElementById('soundLabel').textContent = Sfx.on ? '音效 · 开' : '音效 · 关';
+  document.getElementById('soundKnob').style.transform = Sfx.on ? 'rotate(90deg)' : 'rotate(0deg)';
+}
+
+/* ---------- 键盘输入 ---------- */
+var DIRS = {   // 方向键 + WASD 都认
+  ArrowUp: { x: 0, y: -1 }, ArrowDown: { x: 0, y: 1 }, ArrowLeft: { x: -1, y: 0 }, ArrowRight: { x: 1, y: 0 },
+  w: { x: 0, y: -1 }, s: { x: 0, y: 1 }, a: { x: -1, y: 0 }, d: { x: 1, y: 0 },
+  W: { x: 0, y: -1 }, S: { x: 0, y: 1 }, A: { x: -1, y: 0 }, D: { x: 1, y: 0 }
+};
+var DIR_INDEX = { '0,-1': 1, '0,1': 3, '-1,0': 0, '1,0': 2 };  // 向量 -> moveGrid 的方向编号
+
+window.addEventListener('keydown', function (e) {
+  var k = e.key;
+  // 方向键和空格会滚动页面，游戏要独占它们
+  if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'ArrowLeft' || k === 'ArrowRight' || k === ' ') e.preventDefault();
+
+  if (k === 'm' || k === 'M') { toggleSound(); return; }
+  if (k === '1') { switchChannel(1); return; }
+  if (k === '2') { switchChannel(2); return; }
+  if (k === 'r' || k === 'R') { resetCurrent(); return; }
+
+  if (k === ' ') {  // 空格：贪吃蛇暂停/继续；死掉时直接重开
+    inputSpace();
+    return;
+  }
+
+  var d = DIRS[k];
+  if (d) inputDir(d);
+});
+
+/* 方向 / 空格的统一入口：键盘、屏上十字键、屏幕滑动都走这里 */
+function inputDir(d) {
+  if (state !== 'snake' && state !== 'g2048') return;
+  if (state === 'snake') {
+    if (S.dead) return;
+    if (!S.running) {              // 第一次按方向：出发！
+      S.running = true;
+      S.lastStep = performance.now();
+      S.acc = 0;
+    }
+    if (S.queue.length < 2) S.queue.push(d);  // 队列最多存两步，转弯才跟手
+  } else {
+    tryMove(DIR_INDEX[d.x + ',' + d.y]);
+  }
+}
+
+function inputSpace() {
+  if (state !== 'snake') return;
+  if (S.dead) { initSnake(); return; }
+  if (!S.running) { S.running = true; S.lastStep = performance.now(); S.acc = 0; return; }
+  S.paused = !S.paused;
+}
+
+/* ---------- 面板按钮 ---------- */
+document.getElementById('ch1').addEventListener('click', function () { switchChannel(1); });
+document.getElementById('ch2').addEventListener('click', function () { switchChannel(2); });
+document.getElementById('resetBtn').addEventListener('click', resetCurrent);
+document.getElementById('powerKnob').addEventListener('click', reboot);
+document.getElementById('soundKnob').addEventListener('click', toggleSound);
+/* 喇叭：拍一下出雪花声；天线：碰一下重新开机 */
+document.querySelector(".speaker").addEventListener("click", function () { Sfx.ensure(); Sfx.on = true; Sfx.snow(); setTimeout(function () { if (store.get(K_SOUND, "0") !== "1") Sfx.on = false; }, 400); });
+document.querySelector(".antenna-box").addEventListener("click", reboot);
+
+/* ---------- 屏上十字键 ---------- */
+document.querySelectorAll('.dbtn[data-dir]').forEach(function (b) {
+  b.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    var p = b.dataset.dir.split(',');
+    Sfx.click();
+    inputDir({ x: +p[0], y: +p[1] });
+    b.classList.add('hit');
+    setTimeout(function () { b.classList.remove('hit'); }, 130);
+  });
+});
+document.getElementById('padMid').addEventListener('pointerdown', function (e) {
+  e.preventDefault(); Sfx.click(); inputSpace();
+});
+
+/* ---------- 屏幕滑动（十字键之外的手势） ---------- */
+var swipeStart = null;
+cv.addEventListener('pointerdown', function (e) { swipeStart = { x: e.clientX, y: e.clientY }; });
+window.addEventListener('pointerup', function (e) {
+  if (!swipeStart) return;
+  var dx = e.clientX - swipeStart.x, dy = e.clientY - swipeStart.y;
+  swipeStart = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;   // 抖一下不算滑动
+  inputDir(Math.abs(dx) > Math.abs(dy)
+    ? { x: (dx > 0 ? 1 : -1), y: 0 }
+    : { x: 0, y: (dy > 0 ? 1 : -1) });
+});
+
+/* ---------- 通电！ ---------- */
+S.high = parseInt(store.get(K_SNAKE, '0'), 10) || 0;
+G.high = parseInt(store.get(K_2048, '0'), 10) || 0;
+Sfx.on = store.get(K_SOUND, '0') === '1';
+initSnake();
+init2048();
+updateChannelUI();
+updateSoundUI();
+bootT0 = performance.now();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

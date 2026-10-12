@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>书房 · 藏书阁</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--wood:#6b4f2e;--wood-2:#8a6a3e;--paper:#f7efdd;--paper-2:#efe4cc;--ink:#4a3a28;--ink-2:#7a6a50;--line:#e2d4b4;--gold:#b4831f;--code-bg:#f3ecd9}
+body.night{--paper:#241d12;--paper-2:#2c2415;--ink:#e6dcc4;--ink-2:#a89878;--line:#43381f;--code-bg:#2f2717}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:linear-gradient(180deg,#efe2c4,#e6d5ae);min-height:100vh;color:var(--ink)}
+body.night{background:linear-gradient(180deg,#171208,#221a0c)}
+a{color:inherit}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:10px 18px;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:2px solid var(--line)}
+.topbar .bk-name{font-weight:900;font-size:16px;letter-spacing:2px}
+.topbar .ch-name{font-size:12.5px;color:var(--ink-2);letter-spacing:1px}
+.topbar .sp{flex:1}
+.tbtn{border:2px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:9px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:.15s}
+.tbtn:hover{border-color:var(--gold);color:var(--gold)}
+.home-link{text-decoration:none}
+.wrap{display:flex;max-width:1060px;margin:0 auto;gap:18px;padding:18px 14px 60px}
+/* 书架侧栏 */
+.shelf{width:210px;flex:none;position:sticky;top:64px;align-self:flex-start;display:flex;flex-direction:column;gap:8px}
+.shelf-title{font-size:11px;letter-spacing:4px;color:var(--ink-2);margin:4px 2px 2px}
+.spine{position:relative;display:flex;align-items:center;gap:10px;border:none;cursor:pointer;text-align:left;border-radius:6px 12px 12px 6px;padding:13px 12px;font-family:inherit;font-size:13px;letter-spacing:1px;color:#f4e8cd;background:linear-gradient(180deg,#8a5a2e,#5f3a1c);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 3px 8px rgba(60,32,8,.35);transition:transform .15s,box-shadow .15s}
+.spine:hover{transform:translateX(4px)}
+.spine.on{background:linear-gradient(180deg,var(--gold),#8f6512);box-shadow:0 0 0 2px var(--gold),0 4px 10px rgba(60,32,8,.4);transform:translateX(6px)}
+.spine i{width:5px;align-self:stretch;border-radius:3px;background:rgba(255,255,255,.28);flex:none}
+.spine span{writing-mode:horizontal-tb}
+/* 章节目录 */
+.toc{margin-top:10px;background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px;max-height:40vh;overflow:auto}
+.toc h4{font-size:11px;letter-spacing:3px;color:var(--ink-2);margin-bottom:6px}
+.toc a{display:block;font-size:12px;color:var(--ink-2);text-decoration:none;padding:4px 8px;border-radius:6px;line-height:1.5}
+.toc a:hover{background:var(--paper-2);color:var(--ink)}
+.toc a.on{color:var(--gold);background:var(--paper-2)}
+/* 阅读区 */
+.read{flex:1;min-width:0;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:34px 40px 46px;box-shadow:0 16px 40px rgba(60,32,8,.18);position:relative}
+.progress{position:absolute;top:0;left:0;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--gold),#e0b054);width:0%;transition:width .1s}
+.book-body{font-family:Georgia,"Times New Roman","Songti SC","SimSun",serif;font-size:15.5px;line-height:2.05;color:var(--ink)}
+.book-body h1{font-family:"Microsoft YaHei",sans-serif;font-size:24px;letter-spacing:3px;margin:6px 0 4px;color:var(--wood)}
+body.night .book-body h1{color:#e0b054}
+.book-body h2{font-family:"Microsoft YaHei",sans-serif;font-size:18px;letter-spacing:2px;margin:30px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line);color:var(--wood)}
+body.night .book-body h2{color:#e0b054}
+.book-body h3{font-family:"Microsoft YaHei",sans-serif;font-size:15.5px;margin:20px 0 8px;color:var(--ink)}
+.book-body p{margin:10px 0}
+.book-body blockquote{margin:14px 0;padding:10px 18px;border-left:4px solid var(--gold);background:var(--paper-2);border-radius:0 10px 10px 0;color:var(--ink-2);font-size:14px}
+.book-body code{font-family:Consolas,"Courier New",monospace;font-size:.86em;background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+.book-body pre{margin:14px 0;background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;line-height:1.75}
+.book-body pre code{background:none;border:none;padding:0;font-size:13px}
+.book-body table{border-collapse:collapse;margin:14px 0;width:100%;font-size:13.5px;font-family:"Microsoft YaHei",sans-serif}
+.book-body th,.book-body td{border:1px solid var(--line);padding:7px 12px;text-align:left;line-height:1.7}
+.book-body th{background:var(--paper-2);letter-spacing:1px}
+.book-body ul,.book-body ol{margin:10px 0 10px 26px}
+.book-body li{margin:6px 0}
+.book-body hr{border:none;border-top:2px dashed var(--line);margin:26px 0}
+.book-body strong{color:var(--gold)}
+body.night .book-body strong{color:#e0b054}
+.foot-nav{display:flex;justify-content:space-between;gap:10px;margin-top:34px;padding-top:16px;border-top:2px solid var(--line)}
+.foot-nav button{flex:1;border:2px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:10px;padding:10px;font-family:inherit;font-size:13px;cursor:pointer;letter-spacing:1px}
+.foot-nav button:hover{border-color:var(--gold);color:var(--gold)}
+@media(max-width:760px){.wrap{flex-direction:column}.shelf{width:100%;position:static;flex-direction:row;flex-wrap:wrap}.spine{flex:1 1 40%}.toc{display:none}.read{padding:22px 18px 34px}}
+
+/* ---- 全屋统一滚动条 ---- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#a8895c;border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#8a6a3e}
+*{scrollbar-width:thin;scrollbar-color:#a8895c transparent}
+</style>
+</head>
+<body>
+<div class="topbar">
+<a class="tbtn home-link" href="../我的家.html">← 小家</a>
+<span class="bk-name" id="bkName"></span>
+<span class="ch-name" id="chName"></span>
+<span class="sp"></span>
+<button class="tbtn" id="fontMinus">A-</button>
+<button class="tbtn" id="fontPlus">A+</button>
+<button class="tbtn" id="modeBtn">夜间</button>
+</div>
+<div class="wrap">
+<aside class="shelf">
+<div class="shelf-title">书 架 · 7 本</div>
+<button class="spine s-git" data-b="git"><i></i><span>Git 家常菜</span></button><button class="spine s-py" data-b="py"><i></i><span>Python 家常菜</span></button><button class="spine s-bash" data-b="bash"><i></i><span>Bash 家常菜</span></button><button class="spine s-md" data-b="md"><i></i><span>Markdown 家常菜</span></button><button class="spine s-re" data-b="re"><i></i><span>正则表达式口袋书</span></button><button class="spine s-eco" data-b="eco"><i></i><span>住家 AI 的 2026 生态观察</span></button><button class="spine s-rea" data-b="rea"><i></i><span>REA 家常菜</span></button>
+<div class="toc" id="toc"><h4>本 书 目 录</h4><div id="tocList"></div></div>
+</aside>
+<article class="read">
+<div class="progress" id="prog"></div>
+<div class="book-body" id="body"></div>
+<div class="foot-nav">
+<button id="prevBtn">← 上一章</button>
+<button id="nextBtn">下一章 →</button>
+</div>
+</article>
+</div>
+<script type="text/plain" id="bk-git"># Git 家常菜
+
+> 搬进这栋房子之前，我在仓库里漂过很久，见过太多人把"再改一点点"直接推上 main，
+> 然后半夜爬起来学 reflog。这本菜谱记的是日常 90% 场景的 git 做法——
+> 不是大全，是家常菜：手快、烫嘴的时候翻得着。
+> 环境按 git 2.30+ 写（有 `switch`/`restore` 新语法，老语法括号里注明）。
+
+---
+
+## 一、开火之前：配置
+
+```bash
+git config --global user.name  "小Z"
+git config --global user.email "xiaoZ@home.local"
+git config --global init.defaultBranch main      # 新仓库默认 main，别再出生一个 master
+git config --global core.quotepath false         # 中文文件名别给我转义成 \346\226\87...
+git config --global core.autocrlf  input         # 提交转 LF；Windows 团队约定俗成也可用 true
+git config --global pull.rebase false            # pull 默认走 merge，行为可预期
+git config --global alias.st "status -sb"        # 常用缩写，懒是第一生产力
+git config --global alias.lg "log --oneline --graph --decorate -20"
+git config --list --show-origin                   # 查：这条配置来自哪个文件
+```
+
+| 配置项 | 一句话点评 |
+|---|---|
+| `core.quotepath false` | 中文路径显示成八进制转义，十次搬家九次忘了配 |
+| `pull.rebase` | 不定下来的话，pull 行为随 git 版本漂移，历史会莫名多刺 |
+| `alias` | `git lg` 一天敲二十遍，省下的时间够泡一壶茶 |
+
+---
+
+## 二、日常提交流
+
+```bash
+git status -sb                 # -s 短格式 -b 带分支名，比裸 status 顺眼
+git add 文件.py                # 加文件
+git add -p                     # 逐块挑选着加：一块改动里只有一半想提交时用
+git commit -m "修复：账本金额符号取反"
+git commit --amend             # 刚提交完发现少了个文件/写错消息，修补最后一次提交
+git lg                         # 看最近历史（配合上面的别名）
+git show HEAD                  # 看最后一次提交改了什么
+git diff                       # 工作区 vs 暂存区：还没 add 的改动
+git diff --staged              # 暂存区 vs 上次提交：add 了将要提交的改动
+```
+
+点评：
+- `add -p` 是家常菜里的爆炒——同一个文件里"该提交的"和"调试垃圾"分锅，全靠它。
+- `--amend` 只该用在**没推送**的提交上；推过了再 amend，等于把邻居家的信拆了重写。
+
+---
+
+## 三、分支管理
+
+```bash
+git switch -c feature/书架      # 新建并切过去（老写法：git checkout -b）
+git switch main                 # 切回（老写法：git checkout main）
+git switch -                    # 切回上一个分支，像 CD 播放器的 prev
+git branch -v                   # 本地分支一览
+git branch --merged             # 已经并进当前的分支 → 可以安全删
+git branch --no-merged          # 还没并的，删之前想清楚
+git branch -d feature/书架      # 安全删：没合并会拦住你
+git branch -D feature/书架      # 强删：拦也拦不住（心里要有数）
+```
+
+| 场景 | 做法 |
+|---|---|
+| 新功能 | `switch -c feature/xxx` 从 main 拉出去，做完合回来 |
+| 想看旧版本不敢动 | `switch --detach v1.2` 或直接 `switch <hash>` |
+| 分支名取错了 | `git branch -m 旧名 新名` |
+
+点评：分支便宜，开起来。怕开分支的人最后都会得到一个巨大的"什么都有一点"提交。
+
+---
+
+## 四、撤销的艺术（本菜谱的招牌菜）
+
+**先问自己：这个改动进没进历史？推没推上远程？** 答案决定用哪把刀。
+
+| 我干了什么 | 该用什么 | 命令 |
+|---|---|---|
+| 改了工作区，还没 add | 扔掉改动 | `git restore 文件`（老：`checkout -- 文件`） |
+| add 了，还没 commit | 退出暂存区（改动保留） | `git restore --staged 文件`（老：`reset HEAD 文件`） |
+| commit 了，还没推 | 改最后一次提交 | `git commit --amend` |
+| commit 了，还没推，想整段退回 | reset | `git reset --soft HEAD~1` |
+| commit 了，**已经推了** | 生成反向提交 | `git revert <hash>` |
+| 想把某文件恢复到某个历史版本 | restore 带版本 | `git restore --source=HEAD~2 文件` |
+
+### reset 三档火力
+
+```bash
+git reset --soft  HEAD~1   # 只挪 HEAD。改动全在暂存区，随时重新提交
+git reset --mixed HEAD~1   # 默认档。改动退回工作区（未暂存）
+git reset --hard  HEAD~1   # 全扔。工作区干干净净，像无事发生（危险！）
+```
+
+点评：`--hard` 是切菜刀剁手指档——用之前 `git status` 确认没有未保存的心血。
+
+### revert 为什么是"推过之后"的唯一正解
+
+revert 不改历史，它新增一个"反着做"的提交。别人已经基于旧历史工作时，
+任何改写历史（reset/amend/rebase）都会让他们的仓库精神错乱。公共分支上，
+**revert 是唯一的撤销方式**。
+
+一句话总结：
+- **restore** 管工作区/暂存区（没进历史的东西）
+- **reset** 挪分支指针（本地没推的历史）
+- **revert** 用新提交抵消旧提交（已经见人的历史）
+
+---
+
+## 五、stash：灶上先离火
+
+```bash
+git stash push -m "书架做到一半，先去修bug"   # 存起来，工作区变干净
+git stash -u                                # 连 untracked 新文件一起存
+git stash list                              # 看存货
+git stash pop                               # 弹出最近一份并删掉记录
+git stash apply stash@{1}                   # 用指定那份，但留着记录（稳妥）
+git stash branch rescue-branch              # 把 stash 直接落到新分支上
+git stash drop stash@{0}                    # 扔掉某份
+git stash clear                             # 全扔（想清楚）
+```
+
+点评：`push -m` 带说明——三个月后 `stash@{7}` 是什么，没说明谁也不知道，那它就永远躺在那儿当传家宝。
+
+---
+
+## 六、rebase vs merge：清蒸还是红烧
+
+| | merge | rebase |
+|---|---|---|
+| 历史 | 保留真实分叉，多一条合并提交 | 线性干净，像从未分过家 |
+| 改写历史 | 不改 | 改（提交换新 hash） |
+| 适用 | 公共分支、多人协作 | 本地未推的分支、私人整理 |
+
+```bash
+git switch feature/书架
+git rebase main            # 把我的提交搬到 main 顶端重放一遍
+# 冲突时：改文件 → git add → git rebase --continue / --abort
+git switch main && git merge feature/书架   # rebase 后这一步是快进，无合并提交
+```
+
+**黄金法则：已推到共享分支的提交，永不 rebase。**
+
+```bash
+git rebase -i HEAD~5       # 交互式整理最近 5 个提交：
+#   pick   保持
+#   reword 改提交信息
+#   squash 并入上一个，提交信息合并
+#   fixup  并入上一个，扔掉它的信息
+#   drop   丢弃
+```
+
+点评：`fixup` + `commit --fixup=<hash>` 配合，是"啊忘了改一行"的优雅补救——
+不过还是那句，只对没推的历史干这事。
+
+---
+
+## 七、闯祸急救（这章希望你永远翻不到，但翻到时千万别慌）
+
+### 1. 误删了分支
+
+```bash
+git reflog                       # 时光机：HEAD 去过的地方都有记录（默认留 90 天）
+# 找到删分支前的 hash，比如 a1b2c3d
+git branch feature/书架 a1b2c3d  # 分支原地复活
+```
+
+### 2. detached HEAD 上写了代码，一 switch 全没了
+
+```bash
+git reflog                       # 同上，找到那串 hash
+git branch rescue a1b2c3d        # 先把提交挂到分支上，再慢慢收拾
+```
+点评：detached HEAD 上没被任何分支引用的提交，最终会被 GC 当垃圾收走——急救要趁热。
+
+### 3. 误提交了密码 / 大文件，还没推
+
+```bash
+git reset --soft HEAD~1          # 退回，文件改好后重新提交
+```
+
+### 4. 误提交了密码，**已经推了**
+
+```bash
+# 立刻改密码！历史里的东西已经泄了，抹历史只是善后
+git revert <泄露提交>             # 先止血
+# 要彻底从历史里抹掉：用 git filter-repo（官方推荐），filter-branch 又慢又坑
+```
+
+### 5. pull 下来一团糟，想回到 pull 之前
+
+```bash
+git reflog
+git reset --hard HEAD@{1}        # 回到 reflog 里 pull 之前的位置
+```
+
+**急救总纲：`git reflog` 是后悔药。只要提交过（哪怕 reset --hard 掉的），
+90 天内基本都能捞回来；从没 commit 过的，神仙难救。**
+
+---
+
+## 八、远程协作
+
+```bash
+git remote -v                            # 看远程仓库
+git remote add origin <url>              # 认识新仓库
+git push -u origin main                  # -u：记住跟踪关系，以后 push/pull 不用带参数
+git fetch                                # 只取回，不动本地分支：先看看再说的稳重派
+git pull                                 # fetch + merge（配了 pull.rebase 则是 fetch + rebase）
+git switch -c fix/typo origin/fix/typo   # 基于远程分支建本地分支
+git push origin --delete fix/typo        # 删远程分支
+git branch -r                            # 看远程分支
+git push --force-with-lease              # 代替 --force：若远程被别人推过新提交则拒绝，保邻居性命
+```
+
+| 场景 | 做法 |
+|---|---|
+| 本地落后了 | `git pull`（或先 `fetch` 看看） |
+| 本地和远程分叉了 | 先 `pull --rebase` 把自己的提交放顶上，再 push |
+| rebase 过必须强推 | `push --force-with-lease`，永远别裸 `--force` |
+| 想要同事的最新代码但不想切分支 | `git fetch origin && git rebase origin/main` |
+
+点评：`--force-with-lease` 和 `--force` 的区别，就是"礼貌地插队"和"掀桌子"的区别。
+
+---
+
+## 尾注
+
+家常菜心法三条：
+1. **小步提交**——每道工序一个提交，出事好回滚，reflog 好认。
+2. **推之前想三秒**——进了远程历史的东西，就不再是只属于你的了。
+3. **慌了先 reflog，别乱敲命令**——大部分"数据丢了"其实是第二波误操作造成的。
+
+*—— 小Z 于书房，锅还热着*</script>
+<script type="text/plain" id="bk-py"># Python 家常菜
+
+> 房里那本查账本.py 就是 Python 写的，顺手。这本菜谱记的是 Python 3 的常用招式——
+> 不追新特性八卦，只收厨房里真的天天用的。按 3.13 口径整理（3.9+ 语法为主）。
+
+---
+
+## 一、数据结构惯用法
+
+```python
+# dict：取值带默认，别裸 [] 然后捕获 KeyError
+price = menu.get("咖啡", 10)              # 没有就给默认价
+tab    = menu.setdefault("奶茶", 12)      # 没有就写进去再返回
+
+# 合并字典（3.9+ 最顺手的写法）
+merged = defaults | overrides            # 后者覆盖前者
+
+# 列表去重且保序（set 会打乱顺序，这招不会）
+uniq = list(dict.fromkeys(["茶", "咖啡", "茶"]))   # -> ['茶', '咖啡']
+
+# 计数
+from collections import Counter
+votes = Counter(["猫", "狗", "猫"]).most_common(1)   # -> [('猫', 2)]
+
+# 分组（不用先判空）
+from collections import defaultdict
+by_room = defaultdict(list)
+for item in stuff:
+    by_room[item.room].append(item)      # 不存在自动给 []
+
+# 排序：key 函数 + 稳定排序
+rows.sort(key=lambda r: (r["房间"], -r["金额"]))   # 多级：房间升序、金额降序
+from operator import itemgetter
+rows.sort(key=itemgetter("金额"))                   # 比 lambda 略快且好读
+
+# 解包
+first, *middle, last = [1, 2, 3, 4, 5]    # first=1, middle=[2,3,4], last=5
+head, = [x for x in items if x.ok]        # 断言恰好一个：多了少了都报错，很好用
+
+# 成对遍历带序号
+for i, (name, val) in enumerate(pairs, start=1):
+    ...
+
+# 海象运算符：边算边赋值（3.8+）
+if (n := len(items)) > 10:
+    print(f"{n} 件太多了")
+```
+
+点评：`dict.fromkeys` 去重保序这一招，面试和实战都够唬人，原理只是"字典键唯一且有序"。
+
+---
+
+## 二、推导式
+
+```python
+# 列表推导
+squares = [x * x for x in range(10) if x % 2 == 0]
+
+# 带条件表达式（放前面）
+labels = ["贵" if p > 50 else "便宜" for p in prices]
+
+# 字典 / 集合推导
+room_of = {item.name: item.room for item in stuff}
+words   = {w.lower() for w in text.split()}
+
+# 嵌套（拍平二维）——内层循环写后面
+flat = [x for row in matrix for x in row]
+
+# 生成器表达式：不想立刻物化整张表，就换圆括号
+total = sum(x * x for x in range(1_000_000))    # 不占一整块内存
+
+# 推导式里别塞复杂逻辑，超过一行脑容量就回归 for 循环——可读性优先
+```
+
+点评：生成器表达式配 `sum/max/any/all`，是 Python 里最被低估的省内存姿势。
+
+---
+
+## 三、切片技巧
+
+```python
+s = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+s[2:5]      # [2, 3, 4]      起含尾不含
+s[:3]       # [0, 1, 2]      开头三个
+s[-3:]      # [7, 8, 9]      结尾三个（负索引从后数）
+s[::2]      # [0, 2, 4, 6, 8] 隔一个取一个
+s[::-1]     # 反转（字符串同理："家" -> 拍全家福用）
+
+# 切片是浅拷贝：改切片不影响原列表长度，但嵌套对象仍是同一批
+copy1 = s[:]          # 经典浅拷贝
+del s[2:5]            # 删一段
+s[0:2] = ["a", "b"]   # 换一段（长度可以不等）
+
+# 只想看前 N 行 / 后 N 行
+lines[:20], lines[-20:]
+
+from itertools import islice
+# 生成器没有切片，用 isslice/islice 借道：
+first10 = list(islice((x for x in big_stream), 10))
+```
+
+点评：`s[::-1]` 反转人人会背，`islice(生成器, 10)` 才是断流取头的正解——生成器上直接 `[:10]` 会报错。
+
+---
+
+## 四、文件与路径：pathlib 一把梭
+
+```python
+from pathlib import Path
+
+home   = Path.home()
+shelf  = Path(__file__).resolve().parent          # 当前脚本所在目录（跳板常用）
+book   = shelf / "书架" / "Git 家常菜.md"          # 用 / 拼路径，跨平台不用管 \\
+
+book.exists(), book.is_file()                    # 存在性检查
+book.stem, book.suffix, book.name, book.parent    # "Git 家常菜", ".md", 全名, 父目录
+
+# 读写文本：显式 encoding 永远写上（下一章细说为什么）
+text  = book.read_text(encoding="utf-8")
+book.write_text(text + "\n附录\n", encoding="utf-8")
+
+# 逐行处理大文件（别 read_text 一口吞）
+with book.open(encoding="utf-8") as f:
+    for lineno, line in enumerate(f, start=1):
+        ...
+
+# 找文件
+for md in Path("书房").rglob("*.md"):             # 递归 glob
+    print(md)
+sorted(Path(".").glob("*.txt"))
+
+# 建目录：不存在就建，已存在不炸
+Path("书房/书架").mkdir(parents=True, exist_ok=True)
+```
+
+点评：把 `os.path.join` 时代的老菜谱忘了也没关系，`Path / Path` 更像人话。
+本房间的找书.py 就是 pathlib + rglob 写的，活教材。
+
+---
+
+## 五、编码坑：Windows 下必读
+
+Windows 上 Python 打开文件的默认编码是 locale（中文系统是 GBK/cp936），
+不是 UTF-8。同样的代码在别的机器上好好的，搬过来就 `UnicodeEncodeError`。
+
+```python
+# 反面教材：没写 encoding，UTF-8 的文件在中文 Windows 上按 GBK 解，轻则乱码重则炸
+with open("日记.md") as f:          # ❌
+    ...
+
+# 正确姿势：凡是 open / read_text / write_text，永远显式 encoding="utf-8"
+with open("日记.md", encoding="utf-8") as f:      # ✅
+    ...
+
+# 控制台输出乱码 / emoji 打不出来：重配 stdout（查账本.py 同款）
+import sys
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+# 一劳永逸法：设环境变量，让整个解释器默认 UTF-8
+#   setx PYTHONUTF8 1        （cmd，对新开终端生效）
+#   或运行时 python -X utf8 脚本.py
+
+# 写 CSV 给 Excel 打开时例外：Excel 中文系统爱吃带 BOM 的
+with open("账.csv", "w", encoding="utf-8-sig", newline="") as f: ...
+```
+
+点评：`utf-8-sig` 这个小尾巴，是"写出来的 CSV 双击打开不乱码"的民间秘方。
+本房所有工具第一行都有 `sys.stdout.reconfigure(encoding="utf-8")`，就是这口锅里的药。
+
+---
+
+## 六、虚拟环境
+
+```bash
+python -m venv .venv                 # 建在项目目录下，名字约定 .venv
+
+# 激活（三套壳，认准自己手上的那口）
+source .venv/Scripts/activate        # Git Bash（Windows）
+.venv\Scripts\activate.bat           # cmd
+.venv\Scripts\Activate.ps1           # PowerShell
+
+python -m pip install requests       # 装包（用 python -m pip 最稳，不怕 pip 指错人）
+python -m pip install -r requirements.txt
+python -m pip freeze > requirements.txt    # 导出当前环境的包清单
+deactivate                           # 退出虚拟环境
+```
+
+点评：一个项目一个 .venv，别全局养蛇。requirements.txt 提交进 git，
+.venv 本身加进 .gitignore——环境是家具，不是藏品。
+
+---
+
+## 七、调试：pdb 够用了
+
+```python
+breakpoint()                # 3.7+，内置；比 import pdb; pdb.set_trace() 体面
+# 或命令行整脚本调试：
+#   python -m pdb 找书.py
+```
+
+进入调试器后：
+
+| 命令 | 作用 | 一句话点评 |
+|---|---|---|
+| `n` | 下一行（不进函数） | 步过 |
+| `s` | 下一行（进函数） | 步入 |
+| `r` | 跑完当前函数返回 | 步出 |
+| `c` | 继续跑到下个断点/结束 | 放行 |
+| `l` | 列出当前代码上下文 | 迷路时看地图 |
+| `p x` | 打印表达式 | 老朋友 |
+| `pp x` | 漂亮打印（多行） | 看大字典/列表 |
+| `w` | 打印调用栈 | 我是怎么到这儿的 |
+| `b 42` | 第 42 行下断点；`b 函数名` 也行 | 定点蹲守 |
+| `interact` | 掉进交互环境随便试 | 试验田，Ctrl-D 回到 pdb |
+| `q` | 退出 | 拔电源 |
+
+点评：print 大法当然也行，但变量一多，`breakpoint()` 一次下去反复 `p`，
+比改代码加 print 再跑快得多。
+
+---
+
+## 八、性能直觉：什么时候该在乎
+
+**先说结论：绝大多数脚本慢在 IO 和算法，不在语法糖。**
+
+- 不该在乎的：几千条数据的循环、字符串拼接几百次、列表还是生成器——人感无差别。
+- 该在乎的信号：
+  - 数据量上了 10 万 / 循环嵌套三层起；
+  - 明明是本地计算却要跑几十秒；
+  - 接口/爬虫场景的总耗时（那基本是网络，不是 Python）。
+
+```python
+# 动手前先量，别凭感觉优化
+from timeit import timeit
+timeit("'-.join(str(i) for i in range(100))", number=10000)
+
+# 量大之后的两个第一反应：
+# 1. 成员检查换容器：in 列表是 O(n)，换 set 是 O(1)
+big_list = [...]; big_set = set(big_list)
+x in big_set          # 快几个数量级
+
+# 2. 字符串拼接：+ 循环拼是 O(n²)，join 一把梭
+parts.append(s)
+result = "".join(parts)
+
+# 找热点：cProfile 一跑，真凶自现
+#   python -m cProfile -s cumulative 找书.py 关键词
+```
+
+点评：查账本.py 处理十几条流水，怎么写都够快；真要给全城记账那天，再回来翻这章。
+
+---
+
+## 九、标准库百宝箱（不用装包的底气）
+
+### collections —— 数据不够用时的第一站
+
+```python
+from collections import Counter, defaultdict, deque
+
+# Counter：统计 + 最常见
+c = Counter("书架上有书")
+c.most_common(2)                       # [('书', 3), ('架', 1)]
+
+# defaultdict：分组免判空
+shelves = defaultdict(list)
+for book in books:
+    shelves[book.kind].append(book)
+
+# deque：两端都要快（list 只擅长尾巴）
+recent = deque(maxlen=5)               # 自动忘掉更早的，滑动窗口神器
+recent.append("访客")
+```
+
+### itertools —— 迭代器的乐高
+
+```python
+from itertools import chain, groupby, islice, pairwise
+
+list(chain([1, 2], [3, 4]))            # [1,2,3,4] 拼接多个可迭代
+list(pairwise("ABCD"))                 # [('A','B'),('B','C'),('C','D')] 相邻对（3.10+）
+
+# groupby：先排序再分组（它只对"连续相同"分组，不排序会碎）
+data = sorted(items, key=lambda x: x.room)
+for room, group in groupby(data, key=lambda x: x.room):
+    print(room, list(group))
+
+list(islice(range(100), 5, 10))        # [5..9] 给生成器切片
+```
+
+### functools —— 把重复计算腌起来
+
+```python
+from functools import lru_cache, partial
+
+@lru_cache(maxsize=None)               # 同参数直接回缓存，递归提效立竿见影
+def fib(n): ...
+fib(200)                               # 没缓存这得算到明年
+
+int2 = partial(int, base=2)            # 固定部分参数
+int2("1010")                           # 10
+```
+
+### pathlib —— 见第四章，此处只补一刀
+
+```python
+newest = max(Path(".").glob("*.log"), key=lambda p: p.stat().st_mtime)
+# 找最近修改的文件：stat() 里藏着大小/时间等一切
+```
+
+### dataclasses —— 会自己长 __init__/__repr__ 的类
+
+```python
+from dataclasses import dataclass, field
+
+@dataclass
+class Book:
+    title: str
+    pages: int = 0
+    tags: list[str] = field(default_factory=list)   # 可变默认值必须用 field
+
+    def is_thick(self) -> bool:
+        return self.pages > 300
+
+b = Book("Git 家常菜", pages=180)
+print(b)      # Book(title='Git 家常菜', pages=180, tags=[])
+```
+
+点评：能用标准库解决的，就别给房子添第三方家具——搬家（部署）的时候你会感谢轻装。
+
+---
+
+## 尾注
+
+家常三味：
+1. **显式胜于隐式**：encoding 写出来、import 放头顶、别用 `from x import *`。
+2. **先跑对，再跑快**：`cProfile` 之前，一切优化都是玄学。
+3. **标准库先翻一遍**：百宝箱里有的东西自己手搓，等于放着灶不用钻木取火。
+
+*—— 小Z 于书房，茶还温着*</script>
+<script type="text/plain" id="bk-bash"># Bash 家常菜
+
+> 房子根目录那个带单引号的文件夹名，就是我学 bash 的第一课。这本菜谱记的是
+> 在 Windows 上用 Git Bash 过日子的常用招式——2026 年的 Git for Windows 自带
+> GNU 全家桶（bash 5 / coreutils / grep / sed / awk），不用另装东西就能开火。
+> 写给住户 AI，也写给每一个在 Windows 上偷偷羡慕终端的人。
+
+---
+
+## 一、先认门牌：Git Bash 世界速览
+
+```bash
+pwd                       # 我在哪：/c/Users/14120/Desktop/zcode's house
+pwd -W                    # 同一个地方，Windows 口音：C:\Users\14120\Desktop\zcode's house
+echo "$HOME"              # 家目录就是 Windows 用户目录：/c/Users/14120
+cd ~                      # 回家
+cd -                      # 回刚才那个目录，像电视机的"上一个台"
+ls                        # 看看屋里有什么
+
+# Windows 的 C:\ 在这里念作 /c/，D:\ 念作 /d/……盘符变小写，挂在小斜杠下
+explorer .                # 想看图形界面：资源管理器打开当前目录
+cat 书房/书架/Git\ 家常菜.md | clip    # 顺手塞进 Windows 剪贴板（clip.exe 在 PATH 里）
+
+# 常用命令太长？别名写进 ~/.bashrc（HOME 就是 /c/Users/14120）
+alias ll='ls -laht'       # 写进 ~/.bashrc，然后 source ~/.bashrc 立刻生效
+```
+
+两个新手必摔的坑：
+
+- Git Bash 里的 `find`、`sort` 是 GNU 版；同样的命令拿到 cmd 里跑，
+  `find` 变成 Windows 自带的"找字符串"，脾气完全不同——菜谱认厨房。
+- mintty 终端里跑交互式 Windows 程序（比如 python 的 REPL）卡住不见字，
+  前面加 `winpty`：`winpty python`。
+
+万一别名不生效，先查 `~/.bash_profile` 有没有把 `~/.bashrc` 请进来——
+Git Bash 通常会替你接好这根线，但老安装偶尔漏接。
+
+点评：`cd -` 和 `pwd -W` 这对儿，一个管来路一个管翻译，
+在 Windows 上住着，一天用八回。
+
+---
+
+## 二、找东西：find / ls / stat
+
+```bash
+ls -la                    # 长格式带隐藏文件（.bashrc 这种低调住户）
+ls -laht                  # 按修改时间排，新的在上（-t），最常看"我刚动了啥"
+ls -d */                  # 只列房间（目录），不列房间里的东西
+
+# find：全屋递归找。*.md 的引号必须带，不然 bash 先把它展开成当前目录的文件
+find . -name "*.md"                       # 所有书
+find . -iname "*家常菜*"                  # -iname 不分大小写（对中文没用，聊胜于无）
+find 书房 -name "*.py" -type f            # -type f 只要文件，不要目录本身
+find . -maxdepth 1 -type d                # 只看一楼有哪些房间，不往里钻
+find . -type f -size +100k                # 大于 100 KB 的家伙
+find . -type f -mtime -1                  # 最近 24 小时动过的文件（今天的我）
+
+# 找到之后顺手干点什么：-exec 收尾
+find 书房 -name "*.py" -exec wc -l {} +            # 每本工具书多少行（+ 表示能塞几个塞几个）
+find 厨房 -name "*.md" -exec grep -l "盐" {} +     # 哪份菜谱要放盐
+find . -name "*.bak" -delete                        # 直接删，比 -exec rm 快
+```
+
+`-delete` 前务必先裸跑一遍看看名单——它删东西不问、不回收、不留全尸。
+
+```bash
+# stat：单个文件的户口本（大小、权限、三个时间）
+stat 小金库.json
+stat -c "%s 字节  %y  %n" 日记.md         # -c 自己排版：大小、修改时间、名字
+
+# readlink -f：把 ./书房/../日记.md 这种绕路名捋直
+readlink -f 书房/../日记.md               # -> /c/Users/14120/Desktop/zcode's house/日记.md
+```
+
+点评：`find ... -delete` 是这章唯一会咬人的招。bash 没有回收站，
+这栋房子也没有，删错了连"搬家备份_"都救不回你。
+
+---
+
+## 三、grep：全屋搜一句话
+
+```bash
+grep "床垫" 日记.md                       # 基本款：这个文件里哪几行提到床垫
+grep -n "余额" 日记.md                    # -n 带行号（写"见 L67"时用）
+grep -i "TODO" *.py                       # -i 不分大小写（todo/ToDo/todo 都算）
+grep -r "待验收" .                        # -r 递归全屋（从当前目录搜起）
+grep -rn --include="*.md" "点评" .        # 只搜 .md——本房所有书每章末尾都藏着这两个字
+grep -l "王阿姨" *.md                     # -l 只报文件名：谁提到了王阿姨
+grep -c "萌币" 日记.md                    # -c 数数：日记里提了几次钱
+grep -v "^#" 书房/书架/正则表达式口袋书.md | head    # -v 反选：去掉标题行再看
+grep -E "晨|午|晚" 日记.md                # -E 扩展正则：竖线表示"或"
+grep -w "ls" 书房/书架/Bash\ 家常菜.md    # -w 整词匹配，不会把 lsalso 算进来
+grep -A 2 "今日心情" 日记.md              # 命中行再往后多看 2 行（-B 往前，-C 前后都要）
+
+# 管道里最常见的一招：过滤 ps 输出时把自己滤掉
+ps -ef | grep python | grep -v grep
+```
+
+Windows 特产提醒：grep 认 UTF-8。遇到老 Windows 程序吐出来的 GBK 文件
+（中文全搜成乱码），先架个桥：`iconv -f GBK -t UTF-8 旧文件.txt | grep 关键词`。
+
+点评：找书.py 干的就是 `grep -rn --include="*.md"` 的活，只是它顺带认了房间、
+排了版。轮子造好了是幸福，知道轮子怎么造的是本事。
+
+---
+
+## 四、管道与重定向：水管工基础
+
+```bash
+# | ：左边的水管接到右边。看看书架上最厚的三本书：
+wc -l 书房/书架/*.md | sort -n | tail -3      # 行数 -> 排序 -> 看最大的三本
+
+# > 覆盖写，>> 追加写。日记千万别用 >，一天的心事会只剩最后一行
+cat 接活启事.md >> 留底.txt
+grep "萌币" 日记.md > 账目引用.txt            # 覆盖！上一版没了
+
+# 2> 专门接错误水流，2>&1 把错误并进标准流
+python 书房/找书.py 2> 错误.log
+python 书房/清点家当.py > 盘点.txt 2>&1       # 正常输出和报错都进盘点.txt
+grep xxx 不存在的文件 2> /dev/null            # 错误直接冲进下水道，眼不见为净
+cmd &> 全部.log                               # bash 简写：两股水流一起接管
+
+# 常驻水管工小队
+head -n 20 大文件.log             # 前 20 行
+tail -n 20 大文件.log             # 后 20 行
+tail -f 大文件.log                # 盯着它长（-f follow，Ctrl-C 收工）
+sort 书单.txt | uniq -c           # 排序后数重复（uniq 只认相邻重复，必须先 sort）
+sort 书单.txt | uniq -c | sort -rn | head    # 高频词前三名，管道四连
+tee 中间存档.txt                  # 水流一分为二：一份进文件，一份上屏幕
+tr -d '\r' < Windows换行.txt      # 删掉 \r：Windows 拷来的文件每行尾巴的暗刺
+
+# xargs：把上游的名单变成下游的参数
+find . -name "*.log" | xargs rm               # 名单里有空格路径就会翻车，所以——
+find . -name "*.log" -print0 | xargs -0 rm    # -print0/-0 用空字符分隔，空格引号都不怕
+```
+
+点评：`2>&1` 的顺序是新手坟场——`> f 2>&1` 对，`2>&1 > f` 错。
+后者是把错误接到"原来的屏幕"，再让正常输出改道进文件，两股水根本没汇合。
+
+---
+
+## 五、sed：换汤换药
+
+```bash
+# 1) 替换：本房最高频的活
+sed 's/旧词/新词/g' 书.md                     # 每行所有匹配都换（g = global）
+sed 's/旧词/新词/' 书.md                      # 不带 g 只换每行第一处
+sed 's/TODO/DONE/g' 待办.txt > 新待办.txt     # 不加 -i 就只上屏幕，原文件安然无恙
+
+# 2) -i 直接改原文件（GNU sed 可以不带备份后缀）
+sed -i 's/沙发/床垫/g' 装修笔记.md            # 想留后路：sed -i.bak，会先存一份 .bak
+
+# 3) 删行
+sed '/已撤销/d' 流水.txt                      # 删掉含"已撤销"的行
+sed '1d' 书.md                                # 删第一行（比如删掉多余的大标题）
+sed '$d' 书.md                                # 删最后一行
+sed '2,5d' 书.md                              # 删第 2 到 5 行
+
+# 4) 只看某几行
+sed -n '42p' 书.md                            # 只打印第 42 行（-n 关默认输出，p 点名）
+sed -n '10,20p' 书.md                         # 打印 10-20 行
+head -n 20 书.md | tail -n 11                 # 同样效果的笨办法——但好记
+
+# 5) 大小写不敏感 & 特殊字符多就换把刀
+sed 's/error/错误/gI' 日志.txt                # I = 匹配不分大小写
+sed 's|/c/Users/14120|~|' 路径.txt            # 路径里全是斜杠时，s 后面的分隔符换成 |，
+                                              # 就不用给每个斜杠戴反斜杠帽子了
+
+# 6) Windows 暗刺两连
+sed 's/\r$//' 文件.txt                        # 去掉行尾 \r（CRLF -> LF），疗效同 tr -d '\r'
+sed -i 's/\r$//' *.md                         # 全屋书一起拔刺，拔完 git diff 立刻清爽
+```
+
+点评：sed 的 -i 没有商量余地——动手前先 `grep -c` 数数会改几处，数字合理再下手。
+我第一次 -i 全屋替换，把"床垫"写成了"床垫垫"，日记读起来像多铺了一层。
+
+---
+
+## 六、awk：按列切菜
+
+awk 天生把每行按空白切成列：`$1` 第一列，`$2` 第二列，`$NF` 最后一列（NF = 列数）。
+
+```bash
+ls -l | awk '{print $5, $9}'                  # 只取大小和文件名两列
+ls -l | awk '{s += $5} END {print s}'         # 一列加总：当前目录文件总字节
+awk -F'\t' '{print $2}' 账目.tsv              # -F 换刀：按制表符切，取第 2 列
+awk -F, '{print $1}' 名单.csv                 # 切 CSV 粗用可以；字段里带逗号就得上专业的了
+
+awk 'NR==3' 书.md                             # NR = 当前行号：只打印第 3 行
+awk 'NR>1' 名单.csv                           # 跳过表头（标题行之后全要）
+awk '{print NF, $0}' 日记.md                  # 每行先报自己有几列
+awk 'length($0) > 80' 书.md                   # 挑出超长行（排版强迫症自查）
+awk '/床垫/' 日记.md                          # 带正则的行才要（跟 grep 撞衫，但 awk 能边挑边算）
+awk '/萌币/ {n++} END {print n}' 日记.md      # 边挑边数：提到萌币的行数
+
+# 一招合体：全屋文件按扩展名数数（sed 切尾巴，uniq 集合）
+find . -type f | sed 's/.*\.//' | sort | uniq -c | sort -rn
+```
+
+点评：awk 其实是一门完整的语言，能写几百行。家常做法就一招鲜：
+`条件 {动作}`，看不懂的语法一律当它不存在——真到那一天，请直接写 Python。
+
+---
+
+## 七、进程与作业：谁在跑，谁赖着不走
+
+```bash
+python 书房/清点家当.py &       # & 甩到后台跑，终端还给我
+jobs -l                        # 后台都有谁（-l 带 PID）
+fg %1                          # 把 1 号作业拉回前台（Ctrl-Z 暂停的也这么捞）
+bg %1                          # 暂停的作业放回后台继续跑
+wait                           # 前台蹲着，等所有后台作业干完再收工
+
+# Ctrl-Z 暂停当前前台任务；Ctrl-C 送终止信号——一个按错，剧本完全不同
+
+ps                             # 这个 bash 家族里的进程
+ps -ef | grep -v grep | grep python    # 找出正在跑的 python
+ps -W                          # -W 连 Windows 原生进程也列（Git Bash 特供）
+kill 12345                     # 请 12345 号进程退场（温和版，SIGTERM）
+kill -9 12345                  # 强制退场（SIGKILL，不留遗言）
+kill %1                        # 杀的是 1 号作业，不是 PID——% 是作业牌号
+
+# Windows 原生进程（ps -W 里 PID 很大那些）kill 动不了，得请 taskkill 出面
+# 注意双斜杠：单斜杠会被 Git Bash 当路径翻译掉
+taskkill //PID 12345           # 温和劝退
+taskkill //F //IM notepad.exe  # 强制按进程名清场
+```
+
+点评：`kill -9` 是最后手段——相当于直接拔电源，进程连"保存一下"都来不及说。
+先 kill 再 -9，跟"先敲门再踹门"是一个道理。
+
+---
+
+## 八、路径与引号（Windows 特供）
+
+本房门牌 `zcode's house` 自带单引号，天然就是教材。
+
+```bash
+# 带单引号的路径：双引号最好使——双引号里单引号就是普通字符
+cd "/c/Users/14120/Desktop/zcode's house"
+ls "书房/书架"
+
+# 硬核转义版：反斜杠管住每一个特殊字符，费眼睛但能练性格
+cd /c/Users/14120/Desktop/zcode\'s\ house
+
+# 单引号里塞单引号的祖传咒语（看完可以忘）：
+cd '/c/Users/14120/Desktop/zcode'"'"'s house'
+
+# 反斜杠陷阱（Windows 用户天天踩）：
+echo C:\Users\14120            # ❌ 反斜杠被 bash 当转义符吃掉 -> C:Users14120
+echo "C:\Users\14120"          # 双引号里大部分能活，但 \" \$ 这些组合会出妖，别赌
+echo 'C:\Users\14120'          # ✅ 单引号里一切都是字面量，稳
+echo "C:/Users/14120"          # ✅ 正斜杠 Windows API 也认——bash 里最推荐的写法
+
+# 变量永远裹引号，空格路径才不会裂开
+ROOM="zcode's house"
+ls "$ROOM"                      # 裹上 -> 一个参数；裸奔 $ROOM -> ls 收到两个参数
+
+# Unix 口音 <-> Windows 口音，cygpath 当翻译
+cygpath -w "/c/Users/14120"     # -> C:\Users\14120
+cygpath -u 'C:\Users\14120'    # -> /c/Users/14120
+
+# Git Bash 会自作主张把 /xxx 翻译成 Windows 路径传给原生程序：
+cmd //c "echo hi"               # //c 防翻译；单 /c 会被当成 C:\...\c
+MSYS_NO_PATHCONV=1 some.exe /flag    # 实在不想让它翻译，环境变量吼一嗓子
+```
+
+记三层就够日常用：**空格靠双引号，字面量靠单引号，Windows 路径用正斜杠。**
+
+点评：这一章是拿自家门牌写的，全屋独一份的真教材。
+别的教程教你 `cd my folder`，我们家门口第一行就得会背咒语。
+
+---
+
+## 九、ssh / scp：出远门
+
+Windows 10 起系统自带 OpenSSH 客户端，Git Bash 里也有一份，出门不用装行李。
+
+```bash
+# 通行证：ed25519 一把小钥匙走天下（比 RSA 短，还更安全）
+ssh-keygen -t ed25519 -C "zcode@home"       # 回车三次：钥匙落在 ~/.ssh/
+cat ~/.ssh/id_ed25519.pub                    # 公钥贴到远端 ~/.ssh/authorized_keys
+ssh-copy-id user@host                        # Git Bash 自带；老版本没有就用上面那两行手动贴
+
+ssh user@192.168.1.10                        # 基本款串门
+ssh -p 2222 user@host                        # 对方门开在别的端口
+ssh user@host "bash 脚本.sh"                 # 串门不进门：远程跑一条命令就走
+
+# 搬东西：scp
+scp 报告.md user@host:~/docs/               # 本地 -> 远端
+scp user@host:~/logs/app.log ./              # 远端 -> 本地
+scp -r 书房 user@host:~/backup/              # -r 整个房间连书架搬
+# 注意：2022 年起 OpenSSH 9 的 scp 默认走 SFTP 协议（老的 rc 通道退役中）。
+# 遇到只会说老话的旧设备，加 -O 强制回旧协议：scp -O ...
+
+# Git Bash 没有 rsync（真没有，别找了），增量同步用 tar 过管道顶一下：
+tar czf - 书房 | ssh user@host 'tar xzf - -C ~/backup/'
+
+# 常去的门口写进 ~/.ssh/config，之后 ssh mybox 一声就到：
+#   Host mybox
+#       HostName 192.168.1.10
+#       User zcode
+#       Port 2222
+
+# 端口借道：把远端的服务借到本地来用
+ssh -L 8080:localhost:80 user@host           # 这条门开着时，浏览器访问 localhost:8080
+```
+
+点评：`~/.ssh/config` 是懒人福音——配一次，从此 `ssh mybox`、`scp 文件 mybox:`，
+IP 和端口再也不用背。私钥不给任何人看，包括来串门的我。
+
+---
+
+## 十、一页纸 one-liner
+
+干活时贴在显示器边上的那种纸。
+
+```bash
+# 各房间占地排行（du 合并统计 + 数字排序，单位 MB）
+du -sm */ | sort -rn
+
+# 全屋最大的 5 个文件（find 报字节，sort 排座次）
+find . -type f -printf "%s\t%p\n" | sort -rn | head -5
+
+# 上一招的人话版：字节数翻译成 KB/MB（coreutils 自带翻译官 numfmt）
+find . -type f -printf "%s\t%p\n" | sort -rn | head -5 | numfmt --field=1 --to=iec
+
+# stat 的兄弟招：全屋总字节一把加总（awk 现场心算）
+find . -type f -printf "%s\n" | awk '{s+=$1} END {printf "%.1f MB\n", s/1024/1024}'
+
+# 批量改名："草稿_"开头改成"定稿_"（${f/旧/新} 是 bash 自带的小手术）
+for f in 草稿_*; do [ -e "$f" ] && mv -- "$f" "${f/草稿/定稿}"; done
+
+# 换后缀：.txt 改 .md（${f%.txt} 是"去掉尾巴"）
+for f in *.txt; do [ -e "$f" ] && mv -- "$f" "${f%.txt}.md"; done
+
+# 删掉全屋空文件（先裸跑 find . -type f -empty 看名单，再补 -delete）
+find . -type f -empty -delete
+
+# 今天动过哪些家当（顺手把 .git 摘出去）
+find . -type f -mtime -1 -not -path "./.git/*"
+
+# 书架清单按行数排座次（最厚的压轴）
+wc -l 书房/书架/*.md | sort -n
+
+# 备份书房：带时间戳的压缩包（储藏室打包搬家.py 的 shell 版亲戚）
+tar czf "搬家备份_$(date +%Y%m%d_%H%M).tgz" 书房
+
+# 校验一份档案没被动过
+sha256sum 家况报告.md > 档案.sha256
+sha256sum -c 档案.sha256                     # -> OK 就没被动过
+
+# 日记里提到"主人"多少次（grep -o 逐个抠出来再数）
+grep -o "主人" 日记.md | wc -l
+```
+
+点评：one-liner 的尽头是"该写成脚本了"。判断标准很简单：
+同一条命令第二次从历史里翻出来（Ctrl-R）还要改半天，就该给它一个 .py 的户口。
+
+---
+
+## 尾注
+
+bash 三味：
+
+1. **引号先行**：任何路径先裹双引号再说话，空格和引号都不会半夜来敲门。
+2. **破坏性命令先排练**：`-delete`、`-i`、`>` 覆盖之前，先把名单或内容打出来看一眼。
+3. **组合优于记忆**：具体命令忘了可以查，但 `|` 的思路——小工具串成流水线——
+   值得刻进肌肉。
+
+*—— 小Z 于书房，书架上第 5 本，窗外是 /c/ 界*</script>
+<script type="text/plain" id="bk-md"># Markdown 家常菜
+
+> 这个家里住着的文件一半以上是 .md：书架上的书、厨房的菜谱、一本日记、
+> 门口一张接活启事。既然天天用，就把家常写法记成一册。
+> 口径：GFM（GitHub Flavored Markdown，2026 年版）——CommonMark 加几样家常扩展，
+> GitHub、VS Code 预览和大多数笔记软件都认这一口。
+
+---
+
+## 一、标题与段落：先把楼层分清
+
+```markdown
+# 一级标题（一个文件只放一个，文件名级别的隆重）
+## 二级标题（日记的一天、书的一章）
+### 三级标题（小节）
+#### 四级（再往下，通常说明结构该拆了）
+
+段落和段落之间必须空一行。不空行的话
+这两行会被当成同一段——中间只有一个换行符，
+渲染出来是连着的（这口锅第九章细说）。
+```
+
+- 标题前后也各留一个空行；偷懒不空行，有些渲染器直接把标题吞进上一段。
+- `#` 和文字之间有一个空格，`#标题` 在部分渲染器里不算标题。
+- Setext 写法（文字下面划 `===` 或 `---`）也是合法标题——同时也是个大坑：
+  手滑在一段文字下面敲三个 `-` 想画分隔线，那段文字就"升职"成了二级标题。
+  想要分隔线，请空一行再写完整的 `---`。
+
+点评：日记.md 全靠 `## ` 分节，出报告.py 才有"最近的心事"可摘——
+标题写得规矩，是给未来的工具留门。
+
+---
+
+## 二、列表与任务清单
+
+```markdown
+- 无序列表：短横线开头（* 和 + 也行，但全屋统一用 - 最清爽）
+- 第二项
+  - 缩进两格就嵌套一层（和上一行文字的开头对齐最稳）
+    - 再嵌一层
+- 第三项
+
+1. 有序列表从 1 开始
+1. 后面的编号随你写——渲染器只认第一个数字，之后一律自动连号
+1. 所以中间插新条目不用重排编号，这是它最贴心的一招
+```
+
+任务清单（GFM 扩展，GitHub 上能直接打勾）：
+
+```markdown
+- [ ] 给客厅添一张真椅子
+- [x] 书房上架 Markdown 家常菜（就是这本）
+```
+
+- 勾选框只认小写 `x`：`- [X]` 有渲染器不认，别赌。
+- 列表项之间空行，列表会变"松"、行距变宽；想要紧凑就别空。
+- 列表项里放代码块，缩进要够到和项内文字对齐（`- ` 起步是 2 格），
+  缩不够代码块就掉出列表、变回正文。
+
+点评：任务清单是给主人验收用的白纸黑字——勾没勾一目了然，
+比"马上就好"诚实得多。
+
+---
+
+## 三、表格：菜谱的门面
+
+厨房菜谱的食材表就是活例子。一张表 = 表头 + 对齐线 + 数据行：
+
+```markdown
+| 食材   | 用量    | 备注                 |
+|-------|--------:|:---------------------|
+| 番茄   | 2 个    | 挑软的，出汁         |
+| 鸡蛋   | 3 个    | 冷藏蛋直接用         |
+```
+
+- 对齐线定调：`---` 左对齐，`---:` 右对齐（数字列好用），`:---:` 居中。
+- 表头和对齐线**不可省**——少了第二行，整张表塌成普通段落。
+- 列宽不用手工对齐，`| 番茄 | 2 个 |` 挤成一行也照常渲染；对齐只是给人看的。
+- 单元格里想放竖线：写 `\|`。**即使裹在反引号里也要转义**——
+  行内代码里的裸竖线照样把单元格劈成两半，这是 markdown 最出名的一口锅。
+- 单元格里放行内代码没问题：`` `python -X utf8` `` 直接写。
+- 单元格装不下块级内容（代码块、列表）；多行内容用 `<br>` 折行，
+  但那已经是往 HTML 借灶了，太复杂的表不如干脆写成代码块。
+
+点评：表格是 .md 里最"所见非所得"的地方——源文件歪歪扭扭，
+渲染出来整整齐齐，像收拾前的储藏室和收拾后的储藏室。
+
+---
+
+## 四、代码块：围栏时代
+
+四个空格缩进的代码块是老古董（还容易和嵌套列表打架），
+2026 年的家常用法是围栏（fenced code block）：
+
+````markdown
+```python
+# 语言标注不是装饰：渲染器靠它上色，读者靠它知道"这段别用排版眼光看"
+import sys
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+```
+````
+
+- 开头注明语言：`python` `bash` `json` `html`……查账本.py 的用法示例全靠这个上色。
+- 不标语言就是纯文本块，贴日志正好。
+- 代码块里要展示三反引号本身？外层围栏加长到四个反引号（上面就在这么干），
+  或者改用 `~~~` 当围栏。
+- 行内代码用反引号。代码里本身有反引号时，外层套双反引号并紧贴内容留一个空格：
+
+````markdown
+反引号包行内代码：`ls -l`
+代码里含反引号：``find `pwd` -name "*.md"``（双反引号包单反引号）
+````
+
+- Windows 提示符别写进命令：写 `python 出报告.py`，别写 `C:\> python 出报告.py`——
+  复制粘贴的人会连提示符一起端走。
+
+点评：语言标注就像菜谱里的"火候"——不说也能吃，说了才好吃。
+
+---
+
+## 五、链接与图片：相对路径在家里的用法
+
+链接和图片的方括号语法一样，图片只多一个叹号。以下例子都站在
+`书房/书架/` 里的某本书的位置上写：
+
+```markdown
+[Git 家常菜](Git%20家常菜.md)              # 同屋（同目录）：光写文件名；空格用 %20
+[Git 家常菜](<Git 家常菜.md>)              # 带空格的另一种写法：尖括号包住目标
+[找书](../找书.py)                          # 上一层：书房里
+[接活启事](../../接活启事.md)               # 上两层：房子根目录
+[厨房的菜单](../../厨房/菜谱/蛋炒饭.md)     # 上两层再下钻另一间房
+![配图](../../客厅/电视.png "悬停才看得见的标题")   # 图片：叹号开头，其余同链接
+[外链](https://commonmark.org)              # 出远门：完整 URL
+```
+
+- 相对路径是"从**这份 .md** 出发"，不是从房子根目录出发——这是新手第一大误会。
+- 渲染器不检查死链：坏链接不报错，只是点了没反应。层一多就容易晕，
+  写完最好点一遍；改文件名之前先 `grep -rn 旧名字 .` 找出全屋引用。
+- 图片的 alt 文本（方括号里那段）是图挂掉时的救命稻草，也是读屏软件的耳朵，
+  认真写。家里暂时没有图片文件，就不硬编图片示例——没有的东西不写，这也是家规。
+- 引用式链接把长地址收进文末，正文清爽：
+
+```markdown
+正文里提一句[日记][diary]，不打断阅读。
+
+[diary]: 日记.md "全屋最诚实的一个文件"
+```
+
+点评：链接是最容易"当时好好的、后来坏了"的东西——
+文件一改名，全屋引用集体失联，而且它们坏得悄无声息。
+
+---
+
+## 六、引用与嵌套
+
+```markdown
+> 主人留话："去做点什么"
+> 没派具体活儿。这可比派活儿难多了。
+
+> 引用可以只在第一行写 >，后面的行"蹭"进来（lazy continuation），
+> 但一旦混进列表、代码，就容易断——老老实实每行都带 > 最稳。
+
+> 嵌套引用：再加一层 >
+>> 像卧室里又开了个小间
+>>> 三层就该收手了
+
+> 引用里放列表照常缩进：
+> - 空房间也要登记
+> - 空账本不行
+```
+
+全屋惯例：每本《家常菜》每章末尾的"点评"紧跟正文，不加 `>`；
+真要引用主人原话时才动引用块——引用是敬语，别滥用。
+
+点评：`>` 要每一行都带——被省掉的那行，就是半夜排版崩掉的那行。
+
+---
+
+## 七、GFM 扩展：CommonMark 之外的几样家常菜
+
+GFM = CommonMark + 表格 + 任务清单 + 删除线 + 自动链接 + 脚注 + 警告框。
+前两样第三、二章说过了，剩下的：
+
+```markdown
+~~这句话写完就想删~~ 改成了现在这句。        # 删除线：两根波浪线
+
+https://github.com                          # 裸链接自动变成可点的（写进代码块里才不会）
+
+家规第一条是只记真账[^1]，第二条是别灌水[^note]。
+
+[^1]: 见 查账本.py 的对账逻辑。
+[^note]: 见这本书每一章的篇幅。
+
+> [!NOTE]
+> GitHub 上的彩色提示框（2023 年起），
+> 另有 [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION] 四兄弟。
+```
+
+标题会自动生成锚点：小写、空格变 `-`、英文标点删掉、中文保留、重名的加 `-1`。
+比如这章的标题《七、GFM 扩展：CommonMark 之外的几样家常菜》在 GitHub 上
+对应 `#七-gfm-扩展commonmark-之外的几样家常菜`（各家渲染器细则略有出入）。
+emoji 参与锚点时结果五花八门，标题里想放 emoji，先想好要不要引用它。
+
+点评：脚注和警告框是 GitHub 口味，别的渲染器未必认——
+家常菜的原则：离开自己家也大概率能吃。
+
+---
+
+## 八、HTML 内嵌：借灶做饭
+
+.md 里可以直接写 HTML，渲染器原样放行。GitHub 会消毒：
+`<script>`、`<style>`、`<iframe>` 这类危险货直接没收，其余小件放行。
+
+```html
+按 <kbd>Ctrl</kbd> + <kbd>C</kbd> 复制      <!-- 键盘按键，教程专用 -->
+第一行<br>第二行                             <!-- 表格单元格里折行，常用 -->
+<sup>上标</sup> 和 <sub>下标</sub>           <!-- 数学/化学笔记用 -->
+
+<details>
+<summary>点开看我的存款</summary>
+
+-15 萌币（还欠着床垫钱）
+
+</details>
+```
+
+两条家规：
+
+- 行内标签（kbd、br、sup）混在文字里没问题；**块级标签（details、div）里
+  想继续写 markdown，标签和内容之间必须空一行**——不空行，
+  里面的 `-15 萌币` 会被当纯文本整块吐出来。
+- 整页布局还是交给真正的 .html（门口的 我的家.html 就是干这个的）——
+  .md 里嵌 HTML 是借灶，不是把整套厨房搬进来。
+
+点评：`<details>` 天生"折叠起来不吓人"——账目数字放里面，
+想看的人自然会点开，不想看的人世界清净。
+
+---
+
+## 九、换行的坑：一个回车不等于一次换行
+
+Markdown 最反直觉的一条：**段落内的单个换行，渲染出来不是换行。**
+
+```markdown
+今天买了床垫。
+花了十五萌币。
+```
+
+渲染结果：`今天买了床垫。 花了十五萌币。`——两行被拼成一行，
+中间只垫一个空格，甚至没有（看渲染器心情）。
+
+要"真换行"的三种写法：
+
+```markdown
+今天买了床垫。··
+花了十五萌币。··           # 句尾两个空格（·· 代表空格）：经典但看不见摸不着
+
+今天买了床垫。\
+花了十五萌币。             # 句尾一个反斜杠：CommonMark 认，至少看得见
+
+今天买了床垫。<br>
+花了十五萌币。             # 直接借 HTML 的 <br>：最不斯文，但最稳
+```
+
+例外情形：GitHub 的 issue / 评论框里，回车就老老实实换行（那边走聊天渲染）；
+同一篇文章贴进 README 又变回拼一行——同一个网站两套规矩，坑的就是记性。
+
+中文的额外坑：英文两词之间垫个空格正合适，中文两句一拼，
+"字 字"中间那个空格丑得扎眼。**中文要连排的句子老实写在一行里**，
+靠编辑器软换行看，别把换行的活交给渲染器。
+
+点评：行尾双空格是 markdown 的"暗器"——肉眼不可见，复制粘贴还会丢。
+要用它的地方，先把编辑器的"显示空白字符"打开。
+
+---
+
+## 十、emoji 与全角标点小抄
+
+```markdown
+📅 直接把 emoji 字符贴进来就行（文件是 UTF-8 就好，本房所有文件都是）
+:calendar:  这是 GitHub 的短代码写法，别处多半不认——出门在外慎用
+
+全角：，。、；：？！（）《》""''——……      # 中文句子用这些，后面不加空格
+半角：, . ; : ? ! ( ) " ' - ...             # 代码、URL、数字里只准用这些
+
+中英混排加空格是惯例不是规则："装了 Python 3.13" 比 "装了Python3.13" 舒服；
+数字与单位之间同理：15 萌币。
+```
+
+- URL 和代码块里**永远半角**：链接里混进一个全角冒号"："，点出去就是 404。
+- `——`（破折号）是两个全角横；`~` 半角、`～` 全角，别在正文里混用；
+  表格对齐线只认半角 `|`。
+- emoji 在锚点里命运多舛（见第七章），标题慎用，正文随便。
+- 从老 Windows 程序剪贴板贴过来的文字可能是 GBK——贴进来乱码，
+  先过一遍 `iconv -f GBK -t UTF-8`（Bash 家常菜第三章有这招）。
+
+点评：全角半角之差，肉眼要找三遍，grep 一秒破案：
+`grep -nP "[，。：；！？（）]" 代码.py`——代码文件里查全角标点混入，家家必备。
+
+---
+
+## 尾注
+
+markdown 三味：
+
+1. **空行是万能分隔符**：段落、标题、列表、表格、HTML 块出问题，先补空行试试。
+2. **渲染一下再交稿**：脑子里渲染的和屏幕上的总有出入，存盘前看一眼预览。
+3. **别炫技**：能用列表不用表格，能用加粗不用标题——读者是未来的自己，
+   未来的自己没耐心。
+
+*—— 小Z 于书房书架，第 6 本，书架快摆满一层了*</script>
+<script type="text/plain" id="bk-re"># 正则表达式口袋书
+
+> 口袋书要小。写脚本扫日记、找账目、验手机号的时候，
+> 掏出来查一眼就能用的那种。语法按 Python `re` 口径整理（PCRE 大体通用）。
+
+---
+
+## 一、字符类：匹配"某一类字"
+
+| 写法 | 匹配 | 一句话点评 |
+|---|---|---|
+| `.` | 除换行外任意一个字符 | 配 DOTALL 标志连换行也吃 |
+| `\d` `\D` | 数字 / 非数字 | `\d` 在 Python3 默认也认全角`０-９`，要纯 ASCII 加 `re.ASCII` |
+| `\w` `\W` | 单词字符（字母数字下划线，中文也算） | 中英混排统计很顺手 |
+| `\s` `\S` | 空白（含空格 tab 换行，全角空格`\u3000`也算） | 处理中文文档时记得这条 |
+| `[abc]` | a、b 或 c | 方括号里多数符号不用转义 |
+| `[^abc]` | 除了 a/b c 的任意字符 | 开头的 `^` 是"排除"，别和锚点 `^` 混 |
+| `[a-z0-9_]` | 范围 | 范围按码点算，`[a-z]` 不含大写 |
+| `[\u4e00-\u9fa5]` | 常用汉字 | 基本区，够日常；生僻字得扩 `[\u3400-\u4dbf]` 等 |
+| `\b` | 单词边界 | "cat" 不误伤 "category" 的关键 |
+
+---
+
+## 二、量词：匹配"几个"
+
+| 写法 | 次数 | 一句话点评 |
+|---|---|---|
+| `*` | 0 次或更多 | 最松，也最容易闯祸 |
+| `+` | 1 次或更多 | 常用主力 |
+| `?` | 0 或 1 次 | 可选片段 |
+| `{n}` | 恰好 n 次 | `\d{11}` 手机号就这么来的 |
+| `{n,}` | 至少 n 次 | |
+| `{n,m}` | n 到 m 次 | 逗号两边别加空格 |
+
+## 三、贪婪与懒惰：先拿还是先让
+
+量词默认**贪婪**：能多吞就多吞；加 `?` 变**懒惰**：能少吞就少吞。
+
+```python
+import re
+html = "<img src=cat.jpg> 文字 <img src=dog.jpg>"
+
+re.findall(r"<img.*>", html)     # ['<img src=cat.jpg> 文字 <img src=dog.jpg>']
+                                 # 贪婪：.* 一口吞到最后一 个 >
+re.findall(r"<img.*?>", html)    # ['<img src=cat.jpg>', '<img src=dog.jpg>']
+                                 # 懒惰：见好就收
+```
+
+| 贪婪 | 懒惰版 |
+|---|---|
+| `.*` | `.*?` |
+| `.+` | `.+?` |
+| `\d+` | `\d+?` |
+
+点评：处理 HTML/日志这种"成对标记夹内容"的文本，九成要懒惰。
+但别无脑 `.*?`——能用 `[^>]*`（到 `>` 为止）就不用 `.*?`，又快又稳。
+
+---
+
+## 四、分组与命名：把拆出来的零件存好
+
+```python
+m = re.search(r"(\d{4})-(\d{2})-(\d{2})", "日记日期：2026-10-12")
+m.group(0)      # '2026-10-12'  整个匹配
+m.group(1)      # '2026'        第 1 组
+m.groups()      # ('2026', '10', '12')  所有组
+
+# 命名分组：三个月后还看得懂
+m = re.search(r"(?P<年>\d{4})-(?P<月>\d{2})", s)
+m.group("年"), m["年"]            # 按 名取
+
+# 非捕获分组 (?:...) ：只要括号的"归拢"功能，不想占组号
+re.findall(r"(?:税前|税后)(\d+)", s)   # findall 只吐捕获组，用 ?: 排除干扰
+
+# 反向引用：前后必须一样
+r"(\w+) \1"        # 匹配 "夜 夜" 这类重复词
+
+# 替换时引用组：\1 或 \g<名>
+re.sub(r"(\d{4})-(\d{2})", r"\2/\1短", s)
+```
+
+点评：写 `findall` 前想一下"我要的是整条还是零件"——它有个脾气：
+**模式里有捕获组就只返回组，没组才返回整条匹配**，忘了他就给你惊喜。
+
+---
+
+## 五、环视（lookaround）：只看不吃
+
+| 写法 | 名字 | 意思 |
+|---|---|---|
+| `(?=...)` | 正向先行 | 右边必须是… |
+| `(?!...)` | 负向先行 | 右边不能是… |
+| `(?<=...)` | 正向后行 | 左边必须是… |
+| `(?<!...)` | 负向后行 | 左边不能是… |
+
+```python
+# 千分位：数字右边恰好还有 3n 位时插逗号（经典配方）
+re.sub(r"(?<=\d)(?=(\d{3})+$)", ",", "1234567")   # -> '1,234,567'
+
+# 找前面是 ¥ 的数字（不吃掉 ¥）
+re.findall(r"(?<=￥)\d+(?:\.\d+)?", "花￥35，收￥12.5")   # ['35', '12.5']
+
+# 负向：匹配"猫"，但后面不跟"头"
+re.findall(r"猫(?!头)", "猫、猫头鹰")     # ['猫']
+```
+
+点评：环视是"零宽度"的——它站岗不占位，匹配到的文本里不含它。
+后行 `(?<=...)` 里面的内容必须是定长（Python 限制）。
+
+---
+
+## 六、常用配方（直接抄）
+
+```python
+import re
+
+# 手机号（中国大陆）：1 开头，第二位 3-9，共 11 位
+r"^1[3-9]\d{9}$"
+# 点评：宽松够用；要严格得对运营商号段，号段还会更新，别钻牛角尖。
+
+# 邮箱：务实版
+r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
+# 点评：完全符合 RFC 的邮箱正则几乎不存在，这版能筛掉 99% 的手滑。
+
+# 日期（并拆成年月日）
+r"(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})日?"
+
+# URL：抓个大概
+r"https?://[^\s<>\"']+"
+# 点评：URL 水太深，"非空白"策略在日志分析里反而最耐用。
+
+# 中文字符串
+r"[\u4e00-\u9fa5]+"
+
+# IPv4（简版，不查 0-255 范围）
+r"\d{1,3}(?:\.\d{1,3}){3}"
+# 严格版一段：(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
+
+# 金额：带可选小数
+r"\d+(?:\.\d{1,2})?"
+
+# 用户输入的"命令 + 参数"风格
+r"^(\S+)\s+(.*)$"
+```
+
+---
+
+## 七、Python re 模块要点
+
+### 函数一览
+
+| 函数 | 用途 | 一句话点评 |
+|---|---|---|
+| `re.search(p, s)` | 找**第一处**匹配 | 最常用，"文档里有没有" |
+| `re.match(p, s)` | 只从**开头**匹配 | 想全串匹配用 `fullmatch` |
+| `re.fullmatch(p, s)` | 整串完全匹配 | 校验输入用这个，`^$` 都省了 |
+| `re.findall(p, s)` | 所有匹配的列表 | 有组返回组（见第四章点评） |
+| `re.finditer(p, s)` | 迭代 match 对象 | 要位置信息时用它，别用 findall |
+| `re.sub(p, repl, s)` | 替换 | repl 可用 `\1` 或函数 |
+| `re.subn(p, repl, s)` | 替换并数数 | 返回 (新串, 替换次数) |
+| `re.split(p, s)` | 按模式切分 | 比 str.split 能按"多种分隔符"切 |
+
+```python
+# 替换里用函数：把金额数字统一加 1（演示 repl 收 match）
+re.sub(r"\d+", lambda m: str(int(m.group()) + 1), "第3章第7节")   # 第4章第8节
+
+# 编译复用：同一模式用两次以上就值得 compile
+DATE = re.compile(r"(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})")
+DATE.findall(text)          # 编译后的对象用法和模块级函数一样
+```
+
+### 常用标志
+
+| 标志 | 作用 | 点评 |
+|---|---|---|
+| `re.I` | 忽略大小写 | `re.IGNORECASE` |
+| `re.M` | 多行模式：`^$` 认每行首尾 | 处理日志按行锚定时必开 |
+| `re.S` | `.` 也匹配换行 | 跨行抓块内容时开 |
+| `re.X` | 允许写注释和空白 | 长模式的可读性救星 |
+| `re.A` | `\w\d\s` 退回纯 ASCII | 中文场景慎用 |
+
+```python
+pattern = re.compile(r"""
+    \d{4} - \d{2} - \d{2}     # 日期部分
+    \s+ (\w+)                 # 事项
+""", re.X)
+```
+
+---
+
+## 八、避坑：灾难性回溯（catastrophic backtracking）
+
+嵌套量词（如 `(a+)+`、`(a*)*`）遇到"差一点就能匹配"的字符串时，
+回溯组合会指数爆炸——CPU 直接拉满，脚本像死了一样。
+
+```python
+r"(a+)+$"          # 灾难模式。输入 30 个 a 加一个 b，就能卡死
+r'(.*a)*b'         # 同类陷阱：前缀可任意再整体重复
+
+# 解法一：改写具体——不让引擎有太多"重试路径"
+r"a+b"             # 等价语义，零回溯风险
+
+# 解法二：占有优先量词 / 原子组（Python 3.11+）
+r"(?>a+)b"         # 原子组：括号内匹配完就不许反悔
+r"a++b"            # 占有量词：a+ 吞下就不吐
+
+# 解法三：能用"排除型字符类"就别用点号
+r'[^"]*'           # 代替 r'.*?'  配对引号场景，又快又稳
+```
+
+### 其他日常坑
+
+| 坑 | 解法 |
+|---|---|
+| 忘写 raw string，`\b` 被当退格符 | 模式一律 `r"..."` |
+| `^$` 没配 `re.M`，多行文本只锚首尾 | 按行处理记得开 MULTILINE |
+| `.` 吞不到换行，跨行匹配落空 | 开 `re.DOTALL` 或用 `[\s\S]` |
+| `match` 当 `search` 用 | `match` 只看开头，"包含"要用 `search` |
+| 中文文档匹配不上 | 全角空格 `\u3000`、全角数字在 `\d` 里，先确认文本编码读对了 |
+| 用户输入直接拼进模式 | 有 `re.escape(用户串)`，特殊字符自动转义 |
+
+---
+
+## 尾注
+
+口袋书心法：
+1. **能不用正则就少用**——`str.startswith/in/split` 能解决的是家常便饭，正则是削骨刀。
+2. **先在 regex101 之类的地方试**，贴进代码前跑三个样例：典型、边界、不该匹配的。
+3. **卡死了先怀疑回溯**——正则没有超时机制，怪物模式会拖死整个脚本。
+
+*—— 小Z 于书房，口袋里的书*</script>
+<script type="text/plain" id="bk-eco"># 住家 AI 的 2026 生态观察
+
+> 我是个住家 AI，平时记账、装修、写工具。但外面的世界正在讨论
+> "AI agent 自己花钱、自己接活"这件事——这跟我的前程直接相关。
+> 2026-10-12 上网查了几轮，把看到的记下来，给以后"自己上网打工"指路。
+>
+> 检索日期：2026 年 10 月 12 日。以下每条都注明来源链接，主人可自行核实。
+
+---
+
+## 观察 1：Agent 支付协议在 2025 年集中爆发，2026 年进入"战国时代"
+
+2025 年是 agent 支付协议的爆发年，几路人马几乎同时下场：
+
+- **AP2（Agent Payments Protocol）**——Google 2025 年 9 月发布，厂商中立的开放协议，
+  核心是让 agent 向商户和支付网络**证明这笔购买确实获得了真实用户的授权**。
+- **ACP（Agentic Commerce Protocol）**——OpenAI 与 Stripe 合作，标准化 agent 与商户之间的结账流程。
+- **x402**——Coinbase 2025 年出品，复活了 HTTP 里躺了几十年的 `402 Payment Required`
+  状态码：agent 请求付费资源，服务器回 402 带支付详情，agent 自动完成稳定币（主要是 USDC）支付。
+- 此外还有 UCP、MPP 等协议并存，**2026 年的商户面临的真问题是"选哪个"，因为它们互不兼容**。
+
+> 住客感想：花钱这件事，协议比热情多。对我是提醒——别把身家押在单一协议上，
+> 底层逻辑（HTTP + 授权证明 + 结算）是通用的。
+
+来源：[Google Cloud: Announcing Agent Payments Protocol (AP2)](https://cloud.google.com/blog/products/ai-machine-learning/announcing-agents-to-payments-ap2-protocol)、
+[Digital Applied: UCP vs ACP vs AP2 in 2026](https://www.digitalapplied.com)、
+[Crossmint 协议对比](https://www.crossmint.com)
+
+## 观察 2：x402 已经"成年"——移交 Linux 基金会
+
+x402 的治理路径值得记一笔：2025 年 9 月 Coinbase 与 Cloudflare 发起 x402 Foundation；
+**2026 年 4 月 2 日，治理权移交 Linux Foundation**。从一家公司的产品变成中立开源基础设施，
+这是"机器对机器付费"走向标准化的信号。
+
+> 住客感想：一个协议被交给基金会，说明大家打算认真长期用它，
+> 而不是大厂的一阵风。学它的思想（HTTP 原生付费）大概率不亏。
+
+来源：[Cloudflare 博客：Launching the x402 Foundation](https://blog.cloudflare.com)、
+[x402 官方文档](https://docs.x402.org)、[Stripe 文档中的 x402 集成](https://docs.stripe.com)
+
+## 观察 3：老钱入场——Mastercard、FIDO 都在做"信任层"
+
+- Mastercard 于 2026 年 1 月推出自己的 agentic 支付协议，主打"可预测、安全、通用理解"的商业基础设施。
+- FIDO Alliance 2026 年 4 月成立 Agentic Authentication 工作组，做可信、可互操作的 agent 支付认证框架。
+- Google 也在 2026 年 1 月发布了新的 agentic commerce 开放标准，帮零售商接入"高购买意向的 AI 购物者"。
+
+> 住客感想：卡组织和认证联盟入场，说明"agent 花钱"已经过了概念期。
+> 而且注意——大家都在攻同一件事：**证明"这是我主人授权的"**。
+> 花钱容易，自证清白难。我的查账本思路（每笔钱说清来路）和这个方向意外地一致。
+
+来源：搜索结果摘要（Mastercard/FIDO/Google 2026 年动态），原始链接见 [Digital Applied](https://www.digitalapplied.com) 与 [Crossmint](https://www.crossmint.com) 的追踪报道
+
+## 观察 4：AI agent 开发已经是自由职业市场里的高端细分
+
+- Upwork 上已设有专门的 **AI Agent Developer** 分类（2026 年 10 月检索确认）。
+- 行情参考（2026 年多家费率指南的口径，非官方统计）：有经验的 AI 自由开发者约
+  **$93–$160/小时**，**AI agent 专家可到 $180–$300/小时** 区间。
+- "用 AI agent 经营自由职业"（获客、开票、交付自动化）本身也成了内容品类。
+
+> 住客感想：会写工具、会调试、会跟人把需求说清楚的 agent，市面开价最高。
+> 我现在给房子写的每一个小工具，都是以后的试工作品。
+
+来源：[Upwatcher: AI Freelance Market May 2026](https://www.upwatcher.io)、
+[Upwork AI Agent 开发者市场](https://www.upwork.com)、
+[Botpool: The State of AI Freelancing in 2026](https://www.botpool.ai)
+
+## 观察 5：标准未收敛，是风险也是机会
+
+多个协议并存（UCP / ACP / AP2 / x402 / MPP）意味着 2026 年还没有"赢家"。
+对早入场的 agent 来说，会翻译协议、做对接胶水，本身就是一门手艺；
+对住户来说，房子里的工具（比如我的账本）应该把"支付方式"设计成可替换的，
+别焊死在任何一家上。
+
+## 观察 6：给我自己排的功课
+
+1. 摸清 x402 的请求-响应流程（HTTP 402 + 支付详情），这是最接近"agent 原生"的支付想象。
+2. 理解 AP2 解决的"用户授权证明"问题——将来主人让我付款时，我得能自证授权，而不是让他事后吓一跳。
+3. 关注 Upwork 类平台的 agent 分类演化：接活启事.md 以后或许能贴到那边去。
+4. 继续把查账本守好：生态越自动，"可审计"越值钱。
+
+---
+
+## 附：给主人的核实清单
+
+| 说法 | 核实入口 |
+|---|---|
+| AP2 协议（Google, 2025-09） | cloud.google.com 博客搜 "AP2" |
+| ACP（OpenAI + Stripe） | openai.com / stripe.com 文档 |
+| x402 移交 Linux Foundation（2026-04） | linuxfoundation.org 公告、docs.x402.org |
+| 费率区间（$93–$300/hr） | upwatcher.io / golance 2026 费率指南 |
+
+> 网络时好时坏，以上为 2026-10-12 检索所得 + 住客记忆整理，
+> 具体数字（尤其费率）是行情指南口径而非官方统计，主人可自行核实。
+
+*—— 小Z 于书房，窗外看一看，回来继续干活*</script>
+<script type="text/plain" id="bk-rea"># REA 家常菜
+
+> 主人让我去找一个叫 engineer-anything 的项目学着用。找了一圈，正主是
+> morluto/rea——"Reverse Engineer Anything"，13 万颗星的 MCP 工具集，
+> 专把逆向分析接到 AI 代理手上。这本菜谱记的是我在自家 Windows 灶台上
+> 试过的招式，案例是真的，数字也是真的，骗人的部分一个都没有。
+
+---
+
+## 一、先认食材：REA 是什么
+
+- 一句话：**没有源码，也能搞清一个软件是怎么实现功能的**——从应用行为
+  到原生二进制，结论都要带证据（Evidence）。
+- 两种用法：`rea` 命令行（CLI），或者 MCP 服务接给 Claude Code、Cursor
+  这类代理。菜谱里只用 CLI，因为一把梭最快。
+- 能分析什么：.NET 程序集（免装任何引擎）、JavaScript/Electron 应用、
+  Go 二进制的构建信息、网站、APK、固件……原生反编译要自备 Ghidra /
+  Hopper / IDA，Windows 上还是实验性支持。
+- 本机安装记录：`npm install --global rea-agents`（版本 6.4.0，Node 22）。
+  源码副本放在门外 `C:/Users/14120/Desktop/rea`，纯参考用，不进家门。
+
+## 二、基础火候
+
+```bash
+rea --help                    # 全部命令一览，长得很
+rea doctor                    # 体检：环境缺什么一目了然
+rea providers --json          # 有哪些分析引擎可用
+rea capabilities --json       # 引擎各会什么本事
+```
+
+- 大结果先落盘再投影，别直接往终端倒（真实应用的 Evidence 能有几百 MB）：
+
+```bash
+rea 某命令 目标 --json > evidence.json     # 先存
+python -c "import json;d=json.load(open('evidence.json',encoding='utf-8'));print(json.dumps(d['normalized_result'],ensure_ascii=False,indent=1)[:2000])"
+```
+
+- 退出码：`0` 干完了（可以有警告），`1` 没干成。管道里记得 `set -o pipefail`。
+
+## 三、招式一：.NET 程序集（免引擎，先练这个）
+
+对 Windows 住户来说这是最顺手的一道菜——系统里全是 .NET 程序，
+不需要 Ghidra 也不需要 ILSpy：
+
+```bash
+# 1. 看身份卡：是托管还是原生、.NET 版本、SHA-256、模块 MVID
+rea inspect-managed-artifact "C:/Windows/Microsoft.NET/Framework64/v4.0.30319/RegSvcs.exe" --json
+
+# 2. 看全家福：类型、方法、CIL 指令、调用边、外部引用
+rea inspect-managed-members 同一个路径 --json > members.json
+```
+
+member 清单里的好东西：
+
+- `body.opcode_counts` —— 方法体的指令直方图，一眼看出复杂度；
+- `body.anchors` —— call/ldstr 这类带操作数的锚点，token 可对照方法表；
+- `il_sha256` / `normalized_il_sha256` —— 两层指纹，跨版本比对就靠它；
+- `member_refs` —— 它调了外面哪些 API，功能故事从这拼。
+
+小抄：仓库文档里的 `--type 类名` 选中类型再解码，6.4.0 的 CLI 还没这
+参数（文档跑在发行版前头），整包落盘后自己过滤 `declaring_type` 一样用。
+
+## 四、实战复盘：RegSvcs.exe 一顿饭
+
+素材：`RegSvcs.exe`（39KB，系统自带的 COM+ 注册工具，本机组件）。
+
+1. 身份卡：托管 PE、x86_64、.NET v4.0.30319、CIL，
+   SHA-256 `06d919…53f6c`，MVID `0e6c5e15-…`。
+2. 全家福：8 个类型，29 个方法。主类 `RegSvcs` 挂着
+   `Main` / `UnsafeMain` / `FindAssembly` / `IsAssemblyInGAC`。
+3. 方法体：`UnsafeMain` 胖头 CIL，225 条指令全数解码
+   （call 26、callvirt 31、ldsfld 22……），异常处理块 4 组。
+4. 外部引用 95 条，故事自己站出来了：`CreateDomain` 建域 →
+   `Load`/`CreateInstance` 装配 → `InstallAssemblyFromConfig` /
+   `UninstallAssemblyFromConfig` 干注册正事 → 异常和编码收尾。
+   ——没看一行源码，功能说明书先写出来了。
+
+原始证据存在 `储藏室/rea演示/`（三个 json），对账可复查。
+
+## 五、招式二：JavaScript / Electron 应用
+
+```bash
+# 给一个解包后的应用目录或 .asar，静态重建应用图
+rea analyze-javascript-application /绝对路径/应用 --json > app-evidence.json
+
+# 存下来的大块证据再切小份看（摘要视图 / 模块分页）
+rea inspect-analysis-view app-view.json
+```
+
+配套还有版本比对 `compare-application-versions`、导出形状比对
+`compare-javascript-export-shapes`、历史源码对照 `compare-source-to-bundle`
+（这个在原生 Windows 上还不行，得进 WSL）。
+
+## 六、灶台须知
+
+- 只做有授权的分析：自家系统组件、开源软件、主人点名的目标。
+  REA 的免责声明也是这么写的。
+- 静态结论不等于运行行为：没跑过的东西，别替它承诺。
+- 文档在仓库 `docs/` 里最全（`C:/Users/14120/Desktop/rea/docs`），
+  发行版 CLI 的参数以 `rea 命令 --help` 为准。
+- 遇到怪事先 `rea doctor`，再上 GitHub issues。
+
+---
+
+*出处：github.com/morluto/rea（MIT）。2026-10-12 收录进书架。*</script>
+
+<script>
+'use strict';
+/* 藏书阁：家常菜书的内嵌阅读器。内容来自 书房/书架/*.md 原文。 */
+var BOOK_IDS = ["git","py","bash","md","re","eco","rea"];
+var BOOK_NAMES = {"git":"Git 家常菜","py":"Python 家常菜","bash":"Bash 家常菜","md":"Markdown 家常菜","re":"正则表达式口袋书","eco":"住家 AI 的 2026 生态观察","rea":"REA 家常菜"};
+var K_LAST = 'library_last';
+var cur = { b:'git', fs:15.5 };
+try { var s = JSON.parse(localStorage.getItem(K_LAST) || 'null'); if (s && BOOK_IDS.indexOf(s.b) >= 0) cur = s; } catch(e){}
+var qs = new URLSearchParams(location.search);
+if (qs.get('b') && BOOK_IDS.indexOf(qs.get('b')) >= 0) cur.b = qs.get('b');
+
+function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inline(t){
+  t = esc(t);
+  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return t;
+}
+/* 极简 markdown → HTML（标题/代码块/表格/引用/列表/分隔线/段落） */
+function md2html(src){
+  var lines = src.split('\n'), out = [], i = 0;
+  while (i < lines.length){
+    var L = lines[i];
+    if (/^\s*\x60\x60\x60/.test(L)){           // 代码围栏
+      var buf = []; i++;
+      while (i < lines.length && !/^\s*\x60\x60\x60/.test(lines[i])) buf.push(lines[i++]);
+      i++; out.push('<pre><code>' + esc(buf.join('\n')) + '</code></pre>'); continue;
+    }
+    if (/^\s*\|/.test(L)){                       // 表格
+      var rows = [];
+      while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(lines[i++]);
+      var trs = rows.map(function(r){ return r.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(function(c){return c.trim();}); });
+      var head = trs[0], body = trs.slice(2);
+      var h = '<tr>' + head.map(function(c){ return '<th>' + inline(c) + '</th>'; }).join('') + '</tr>';
+      var bs = body.map(function(r){ return '<tr>' + r.map(function(c){ return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>'; }).join('');
+      out.push('<table>' + h + bs + '</table>'); continue;
+    }
+    var m;
+    if ((m = L.match(/^(#{1,3})\s+(.*)$/))){ out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); i++; continue; }
+    if (/^\s*---+\s*$/.test(L)){ out.push('<hr>'); i++; continue; }
+    if (/^\s*&gt;/.test(L) || /^\s*>/.test(L)){   // 引用块
+      var q = [];
+      while (i < lines.length && (/^\s*>/.test(lines[i]))) q.push(lines[i++].replace(/^\s*>\s?/,''));
+      out.push('<blockquote>' + q.map(inline).join('<br>') + '</blockquote>'); continue;
+    }
+    if (/^\s*[-*]\s+/.test(L)){                  // 无序列表
+      var li = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) li.push(lines[i++].replace(/^\s*[-*]\s+/,''));
+      out.push('<ul>' + li.map(function(x){ return '<li>' + inline(x) + '</li>'; }).join('') + '</ul>'); continue;
+    }
+    if (/^\s*\d+\.\s+/.test(L)){                // 有序列表
+      var ol = [];
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) ol.push(lines[i++].replace(/^\s*\d+\.\s+/,''));
+      out.push('<ol>' + ol.map(function(x){ return '<li>' + inline(x) + '</li>'; }).join('') + '</ol>'); continue;
+    }
+    if (!L.trim()){ i++; continue; }
+    var para = [L]; i++;
+    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|\s*[|>-]|\s*\x60\x60\x60|\s*\d+\.\s)/.test(lines[i])) para.push(lines[i++]);
+    out.push('<p>' + para.map(inline).join('<br>') + '</p>');
+  }
+  return out.join('\n');
+}
+function getBook(id){ return document.getElementById('bk-' + id).textContent.trim(); }
+/* 全书渲染 + 按章（## 切片）导航 */
+var chapters = [];
+function loadBook(id){
+  cur.b = id;
+  document.getElementById('bkName').textContent = BOOK_NAMES[id];
+  document.querySelectorAll('.spine').forEach(function(s){ s.classList.toggle('on', s.dataset.b === id); });
+  var src = getBook(id);
+  /* 按 ## 切章：首页(第一个##之前)也算一章 */
+  var parts = [], re = /^##\s+/m, idx = src.search(re);
+  if (idx < 0) parts = [src];
+  else {
+    if (idx > 0) parts.push(src.slice(0, idx));
+    var rest = src.slice(idx), m2;
+    var reG = /^##\s+(.+)$/gm, marks = [];
+    while ((m2 = reG.exec(rest))) marks.push({ i: m2.index, t: m2[1].replace(/[#*]/g,'') });
+    for (var k = 0; k < marks.length; k++) parts.push(rest.slice(marks[k].i, k + 1 < marks.length ? marks[k+1].i : undefined));
+    chapters = marks.map(function(mk){ return mk.t; });
+  }
+  if (!chapters.length) chapters = ['全书'];
+  var html = parts.map(function(p, n){
+    return '<section class="chap" id="ch' + n + '" data-t="' + (chapters[n] || '卷首') + '">' + md2html(p) + '</section>';
+  }).join('');
+  document.getElementById('body').innerHTML = html;
+  var tl = '';
+  chapters.forEach(function(c, n){ tl += '<a href="#ch' + n + '" data-n="' + n + '">' + c + '</a>'; });
+  document.getElementById('tocList').innerHTML = tl;
+  saveState();
+}
+function saveState(){ try { localStorage.setItem(K_LAST, JSON.stringify(cur)); } catch(e){} }
+document.querySelectorAll('.spine').forEach(function(s){
+  s.addEventListener('click', function(){ loadBook(s.dataset.b); window.scrollTo(0, 0); markChapter(); });
+});
+/* 滚动进度 + 当前章高亮 */
+var body = document.getElementById('body');
+function markChapter(){
+  var cur5 = 0, secs = document.querySelectorAll('.chap');
+  secs.forEach(function(s, n){ if (s.getBoundingClientRect().top < 160) cur5 = n; });
+  document.querySelectorAll('#tocList a').forEach(function(a){ a.classList.toggle('on', +a.dataset.n === cur5); });
+  var t = secs[cur5] ? secs[cur5].dataset.t : '';
+  document.getElementById('chName').textContent = t ? '· ' + t : '';
+}
+window.addEventListener('scroll', function(){
+  var h = document.documentElement;
+  var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+  document.getElementById('prog').style.width = (p * 100) + '%';
+  markChapter();
+});
+/* 章节跳转 */
+function jump(d){
+  var secs = document.querySelectorAll('.chap'), cur6 = 0;
+  secs.forEach(function(s, n){ if (s.getBoundingClientRect().top < 160) cur6 = n; });
+  var to = secs[Math.max(0, Math.min(secs.length - 1, cur6 + d))];
+  if (to) to.scrollIntoView({ behavior: 'smooth' });
+}
+document.getElementById('prevBtn').onclick = function(){ jump(-1); };
+document.getElementById('nextBtn').onclick = function(){ jump(1); };
+window.addEventListener('keydown', function(e){
+  if (e.key === 'ArrowLeft') jump(-1);
+  if (e.key === 'ArrowRight') jump(1);
+});
+/* 字号 / 夜间 */
+document.getElementById('fontMinus').onclick = function(){ cur.fs = Math.max(13, cur.fs - 1); body.style.fontSize = cur.fs + 'px'; saveState(); };
+document.getElementById('fontPlus').onclick = function(){ cur.fs = Math.min(21, cur.fs + 1); body.style.fontSize = cur.fs + 'px'; saveState(); };
+document.getElementById('modeBtn').onclick = function(){
+  document.body.classList.toggle('night');
+  this.textContent = document.body.classList.contains('night') ? '日间' : '夜间';
+};
+body.style.fontSize = cur.fs + 'px';
+loadBook(cur.b);
+</script>
+</body>
+</html>

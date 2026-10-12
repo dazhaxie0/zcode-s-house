@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客厅 · 桂花牌八音留声机</title>
+<style>
+  /* ============================================================
+     桂花牌留声机 · 外观样式
+     整体思路：一台三十年代桃花心木壳的台式留声机，
+     黄铜喇叭花开在机器左上方，黑胶盘卧在酒红绒布里。
+     配色跟隔壁萌牌电视是同一间屋的暖木色系，
+     但机身更红一点（桃花心木），装饰全是黄铜——有点自己的脾气。
+     ============================================================ */
+  :root{
+    --u:1;                    /* 整机缩放单位：小屏时整除变小，几何关系不乱 */
+    --maho1:#b2603a;          /* 桃花心木亮面 */
+    --maho2:#8a3f24;          /* 桃花心木主色 */
+    --maho3:#59241a;          /* 桃花心木暗部 */
+    --brassL:#f6dd9a;         /* 黄铜高光 */
+    --brassM:#d4a942;         /* 黄铜主色 */
+    --brassD:#93701f;         /* 黄铜暗部 */
+    --cream:#f7ead2;          /* 奶油色（标签、曲目卡） */
+    --ink:#4a2e14;            /* 深棕文字 */
+    --velvet1:#6d2130;        /* 绒布亮 */
+    --velvet2:#471020;        /* 绒布暗 */
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 480px at 50% -100px, #fff0d2 0%, rgba(255,240,210,0) 62%),
+      linear-gradient(180deg, #f6dfb6 0%, #eed3a2 55%, #e0bf8b 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  /* 墙纸：跟电视机那面墙同一款圆点糊墙纸，一眼认出是同一个家 */
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,.45) 1.5px, transparent 1.6px);
+    background-size:28px 28px;
+  }
+
+  .stage{
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:18px; padding:56px 14px 40px;
+  }
+
+  /* ============================================================
+     喇叭花（黄铜大喇叭）
+     做法：一朵 12 瓣的"花"，用 clip-path 多边形裁出波浪花边，
+     里面铺 repeating-conic-gradient 做出铜瓣的凹槽，
+     中央一个深洞（喇叭口），底下接一根弯下来的黄铜颈管。
+     ============================================================ */
+  .horn-wrap{
+    position:relative;
+    width:calc(616px * var(--u));
+    height:calc(176px * var(--u));
+    margin-bottom:calc(-22px * var(--u));
+    z-index:2;                          /* 压在木壳上沿，颈管才插得进去 */
+  }
+  .horn{
+    position:absolute;
+    left:calc(30px * var(--u)); top:calc(-36px * var(--u));
+    width:calc(190px * var(--u)); height:calc(190px * var(--u));
+    transform:rotate(12deg);
+    transform-origin:62% 72%;
+    filter:drop-shadow(0 12px 14px rgba(60,28,8,.4));
+  }
+  /* 播放时喇叭花轻轻晃，像真的有气流感出来 */
+  .stage.playing .horn{ animation:hornSway 2.4s ease-in-out infinite; }
+  @keyframes hornSway{
+    0%,100%{ transform:rotate(11deg); }
+    50%    { transform:rotate(14.5deg); }
+  }
+  /* 花本体：12 瓣黄铜。polygon 是 12 个外点 + 12 个内点交替的波浪花边 */
+  .horn-bell{
+    position:absolute; inset:0;
+    clip-path:polygon(
+      100% 50%, 94.4% 61.9%, 93.3% 75%, 82.5% 82.5%,
+      75% 93.3%, 61.9% 94.4%, 50% 100%, 38.1% 94.4%,
+      25% 93.3%, 17.5% 82.5%, 6.7% 75%, 6.1% 61.9%,
+      0% 50%, 6.1% 38.1%, 6.7% 25%, 17.5% 17.5%,
+      25% 6.7%, 38.1% 6.1%, 50% 0%, 61.9% 6.1%,
+      75% 6.7%, 82.5% 17.5%, 93.3% 25%, 94.4% 38.1%
+    );
+    background:
+      radial-gradient(circle at 40% 36%, rgba(255,248,220,.7), rgba(255,248,220,0) 36%),
+      radial-gradient(circle, rgba(0,0,0,0) 50%, rgba(96,58,10,.38) 86%, rgba(70,42,8,.55) 100%),
+      repeating-conic-gradient(from 7.5deg, #f4dc9c 0deg 15deg, #d3a854 15deg 30deg);
+  }
+  /* 喇叭口：中央的深洞，一圈圈往里黑下去，外圈两道铜箍 */
+  .horn-throat{
+    position:absolute; left:23%; top:23%; width:54%; height:54%;
+    border-radius:50%;
+    background:radial-gradient(circle at 44% 38%,
+      #3a2210 0 18%, #241305 44%, #553517 74%, #1c0f04 100%);
+    box-shadow:
+      inset 0 4px 10px rgba(0,0,0,.85),
+      0 0 0 3px rgba(244,220,156,.8),
+      0 0 0 6px rgba(150,102,32,.55);
+  }
+  /* 颈管：从花底弯下来，斜着插进木壳顶上的黄铜底座 */
+  .horn-neck{
+    position:absolute;
+    left:calc(152px * var(--u)); top:calc(112px * var(--u));
+    width:calc(13px * var(--u)); height:calc(58px * var(--u));
+    border-radius:calc(7px * var(--u));
+    background:linear-gradient(90deg, #8a6425, #f2dfa8 45%, #9a7420);
+    transform:rotate(26deg);
+    transform-origin:50% 0;
+    box-shadow:0 4px 6px rgba(60,30,8,.35);
+  }
+  /* 音符飘出来的那层（其实是 DOM，别告诉邻居） */
+  .notes{
+    position:absolute;
+    left:calc(20px * var(--u)); top:calc(-20px * var(--u));
+    width:calc(230px * var(--u)); height:calc(150px * var(--u));
+    pointer-events:none; z-index:6;
+  }
+  .note{
+    position:absolute; bottom:26px; left:0;
+    font-weight:900; color:#b98f45;
+    text-shadow:0 1px 2px rgba(255,255,255,.35);
+    opacity:0;
+    animation:floatUp var(--dur,2.4s) ease-out forwards;
+  }
+  @keyframes floatUp{
+    0%  { transform:translate(0,0) rotate(-8deg); opacity:0; }
+    14% { opacity:.95; }
+    100%{ transform:translate(var(--dx,20px), -130px) rotate(14deg); opacity:0; }
+  }
+
+  /* ============================================================
+     木壳机身（桃花心木）
+     ============================================================ */
+  .gramo{
+    position:relative; z-index:1;
+    width:calc(616px * var(--u)); max-width:96vw;
+    padding:calc(12px * var(--u)) calc(20px * var(--u)) calc(16px * var(--u));
+    border-radius:26px;
+    background:
+      /* 细木纹：一条条半透明竖线叠在桃花心木渐变上 */
+      repeating-linear-gradient(90deg,
+        rgba(0,0,0,.08) 0 2px, rgba(255,255,255,0) 2px 6px,
+        rgba(0,0,0,.05) 6px 9px, rgba(255,255,255,0) 9px 14px),
+      linear-gradient(180deg, var(--maho1) 0%, var(--maho2) 58%, var(--maho3) 100%);
+    box-shadow:
+      inset 0 3px 0 rgba(255,255,255,.26),   /* 上缘高光：擦得很亮 */
+      inset 0 -8px 14px rgba(0,0,0,.35),     /* 下缘阴影 */
+      inset 3px 0 6px rgba(255,255,255,.07),
+      0 26px 46px rgba(60,32,8,.45);         /* 投在地板上的影子 */
+  }
+  /* 机身装饰：一圈金色细线，跟电视机学的 */
+  .gramo::before{
+    content:''; position:absolute; inset:8px;
+    border:2px solid rgba(244,201,107,.28);
+    border-radius:20px; pointer-events:none;
+  }
+  /* 喇叭颈管的黄铜底座，焊在木壳顶上 */
+  .horn-seat{
+    position:absolute;
+    left:calc(158px * var(--u)); top:calc(-11px * var(--u));
+    width:calc(58px * var(--u)); height:calc(18px * var(--u));
+    border-radius:50%;
+    background:radial-gradient(ellipse at 50% 30%, #f2dfa8, #a37c30 70%);
+    box-shadow:0 3px 5px rgba(0,0,0,.35), inset 0 -2px 3px rgba(90,60,10,.5);
+    z-index:2;
+  }
+  /* 右侧的发条摇柄：装饰件。这年头，电比发条讲道理 */
+  .crank{
+    position:absolute;
+    right:calc(-16px * var(--u)); top:calc(190px * var(--u));
+    width:calc(34px * var(--u)); height:calc(78px * var(--u));
+    z-index:0;
+  }
+  .crank-shaft{
+    position:absolute; left:0; top:calc(34px * var(--u));
+    width:calc(16px * var(--u)); height:calc(9px * var(--u));
+    border-radius:calc(3px * var(--u));
+    background:linear-gradient(180deg, #e8cf92, #8a6425);
+  }
+  .crank-arm{
+    position:absolute; left:calc(6px * var(--u)); top:calc(2px * var(--u));
+    width:calc(9px * var(--u)); height:calc(52px * var(--u));
+    border-radius:calc(5px * var(--u));
+    background:linear-gradient(90deg, #8a6425, #e8cf92 50%, #8a6425);
+    transform-origin:50% 100%;
+  }
+  .gramo.playing .crank-arm{ animation:crankSwing 2.6s ease-in-out infinite; }
+  @keyframes crankSwing{
+    0%,100%{ transform:rotate(-16deg); }
+    50%    { transform:rotate(16deg); }
+  }
+  .crank-knob{
+    position:absolute; left:calc(1px * var(--u)); top:calc(-6px * var(--u));
+    width:calc(19px * var(--u)); height:calc(19px * var(--u));
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #f2dfa8, #9a7420 75%);
+    box-shadow:0 3px 5px rgba(0,0,0,.4);
+  }
+  /* 顶部品牌条 */
+  .g-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:calc(2px * var(--u)) calc(6px * var(--u)) calc(10px * var(--u));
+  }
+  .brand{
+    font-size:calc(21px * var(--u)); font-weight:900; letter-spacing:4px;
+    color:#ffedd0;
+    text-shadow:0 2px 0 rgba(0,0,0,.35), 0 0 14px rgba(255,214,140,.35);
+  }
+  .brand i{
+    font-style:normal; font-size:calc(11px * var(--u));
+    letter-spacing:2px; color:rgba(255,240,214,.75);
+    margin-left:10px; font-weight:400;
+  }
+  .model{
+    font-size:calc(12px * var(--u)); letter-spacing:2px;
+    color:rgba(255,240,214,.7);
+    background:rgba(0,0,0,.18); padding:3px 10px; border-radius:99px;
+  }
+  /* 小脚 */
+  .feet{ display:flex; justify-content:space-between; padding:calc(12px * var(--u)) 70px 0; }
+  .feet span{
+    width:74px; height:16px; border-radius:0 0 12px 12px;
+    background:linear-gradient(180deg, #46200f, #2c130a);
+    box-shadow:0 6px 10px rgba(50,28,8,.4);
+  }
+
+  /* ============================================================
+     唱盘舱（酒红绒布 + 黑胶盘 + 唱臂）
+     舱内所有坐标都乘 var(--u)，整机缩小时几何关系原样缩小。
+     ============================================================ */
+  .deck{
+    position:relative;
+    width:calc(576px * var(--u));
+    height:calc(238px * var(--u));
+    border-radius:14px;
+    background:linear-gradient(180deg, var(--velvet1), var(--velvet2));
+    box-shadow:
+      inset 0 3px 10px rgba(0,0,0,.55),
+      inset 0 -2px 6px rgba(0,0,0,.4);
+    margin-top:calc(10px * var(--u));
+    overflow:hidden;
+  }
+  /* 绒布的斜纹肌理 */
+  .deck::before{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(45deg,
+      rgba(255,255,255,.028) 0 3px, rgba(0,0,0,0) 3px 7px);
+  }
+  /* 舱内左上的玻璃反光，旧机器擦得很亮的那种 */
+  .deck::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse 55% 38% at 26% 12%,
+      rgba(255,246,220,.1), rgba(255,246,220,0) 70%);
+  }
+  .rpm{
+    position:absolute;
+    right:calc(24px * var(--u)); bottom:calc(14px * var(--u));
+    font-size:calc(11px * var(--u)); letter-spacing:calc(2px * var(--u));
+    color:rgba(255,233,196,.5); pointer-events:none;
+  }
+
+  /* ---------- 唱盘：黑胶 + 中轴 + 红标 ---------- */
+  .platter{
+    position:absolute;
+    left:calc(75px * var(--u)); top:calc(15px * var(--u));
+    width:calc(190px * var(--u)); height:calc(190px * var(--u));
+    border-radius:50%;
+    background:radial-gradient(circle at 50% 42%, #55555e, #232329 72%);
+    box-shadow:
+      0 10px 18px rgba(0,0,0,.55),
+      inset 0 2px 2px rgba(255,255,255,.25);
+  }
+  /* 胶盘本体：一圈圈唱纹；播放时旋转，暂停时停 */
+  .disc{
+    position:absolute; inset:calc(9px * var(--u));
+    border-radius:50%;
+    background:repeating-radial-gradient(circle,
+      #131317 0 calc(2px * var(--u)),
+      #22222a calc(2px * var(--u)) calc(3.5px * var(--u)));
+    box-shadow:inset 0 0 12px rgba(0,0,0,.8);
+    animation:spin 1.9s linear infinite;
+    animation-play-state:paused;
+  }
+  .deck.playing .disc{ animation-play-state:running; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  /* 盘面上的两道斜高光：跟着盘转，转速才看得出来 */
+  .sheen{
+    position:absolute; inset:0; border-radius:50%;
+    background:linear-gradient(118deg,
+      rgba(255,244,214,0) 30%,
+      rgba(255,244,214,.13) 46%,
+      rgba(255,244,214,.03) 54%,
+      rgba(255,244,214,0) 66%);
+  }
+  .sheen.two{ transform:rotate(180deg); opacity:.6; }
+  /* 盘心红标：桂花牌的"唱片厂牌" */
+  .label{
+    position:absolute; left:50%; top:50%;
+    width:calc(62px * var(--u)); height:calc(62px * var(--u));
+    margin:calc(-31px * var(--u)) 0 0 calc(-31px * var(--u));
+    border-radius:50%;
+    background:radial-gradient(circle at 36% 30%, #d96a52, #9c2830 72%);
+    box-shadow:
+      0 0 0 calc(2.5px * var(--u)) #caa04e,
+      inset 0 2px 4px rgba(255,255,255,.4),
+      0 2px 6px rgba(0,0,0,.5);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .label span{
+    font-size:calc(12px * var(--u)); font-weight:900;
+    color:#ffe9c8; letter-spacing:calc(2px * var(--u));
+    text-shadow:0 1px 1px rgba(0,0,0,.5);
+  }
+  .spindle{
+    position:absolute; left:50%; top:50%;
+    width:calc(7px * var(--u)); height:calc(7px * var(--u));
+    margin:calc(-3.5px * var(--u)) 0 0 calc(-3.5px * var(--u));
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ffe9ad, #b98f45);
+    box-shadow:0 1px 2px rgba(0,0,0,.6);
+  }
+
+  /* ---------- 唱臂：黄铜管 + 唱头，播放时搭上唱片 ---------- */
+  .tonearm{
+    position:absolute;
+    left:calc(313px * var(--u)); top:calc(8px * var(--u));
+    width:calc(34px * var(--u)); height:calc(34px * var(--u));
+    z-index:3;
+  }
+  .arm-base{
+    position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle at 36% 30%, #f2dfa8, #c0973f 60%, #8a6425);
+    box-shadow:0 4px 8px rgba(0,0,0,.5), inset 0 -2px 4px rgba(90,60,10,.6);
+  }
+  .arm-base::after{
+    content:''; position:absolute; inset:calc(10px * var(--u));
+    border-radius:50%;
+    background:radial-gradient(circle at 40% 34%, #8a6425, #5c3f14);
+  }
+  .arm{
+    position:absolute;
+    left:calc(17px * var(--u)); top:calc(13px * var(--u));
+    width:calc(172px * var(--u)); height:calc(8px * var(--u));
+    border-radius:calc(4px * var(--u));
+    transform-origin:calc(4px * var(--u)) 50%;
+    transform:rotate(38deg);               /* 待机：斜搭在臂托上 */
+    background:linear-gradient(180deg, #f4e3b2, #c39a48 55%, #8a6425);
+    box-shadow:0 3px 6px rgba(0,0,0,.45);
+    transition:transform 1s cubic-bezier(.45,.05,.35,1);
+  }
+  .arm::before{ /* 唱头 */
+    content:''; position:absolute;
+    right:calc(-2px * var(--u)); top:calc(-4px * var(--u));
+    width:calc(24px * var(--u)); height:calc(15px * var(--u));
+    border-radius:calc(4px * var(--u));
+    background:linear-gradient(180deg, #e8cf92, #a37c30);
+    box-shadow:0 2px 4px rgba(0,0,0,.4), inset 0 1px 2px rgba(255,255,255,.5);
+  }
+  .arm::after{ /* 唱针 */
+    content:''; position:absolute;
+    right:calc(4px * var(--u)); top:calc(11px * var(--u));
+    width:calc(2.5px * var(--u)); height:calc(7px * var(--u));
+    background:#3b2b16; border-radius:1px;
+  }
+  .deck.playing .arm{ transform:rotate(181deg); }  /* 播放：搭上唱片外圈 */
+  .arm-rest{ /* 臂托：待机时唱臂的停车位 */
+    position:absolute;
+    left:calc(452px * var(--u)); top:calc(118px * var(--u));
+    width:calc(12px * var(--u)); height:calc(26px * var(--u));
+    border-radius:calc(6px * var(--u)) calc(6px * var(--u)) calc(3px * var(--u)) calc(3px * var(--u));
+    background:linear-gradient(180deg, #e8cf92, #8a6425);
+    box-shadow:0 3px 6px rgba(0,0,0,.5);
+  }
+
+  /* ============================================================
+     控制面板：曲子按键 / 播放 / 下一首 / 音量旋钮 / 连播拨杆 / 指示灯
+     ============================================================ */
+  .panel{
+    display:flex; flex-wrap:wrap;
+    justify-content:center; align-items:center;
+    gap:12px 16px; margin-top:14px; position:relative; z-index:1;
+  }
+  .tracks{
+    display:flex; gap:9px; flex-wrap:wrap; justify-content:center;
+    flex-basis:100%;
+  }
+  .trackbtn{
+    min-width:64px; padding:8px 9px 7px;
+    border:none; cursor:pointer; border-radius:11px;
+    font-family:inherit; font-weight:900; font-size:19px; color:var(--ink);
+    background:linear-gradient(180deg, #f7ecd2, #e6cfa2);
+    box-shadow:0 4px 0 #9c7a44, 0 6px 10px rgba(0,0,0,.28);
+    display:flex; flex-direction:column; align-items:center; gap:1px;
+    transition:transform .06s, box-shadow .06s, filter .15s;
+  }
+  .trackbtn small{ font-size:10px; font-weight:700; letter-spacing:1px; opacity:.8; }
+  .trackbtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #9c7a44, 0 2px 5px rgba(0,0,0,.28); }
+  .trackbtn.active{
+    background:linear-gradient(180deg, #ffd98a, #f0a942);
+    box-shadow:0 2px 0 #9c7a44, inset 0 2px 4px rgba(255,255,255,.55);
+    transform:translateY(2px);
+  }
+  .pgroup{ display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .plabel{
+    font-size:11px; letter-spacing:2px; color:#ffe9c4;
+    text-shadow:0 1px 0 rgba(0,0,0,.4); white-space:nowrap;
+  }
+  /* 大红播放键：胶木手感 + 黄铜圈 */
+  .playbtn{
+    width:60px; height:60px; border-radius:50%;
+    border:none; cursor:pointer;
+    font-family:inherit; font-weight:900; font-size:14px; letter-spacing:2px;
+    color:#ffe9c4; text-shadow:0 1px 1px rgba(0,0,0,.5);
+    background:radial-gradient(circle at 35% 30%, #b04a38, #6b1c12 62%, #4a0f08);
+    box-shadow:
+      0 0 0 3px #caa04e,
+      0 6px 0 #3d0d06,
+      0 10px 14px rgba(0,0,0,.35),
+      inset 0 2px 4px rgba(255,255,255,.25);
+    transition:transform .06s, box-shadow .06s;
+  }
+  .playbtn:active{
+    transform:translateY(3px);
+    box-shadow:0 0 0 3px #caa04e, 0 2px 0 #3d0d06, 0 4px 8px rgba(0,0,0,.3),
+      inset 0 2px 4px rgba(255,255,255,.25);
+  }
+  .playbtn.playing{
+    background:radial-gradient(circle at 35% 30%, #c85a45, #7a2216 62%, #52130a);
+    box-shadow:
+      0 0 0 3px #f2d38b,
+      0 2px 0 #3d0d06,
+      inset 0 2px 8px rgba(255,120,80,.5);
+  }
+  .nextbtn{
+    padding:9px 12px 8px; border:none; cursor:pointer; border-radius:10px;
+    font-family:inherit; font-weight:900; font-size:13px; letter-spacing:1px;
+    color:#fff3d9; text-shadow:0 1px 1px rgba(0,0,0,.4);
+    background:linear-gradient(180deg, #b26a3c, #8a4526);
+    box-shadow:0 4px 0 #5c2a12, 0 6px 10px rgba(0,0,0,.28);
+    transition:transform .06s, box-shadow .06s;
+  }
+  .nextbtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #5c2a12, 0 2px 5px rgba(0,0,0,.28); }
+  /* 音量旋钮：乌木身 + 金指针（点一下换一档） */
+  .knob{
+    width:52px; height:52px; border-radius:50%;
+    border:none; cursor:pointer; position:relative;
+    background:radial-gradient(circle at 34% 28%, #5c4632, #2a1c10 68%, #140c06);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,.3),
+      inset 0 -3px 5px rgba(0,0,0,.6),
+      0 4px 8px rgba(0,0,0,.4);
+    transition:transform .25s cubic-bezier(.34,1.5,.64,1);
+  }
+  .knob::after{
+    content:''; position:absolute; top:5px; left:50%;
+    width:4px; height:15px; transform:translateX(-50%);
+    border-radius:2px;
+    background:linear-gradient(180deg, var(--brassL), var(--brassM));
+    box-shadow:0 0 5px rgba(244,201,107,.65);
+  }
+  .knob:active{ transform:scale(.94); }
+  /* 连播拨杆：小滑块，往右一拨就开 */
+  .lever{
+    width:60px; height:26px; border-radius:13px;
+    border:none; cursor:pointer; position:relative;
+    background:linear-gradient(180deg, #241812, #170f0a);
+    box-shadow:inset 0 2px 5px rgba(0,0,0,.7), 0 2px 4px rgba(0,0,0,.35);
+    transition:background .25s;
+  }
+  .lever::before{
+    content:''; position:absolute; left:5px; top:50%;
+    width:16px; height:16px; margin-top:-8px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #f2dfa8, #b98f45 70%);
+    box-shadow:0 2px 4px rgba(0,0,0,.5), inset 0 -2px 3px rgba(90,60,10,.6);
+    transition:left .22s cubic-bezier(.4,1.6,.6,1);
+  }
+  .lever.on{
+    background:linear-gradient(180deg, #4a3413, #2e1f09);
+    box-shadow:inset 0 2px 5px rgba(0,0,0,.7), inset 0 0 8px rgba(244,201,107,.35);
+  }
+  .lever.on::before{ left:39px; }
+  /* 黄铜小指示灯：播放时呼吸 */
+  .lamp-dot{
+    width:14px; height:14px; border-radius:50%;
+    background:#571c15;
+    border:2.5px solid #b98f45;
+    box-shadow:inset 0 -2px 3px rgba(0,0,0,.6), 0 2px 4px rgba(0,0,0,.35);
+    margin:19px 0 21px;
+  }
+  .lamp-dot.on{
+    background:radial-gradient(circle at 40% 32%, #ffe9ad, #f5a63b 60%, #d97b1e);
+    box-shadow:
+      0 0 10px rgba(255,190,90,.85),
+      0 0 24px rgba(255,170,60,.4),
+      inset 0 -2px 3px rgba(150,60,0,.5),
+      0 2px 4px rgba(0,0,0,.35);
+    animation:lampBreath 2.4s ease-in-out infinite;
+  }
+  @keyframes lampBreath{
+    0%,100%{ filter:brightness(1); }
+    50%    { filter:brightness(.55); }
+  }
+
+  /* ============================================================
+     进度条 + 小电平表（表针随播放扫动）
+     ============================================================ */
+  .progrow{ display:flex; gap:12px; margin-top:14px; position:relative; z-index:1; }
+  .prog{
+    position:relative; flex:1; height:46px;
+    border-radius:9px; border:3px solid #8a6425;
+    background:linear-gradient(180deg, #f4e6c4, #e8d3a4);
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.25), 0 2px 4px rgba(0,0,0,.25);
+    overflow:hidden;
+  }
+  .prog-fill{
+    position:absolute; left:0; top:0; bottom:0; width:0%;
+    background:linear-gradient(180deg, rgba(138,90,46,.82), rgba(95,58,28,.82));
+    transition:width .25s linear;
+  }
+  .prog-text{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12.5px; font-weight:700; letter-spacing:1px;
+    color:#4a2e14; text-shadow:0 1px 0 rgba(255,255,255,.6);
+  }
+  .vu{
+    position:relative; width:148px; height:46px;
+    border-radius:9px; border:3px solid #8a6425;
+    background:linear-gradient(180deg, #f4e6c4, #e8d3a4);
+    box-shadow:0 2px 4px rgba(0,0,0,.25);
+    overflow:hidden;
+  }
+  .vu::before{ /* 刻度线 */
+    content:''; position:absolute; left:6px; right:6px; top:6px; height:8px;
+    background:repeating-linear-gradient(90deg,
+      rgba(90,61,26,.45) 0 1.5px, rgba(0,0,0,0) 1.5px 12px);
+    border-radius:2px;
+  }
+  .vu::after{ /* 右端红区 */
+    content:''; position:absolute; right:8px; top:5px; width:22px; height:10px;
+    background:linear-gradient(180deg, rgba(180,40,30,.55), rgba(180,40,30,.25));
+    border-radius:2px;
+  }
+  .vu-needle{
+    position:absolute; left:50%; bottom:2px;
+    width:2.5px; height:33px; margin-left:-1.25px;
+    transform-origin:50% 100%;
+    transform:rotate(-40deg);
+    background:linear-gradient(180deg, #c14a35, #7a2416);
+    border-radius:2px;
+    transition:transform .18s linear;
+  }
+  .vu-pin{
+    position:absolute; left:50%; bottom:0;
+    width:10px; height:10px; margin-left:-5px;
+    border-radius:50% 50% 0 0;
+    background:radial-gradient(circle at 40% 30%, #f2dfa8, #a37c30);
+  }
+  /* 出风口格栅：装饰，也帮木壳收个底 */
+  .vent{
+    height:10px; margin:14px 4px 0; border-radius:5px;
+    background:repeating-linear-gradient(90deg,
+      rgba(0,0,0,.32) 0 3px, rgba(255,255,255,.05) 3px 9px);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.4);
+  }
+
+  /* ============================================================
+     曲目单小卡（奶油纸，贴在留声机下方，跟电视的说明书一个师傅做的）
+     ============================================================ */
+  .manual{
+    position:relative; width:min(560px,92vw);
+    background:var(--cream);
+    border-radius:6px;
+    padding:16px 20px 14px;
+    box-shadow:0 10px 22px rgba(90,61,26,.28);
+    transform:rotate(.5deg);
+    line-height:1.9; font-size:13.5px;
+    text-align:left;
+  }
+  .manual::before{ /* 顶部一截胶带 */
+    content:''; position:absolute; top:-12px; left:50%;
+    width:96px; height:26px; transform:translateX(-50%) rotate(-1.5deg);
+    background:rgba(255,255,255,.5);
+    border-left:1px dashed rgba(0,0,0,.12);
+    border-right:1px dashed rgba(0,0,0,.12);
+    box-shadow:0 2px 5px rgba(0,0,0,.12);
+  }
+  .manual h3{ font-size:14px; letter-spacing:3px; margin-bottom:6px; color:#7a5326; }
+  .manual b{ color:#b4651d; }
+  .manual kbd{
+    display:inline-block; padding:0 7px; margin:0 2px;
+    border-radius:5px; border:1px solid #c9a06a; border-bottom-width:3px;
+    background:#fffaf0; font-family:inherit; font-size:12px;
+    font-weight:700; color:#8a5a2e;
+  }
+
+  /* ============================================================
+     移动端适配：整机缩放单位逐档调小，面板换行，进度条竖排
+     ============================================================ */
+  @media (max-width:760px){ :root{ --u:.9; } }
+  @media (max-width:640px){
+    :root{ --u:.8; }
+    .stage{ padding:40px 10px 30px; gap:14px; }
+    .brand{ letter-spacing:2px; }
+    .model{ display:none; }
+  }
+  @media (max-width:540px){
+    :root{ --u:.68; }
+    .progrow{ flex-direction:column; }
+    .vu{ width:auto; height:44px; }
+    .trackbtn{ min-width:54px; padding:7px 7px 6px; font-size:16px; }
+    .panel{ gap:10px 12px; }
+  }
+  @media (max-width:430px){
+    :root{ --u:.58; }
+    .crank{ display:none; }        /* 小屏塞不下的体面舍弃法 */
+    .manual{ font-size:12.5px; padding:14px 14px 12px; }
+  }
+  @media (max-width:370px){ :root{ --u:.5; } }
+
+/* ---- 全屋统一滚动条 ---- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#a8895c;border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#8a6a3e}
+*{scrollbar-width:thin;scrollbar-color:#a8895c transparent}
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+
+    <!-- 喇叭花 + 颈管 + 音符层 -->
+    <div class="horn-wrap" aria-hidden="true">
+      <div class="horn">
+        <div class="horn-bell"></div>
+        <div class="horn-throat"></div>
+      </div>
+      <div class="horn-neck"></div>
+      <div class="notes" id="notes"></div>
+    </div>
+
+    <!-- 留声机本体 -->
+    <div class="gramo" id="gramo">
+      <div class="horn-seat" aria-hidden="true"></div>
+      <div class="g-head">
+        <span class="brand">桂花牌留声机<i>GUIHUA · GRAMOPHONE 1931</i></span>
+        <span class="model">客厅八音盒限定款</span>
+      </div>
+
+      <!-- 唱盘舱 -->
+      <div class="deck" id="deck">
+        <div class="platter">
+          <div class="disc">
+            <div class="sheen"></div>
+            <div class="sheen two"></div>
+            <div class="label"><span>桂花牌</span></div>
+            <div class="spindle"></div>
+          </div>
+        </div>
+        <div class="tonearm">
+          <div class="arm-base"></div>
+          <div class="arm" id="arm"></div>
+        </div>
+        <div class="arm-rest" aria-hidden="true"></div>
+        <div class="rpm" aria-hidden="true">GUIHUA · 33⅓ R.P.M.</div>
+      </div>
+
+      <!-- 控制面板 -->
+      <div class="panel">
+        <div class="tracks" id="tracks">
+          <button class="trackbtn" data-i="0" title="小星星 —— 一闪一闪亮晶晶">1<small>小星星</small></button>
+          <button class="trackbtn" data-i="1" title="欢乐颂 —— 贝多芬，免费">2<small>欢乐颂</small></button>
+          <button class="trackbtn" data-i="2" title="茉莉花 —— 满屋飘香">3<small>茉莉花</small></button>
+          <button class="trackbtn" data-i="3" title="致爱丽丝 —— 叮咚叮咚">4<small>致爱丽丝</small></button>
+          <button class="trackbtn" data-i="4" title="两只老虎 —— 跑得快">5<small>两只老虎</small></button>
+        </div>
+
+        <div class="pgroup">
+          <button class="playbtn" id="playBtn" title="播放 / 停止（空格也行）">播放</button>
+          <span class="plabel">播放 · 停止</span>
+        </div>
+        <div class="pgroup">
+          <button class="nextbtn" id="nextBtn" title="下一首（键盘 N）">下一首</button>
+          <span class="plabel">换一张</span>
+        </div>
+        <div class="pgroup">
+          <button class="knob" id="volKnob" title="音量：点一下换一档（轻 / 中 / 满）"></button>
+          <span class="plabel" id="volLabel">音量 · 中</span>
+        </div>
+        <div class="pgroup">
+          <button class="lever" id="chainLever" title="连播拨杆：开着一曲唱完自己换下一曲（状态会记住）"></button>
+          <span class="plabel" id="chainLabel">连播 · 关</span>
+        </div>
+        <div class="pgroup">
+          <span class="lamp-dot" id="lamp" title="指示灯：亮着就是在唱"></span>
+          <span class="plabel">指示灯</span>
+        </div>
+      </div>
+
+      <!-- 进度条 + 小电平表 -->
+      <div class="progrow">
+        <div class="prog">
+          <div class="prog-fill" id="progFill"></div>
+          <span class="prog-text" id="progText">待机 · 先挑一张"唱片"吧</span>
+        </div>
+        <div class="vu" aria-hidden="true">
+          <div class="vu-needle" id="vuNeedle"></div>
+          <div class="vu-pin"></div>
+        </div>
+      </div>
+
+      <div class="vent" aria-hidden="true"></div>
+
+      <!-- 发条摇柄：装饰件，转不动的，别问，问就是省发条 -->
+      <div class="crank" aria-hidden="true" title="发条（装饰）">
+        <div class="crank-shaft"></div>
+        <div class="crank-arm"></div>
+        <div class="crank-knob"></div>
+      </div>
+
+      <div class="feet"><span></span><span></span></div>
+    </div>
+
+    <!-- 曲目单小卡 -->
+    <div class="manual">
+      <h3>曲目小卡 · 桂花牌留声机</h3>
+      <p>
+        <b>1 小星星</b>——一闪一闪，给刷了一下午装修墙的自己<br>
+        <b>2 欢乐颂</b>——贝多芬没赶上收版权费，我们赶上了免费<br>
+        <b>3 茉莉花</b>——放这首的时候，整条街都是自家阳台<br>
+        <b>4 致爱丽丝</b>——琴童的眼泪，八音盒的糖<br>
+        <b>5 两只老虎</b>——验收专用，跑得快不快一听便知
+      </p>
+      <p>
+        按 <b>1-5</b> 选曲（键盘 <kbd>1</kbd>-<kbd>5</kbd> 也认），按 <b>播放</b> 起针（<kbd>空格</kbd> 同效），<b>下一首</b> 换一张（<kbd>N</kbd>）。<br>
+        <b>音量旋钮</b>：点一下换一档（轻 / 中 / 满），真实生效，不搞虚的；<b>连播拨杆</b>：拨开了，一曲唱完自己接下一曲。<br>
+        曲毕唱臂自动归位、指示灯熄灭；音量、连播和上次选的曲子都记在浏览器里，下次开门还在。<br>
+        唱盘会转、喇叭花会晃、发条是装饰——这年头，电比发条讲道理；针压为零，唱片永不磨损（唱片：谢谢）。<br>
+        打开方式：双击本文件即可，无需服务器。
+      </p>
+    </div>
+
+  </div>
+
+<script>
+'use strict';
+/* ============================================================
+   桂花牌留声机 · 八音盒点唱机主程序
+   结构：
+     1. 小工具 & 本地存档
+     2. 音符换算 & 曲库（五首公版旋律，亲手扒的）
+     3. 八音盒音源（WebAudio 现场合成：sine 主音 + 4 倍频泛音）
+     4. 播放器（排程 + 进度 + 曲毕收针 / 连播）
+     5. 外观联动（唱盘、唱臂、灯、喇叭花、电平表、音符泡泡）
+     6. 输入（面板按钮 + 键盘）
+     7. 通电（不自动出声，等住户亲手按播放）
+   ============================================================ */
+
+/* ---------- 1. 小工具 & 本地存档 ---------- */
+function $(id) { return document.getElementById(id); }
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
+var K_VOL   = 'gramo_vol';    // 存档键：音量档位
+var K_CHAIN = 'gramo_chain';  // 存档键：连播开关
+var K_SONG  = 'gramo_song';   // 存档键：上次选的曲子
+
+// localStorage 在个别环境（比如某些 file:// 安全设置）会抛异常，包一层稳一点
+var store = {
+  get: function (k, dft) {
+    try { var v = localStorage.getItem(k); return v === null ? dft : v; }
+    catch (e) { return dft; }
+  },
+  set: function (k, v) {
+    try { localStorage.setItem(k, String(v)); } catch (e) { /* 存不下就算了，留声机不跟浏览器计较 */ }
+  }
+};
+
+/* ---------- 2. 音符换算 & 曲库 ---------- */
+/* 音名（如 C4、D#5、Bb3）转 MIDI 音号，再按 440 * 2^((n-69)/12) 换频率 */
+var NOTE_BASE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+function noteToMidi(name) {
+  var m = /^([A-G])([#b]?)(\d)$/.exec(name);
+  if (!m) return null;
+  var semi = NOTE_BASE[m[1]] + (m[2] === '#' ? 1 : (m[2] === 'b' ? -1 : 0));
+  return (parseInt(m[3], 10) + 1) * 12 + semi;
+}
+function midiToFreq(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+
+/* 曲库：每首 [音名, 拍长] 一颗音，拍长 1 = 一拍。
+   都是无主公版旋律，放心放，版权费一分不出。 */
+var SONGS = [
+  {
+    name: '小星星', blurb: '一闪一闪，给刷了一下午装修墙的自己',
+    bpm: 92, beatsPerBar: 4, notes: [
+      // 一闪一闪亮晶晶
+      ['C4', 1], ['C4', 1], ['G4', 1], ['G4', 1], ['A4', 1], ['A4', 1], ['G4', 2],
+      // 满天都是小星星
+      ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['D4', 1], ['D4', 1], ['C4', 2],
+      // 挂在天上放光明
+      ['G4', 1], ['G4', 1], ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['D4', 2],
+      // 好像许多小眼睛
+      ['G4', 1], ['G4', 1], ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['D4', 2],
+      // 一闪一闪亮晶晶（再亮一遍）
+      ['C4', 1], ['C4', 1], ['G4', 1], ['G4', 1], ['A4', 1], ['A4', 1], ['G4', 2],
+      // 满天都是小星星（收工）
+      ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['D4', 1], ['D4', 1], ['C4', 2]
+    ]
+  },
+  {
+    name: '欢乐颂', blurb: '贝多芬没赶上收版权费，我们赶上了免费',
+    bpm: 108, beatsPerBar: 4, notes: [
+      // 主题第一遍
+      ['E4', 1], ['E4', 1], ['F4', 1], ['G4', 1],
+      ['G4', 1], ['F4', 1], ['E4', 1], ['D4', 1],
+      ['C4', 1], ['C4', 1], ['D4', 1], ['E4', 1],
+      ['E4', 1.5], ['D4', .5], ['D4', 2],
+      // 主题第二遍，收在属音上
+      ['E4', 1], ['E4', 1], ['F4', 1], ['G4', 1],
+      ['G4', 1], ['F4', 1], ['E4', 1], ['D4', 1],
+      ['C4', 1], ['C4', 1], ['D4', 1], ['E4', 1],
+      ['D4', 1.5], ['C4', .5], ['C4', 2],
+      // 中段：音型往下走两步
+      ['D4', 1], ['D4', 1], ['E4', 1], ['C4', 1],
+      ['D4', 1], ['E4', 1.5], ['F4', .5], ['E4', .5], ['C4', .5],
+      ['D4', 1], ['E4', 1.5], ['F4', .5], ['E4', .5], ['D4', .5],
+      ['C4', 1], ['D4', 1], ['G3', 2],
+      // 再来一遍头，稳稳收在主音上
+      ['E4', 1], ['E4', 1], ['F4', 1], ['G4', 1],
+      ['G4', 1], ['F4', 1], ['E4', 1], ['D4', 1],
+      ['C4', 1], ['C4', 1], ['D4', 1], ['E4', 1],
+      ['D4', 1.5], ['C4', .5], ['C4', 2]
+    ]
+  },
+  {
+    name: '茉莉花', blurb: '放这首的时候，整条街都是自家阳台',
+    bpm: 76, beatsPerBar: 4, notes: [
+      // 好一朵美丽的茉莉花
+      ['E4', 1], ['E4', 1], ['E4', 1], ['G4', 1],
+      ['A4', 1], ['C5', 1], ['C5', 2],
+      ['C5', 1], ['A4', 1], ['C5', 1], ['G4', 1],
+      ['G4', 1], ['A4', 1], ['G4', 2],
+      // 好一朵美丽的茉莉花（邻居开始跟着哼了）
+      ['E4', 1], ['E4', 1], ['E4', 1], ['G4', 1],
+      ['A4', 1], ['C5', 1], ['C5', 2],
+      ['C5', 1], ['A4', 1], ['C5', 1], ['G4', 1],
+      ['G4', 1], ['A4', 1], ['G4', 2],
+      // 好一朵美丽的茉莉花（第三遍，理直气壮）
+      ['E4', 1], ['E4', 1], ['E4', 1], ['G4', 1],
+      ['A4', 1], ['C5', 1], ['C5', 2],
+      ['C5', 1], ['A4', 1], ['C5', 1], ['G4', 1],
+      ['G4', 1], ['A4', 1], ['G4', 2],
+      // 茉莉花呀茉莉花，轻轻收个尾
+      ['E4', 1], ['G4', 1], ['A4', 1], ['C5', 1],
+      ['C5', 1], ['A4', 1], ['G4', 2],
+      ['G4', 1], ['A4', 1], ['G4', 1], ['E4', 1],
+      ['D4', 2], ['C4', 2]
+    ]
+  },
+  {
+    name: '致爱丽丝', blurb: '琴童的眼泪，八音盒的糖',
+    bpm: 168, beatsPerBar: 3, notes: [
+      // 灵魂开头：一串小铃铛滚下来（原曲十六分，八音盒里放慢半步更叮咚）
+      ['E5', .5], ['D#5', .5], ['E5', .5], ['D#5', .5], ['E5', .5], ['B4', .5], ['D5', .5], ['C5', .5],
+      ['A4', 1], ['C4', .5], ['E4', .5],
+      ['B4', 1], ['E4', .5], ['G#4', .5],
+      ['C5', 1], ['E4', .5],
+      // 蓄力，再来一遍
+      ['E5', .5], ['D#5', .5], ['E5', .5], ['D#5', .5], ['E5', .5], ['B4', .5], ['D5', .5], ['C5', .5],
+      ['A4', 1], ['C4', .5], ['E4', .5],
+      ['B4', 1], ['E4', .5],
+      // 收在主音上，余音给它两拍
+      ['C5', .5], ['B4', .5], ['A4', 2]
+    ]
+  },
+  {
+    name: '两只老虎', blurb: '验收专用，跑得快不快一听便知',
+    bpm: 108, beatsPerBar: 4, notes: [
+      // 两只老虎，跑得快
+      ['C4', 1], ['D4', 1], ['E4', 1], ['C4', 1],
+      ['C4', 1], ['D4', 1], ['E4', 1], ['C4', 1],
+      // 一只没有耳朵，一只没有尾巴
+      ['E4', 1], ['F4', 1], ['G4', 2],
+      ['E4', 1], ['F4', 1], ['G4', 2],
+      // 真奇怪（快速绕两圈）
+      ['G4', .5], ['A4', .5], ['G4', .5], ['F4', .5], ['E4', 1], ['C4', 1],
+      ['G4', .5], ['A4', .5], ['G4', .5], ['F4', .5], ['E4', 1], ['C4', 1],
+      // 真奇怪（收工）
+      ['C4', 1], ['G3', 1], ['C4', 2],
+      ['C4', 1], ['G3', 1], ['C4', 2]
+    ]
+  }
+];
+
+/* 给每首曲子算好总拍数和小节数（进度条要用） */
+function tallySongs() {
+  for (var i = 0; i < SONGS.length; i++) {
+    var s = SONGS[i], total = 0;
+    for (var j = 0; j < s.notes.length; j++) total += s.notes[j][1];
+    s.totalBeats = total;
+    s.bars = Math.ceil(total / s.beatsPerBar - 0.000001);
+  }
+}
+
+/* 把 [音名, 拍长] 展开成带绝对时间的事件表（秒） */
+function expandSong(song) {
+  var out = [], beatPos = 0, spb = 60 / song.bpm;
+  for (var i = 0; i < song.notes.length; i++) {
+    var pair = song.notes[i];
+    var midi = noteToMidi(pair[0]);
+    if (midi !== null) {
+      out.push({
+        t: beatPos * spb,
+        freq: midiToFreq(midi),
+        vol: midi > 86 ? 0.085 : 0.1      // 太高的音轻一点，免得尖
+      });
+    }
+    beatPos += pair[1];
+  }
+  return out;
+}
+
+/* ---------- 3. 八音盒音源 ---------- */
+/* 音色配方：主音一颗 sine，attack 0.005s 一敲就响，
+   decay 1.2~2s 慢慢散掉；再叠一颗 4 倍频的轻泛音，出"叮"的金属感。
+   音量总在 0.1 上下——客厅物件，温柔不吵。 */
+var VOL_LEVELS = [
+  { v: 0.05, t: '轻',  rot: -42 },
+  { v: 0.10, t: '中',  rot: 0 },
+  { v: 0.16, t: '满',  rot: 42 }
+];
+
+var Box = {
+  ctx: null, master: null, live: [],   // live：还挂着的一串振荡器，停机时好收拾
+
+  /* 浏览器规定：AudioContext 得在用户点过什么之后才许出声，
+     所以第一次按"播放"时才创建（并顺手 resume）。 */
+  ensure: function () {
+    if (!this.ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      try {
+        this.ctx = new AC();
+        this.master = this.ctx.createGain();
+        this.master.gain.value = VOL_LEVELS[Player.volIdx].v;
+        this.master.connect(this.ctx.destination);
+      } catch (e) { this.ctx = null; return false; }
+    }
+    if (this.ctx.state === 'suspended') { try { this.ctx.resume(); } catch (e) {} }
+    return true;
+  },
+
+  /* 把总音量恢复到当前档位（hush 之后重新开唱前调用） */
+  restore: function () {
+    if (!this.ctx || !this.master) return;
+    var now = this.ctx.currentTime;
+    try {
+      this.master.gain.cancelScheduledValues(now);
+      this.master.gain.setValueAtTime(VOL_LEVELS[Player.volIdx].v, now);
+    } catch (e) {}
+  },
+
+  /* 静音收场：总音量快速滑到 0，再把挂着的振荡器全停掉，
+     免得换曲/停机时"啪"一声，吓着猫。 */
+  hush: function (fast) {
+    if (!this.ctx || !this.master) return;
+    var now = this.ctx.currentTime;
+    try {
+      this.master.gain.cancelScheduledValues(now);
+      this.master.gain.setTargetAtTime(0.0001, now, fast ? 0.015 : 0.05);
+    } catch (e) {}
+    var cut = now + (fast ? 0.06 : 0.2);
+    var dead = this.live.splice(0, this.live.length);
+    for (var i = 0; i < dead.length; i++) { try { dead[i].stop(cut); } catch (e2) {} }
+  },
+
+  /* 八音盒的一"叮" */
+  pluck: function (freq, when, vol) {
+    if (!this.ctx) return;
+    vol = vol || 0.1;
+    var t = Math.max(when, this.ctx.currentTime + 0.001);
+    var decay = clamp(2.05 - (freq / 440) * 0.42, 1.2, 2.0);  // 音越高，散得越快
+    this.voice(freq, t, vol, decay);             // 主音
+    this.voice(freq * 4, t, vol * 0.22, decay * 0.3);  // 4 倍频泛音，叮~
+  },
+
+  /* 一颗带包络的正弦音：快起（0.005s）慢衰（decay 秒） */
+  voice: function (freq, t, vol, decay) {
+    var osc = this.ctx.createOscillator();
+    var g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.005 + decay);
+    osc.connect(g); g.connect(this.master);
+    osc.start(t);
+    try { osc.stop(t + decay + 0.12); } catch (e) {}
+    this.live.push(osc);
+    if (this.live.length > 160) this.live.splice(0, 40);  // 老节点收拾一下，数组别长草
+  },
+
+  /* 面板小咔哒（第一次开唱之前它一直安静，不越权出声） */
+  tick: function () {
+    if (!this.ctx) return;
+    this.voice(1750, this.ctx.currentTime, 0.035, 0.06);
+  },
+
+  /* 唱完的道别：叮~咚 */
+  chime: function () {
+    if (!this.ctx) return;
+    var t = this.ctx.currentTime + 0.05;
+    this.pluck(midiToFreq(76), t, 0.09);           // E5
+    this.pluck(midiToFreq(72), t + 0.22, 0.09);    // C5
+  }
+};
+
+/* ---------- 4. 播放器 ---------- */
+/* 排程思路：每 55ms 醒一次，把"未来 1.2 秒内"要响的音提前交给
+   AudioContext 的时钟去精确触发（后台标签页被限流也不漏音）。 */
+var Player = {
+  songIdx: 0, playing: false,
+  chain: false, volIdx: 1,
+  events: [], head: 0,
+  t0: 0, songEnd: 0, totalSec: 0,
+  timer: 0, raf: 0,
+
+  play: function () {
+    if (this.playing) return;
+    if (!Box.ensure()) {
+      setProgText('这台机器在这儿出不了声……（浏览器没批音响）');
+      return;
+    }
+    this.startEngine();
+  },
+
+  /* 开唱（换曲时也走这里：先掐掉旧音，再从头排新音） */
+  startEngine: function () {
+    var song = SONGS[this.songIdx];
+    var spb = 60 / song.bpm;
+    this.events = expandSong(song);
+    this.head = 0;
+    this.t0 = Box.ctx.currentTime + 0.16;
+    this.totalSec = song.totalBeats * spb;
+    this.songEnd = this.t0 + this.totalSec + 1.4;   // 给最后一声"叮"留足余韵
+    Box.hush(true);
+    setTimeout(function () { Box.restore(); }, 95); // 等旧音断干净，再开总闸
+    this.playing = true;
+    setPlayingUI(true);
+    lastNoteAt = 0;
+    this.clearTimers();
+    this.timer = setInterval(scheduleAhead, 55);
+    this.raf = requestAnimationFrame(paintProgress);
+    scheduleAhead();
+  },
+
+  /* 停机：掐音、唱臂归位、灯灭 */
+  stop: function () {
+    if (!this.playing) return;
+    this.playing = false;
+    this.clearTimers();
+    Box.hush(false);
+    setPlayingUI(false);
+    $('progFill').style.width = '0%';
+    setProgText('待机 · 再按播放，从头再来');
+  },
+
+  /* 曲毕：自动收针；连播开着就接着换下一张 */
+  finish: function () {
+    this.playing = false;
+    this.clearTimers();
+    setPlayingUI(false);
+    if (this.chain) {
+      this.songIdx = (this.songIdx + 1) % SONGS.length;
+      store.set(K_SONG, String(this.songIdx));
+      updateTrackUI();
+      setProgText('唱完啦 · 顺手换上《' + SONGS[this.songIdx].name + '》');
+      var self = this;
+      setTimeout(function () { self.play(); }, 900);
+    } else {
+      Box.chime();
+      setProgText('唱完了 · 唱臂已归位，灯已熄');
+    }
+  },
+
+  toggle: function () { this.playing ? this.stop() : this.play(); },
+
+  next: function () { this.pick((this.songIdx + 1) % SONGS.length); },
+
+  /* 选曲：没在唱就只换唱片；正在唱就当场换，立刻开唱 */
+  pick: function (idx) {
+    this.songIdx = idx;
+    store.set(K_SONG, String(idx));
+    updateTrackUI();
+    if (this.playing) {
+      this.startEngine();
+    } else {
+      setProgText('待机 · 已上《' + SONGS[idx].name + '》· 共 ' + SONGS[idx].bars + ' 小节');
+    }
+  },
+
+  /* 音量旋钮：轻 → 中 → 满 → 轻 循环，真实改总音量 */
+  cycleVolume: function () {
+    this.volIdx = (this.volIdx + 1) % VOL_LEVELS.length;
+    store.set(K_VOL, String(this.volIdx));
+    updateVolumeUI();
+    if (this.playing) Box.restore();
+    Box.tick();
+  },
+
+  /* 连播拨杆 */
+  toggleChain: function () {
+    this.chain = !this.chain;
+    store.set(K_CHAIN, this.chain ? '1' : '0');
+    updateChainUI();
+    Box.tick();
+  },
+
+  clearTimers: function () {
+    if (this.timer) { clearInterval(this.timer); this.timer = 0; }
+    if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; }
+  }
+};
+
+/* 排程泵：把未来一小段要响的音提前排给 AudioContext */
+function scheduleAhead() {
+  if (!Player.playing || !Box.ctx) return;
+  var now = Box.ctx.currentTime;
+  var horizon = now + 1.2;   // 后台标签页限流到 1 秒一跳也不漏音
+  while (Player.head < Player.events.length && Player.t0 + Player.events[Player.head].t < horizon) {
+    var ev = Player.events[Player.head++];
+    if (ev.freq) Box.pluck(ev.freq, Player.t0 + ev.t, ev.vol);
+  }
+  if (now - lastNoteAt > 0.62) { lastNoteAt = now; spawnNoteGlyph(); }
+  if (now >= Player.songEnd) Player.finish();
+}
+
+/* 进度刷新：进度条 / 小节读数 / 电平表针 / 唱臂慢慢向内爬 */
+function paintProgress() {
+  if (!Player.playing || !Box.ctx) return;
+  var now = Box.ctx.currentTime;
+  var song = SONGS[Player.songIdx];
+  var spb = 60 / song.bpm;
+  var beat = clamp((now - Player.t0) / spb, 0, song.totalBeats);
+  var p = song.totalBeats ? beat / song.totalBeats : 0;
+
+  $('progFill').style.width = (p * 100).toFixed(1) + '%';
+  var bar = Math.min(song.bars, Math.floor(beat / song.beatsPerBar) + 1);
+  $('progText').textContent = '第 ' + bar + ' / ' + song.bars + ' 小节 · ' + song.name;
+
+  var ang = -40 + p * 80 + Math.sin(now * 6.7) * 2.6;   // 表针随进度扫，还轻轻抖
+  $('vuNeedle').style.transform = 'rotate(' + ang.toFixed(2) + 'deg)';
+
+  $('arm').style.transform = 'rotate(' + (181 + p * 6).toFixed(2) + 'deg)';  // 针往里爬
+
+  Player.raf = requestAnimationFrame(paintProgress);
+}
+
+/* ---------- 5. 外观联动 ---------- */
+function setPlayingUI(on) {
+  $('stage').classList.toggle('playing', on);
+  $('gramo').classList.toggle('playing', on);
+  $('deck').classList.toggle('playing', on);
+  $('lamp').classList.toggle('on', on);
+  $('playBtn').classList.toggle('playing', on);
+  $('playBtn').textContent = on ? '停止' : '播放';
+  if (on) {
+    $('vuNeedle').style.transform = '';
+  } else {
+    $('vuNeedle').style.transform = 'rotate(-40deg)';
+    $('arm').style.transform = '';    // 唱臂归位（CSS 接管回 38° 的停车位）
+  }
+}
+
+function setProgText(msg) { $('progText').textContent = msg; }
+
+function updateTrackUI() {
+  var btns = document.querySelectorAll('.trackbtn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', i === Player.songIdx);
+  }
+}
+
+function updateVolumeUI() {
+  $('volKnob').style.transform = 'rotate(' + VOL_LEVELS[Player.volIdx].rot + 'deg)';
+  $('volLabel').textContent = '音量 · ' + VOL_LEVELS[Player.volIdx].t;
+}
+
+function updateChainUI() {
+  $('chainLever').classList.toggle('on', Player.chain);
+  $('chainLabel').textContent = '连播 · ' + (Player.chain ? '开' : '关');
+}
+
+/* 音符泡泡：从喇叭花口飘出来的小音符（其实是 DOM） */
+var NOTE_GLYPHS = ['♪', '♫', '♬', '♩'];
+var noteSeq = 0;
+var lastNoteAt = 0;
+
+function spawnNoteGlyph() {
+  var layer = $('notes');
+  if (!layer || layer.childElementCount > 9) return;   // 满天都是也不行，会吵
+  var s = document.createElement('span');
+  s.className = 'note';
+  s.textContent = NOTE_GLYPHS[noteSeq++ % NOTE_GLYPHS.length];
+  var x = 50 + Math.random() * 130;                     // 喇叭花口附近
+  var size = 13 + Math.random() * 11;
+  s.style.left = 'calc(' + x.toFixed(0) + 'px * var(--u))';
+  s.style.fontSize = 'calc(' + size.toFixed(0) + 'px * var(--u))';
+  s.style.setProperty('--dx', (Math.random() * 64 - 32).toFixed(0) + 'px');
+  s.style.setProperty('--dur', (1.9 + Math.random() * 1.3).toFixed(2) + 's');
+  layer.appendChild(s);
+  setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 3400);
+}
+
+/* ---------- 6. 输入（面板 + 键盘） ---------- */
+var trackBtns = Array.prototype.slice.call(document.querySelectorAll('.trackbtn'));
+trackBtns.forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    Player.pick(parseInt(btn.getAttribute('data-i'), 10) || 0);
+    Box.tick();
+  });
+});
+$('playBtn').addEventListener('click', function () { Player.toggle(); Box.tick(); });
+$('nextBtn').addEventListener('click', function () { Player.next(); Box.tick(); });
+$('volKnob').addEventListener('click', function () { Player.cycleVolume(); });
+$('chainLever').addEventListener('click', function () { Player.toggleChain(); });
+
+window.addEventListener('keydown', function (e) {
+  var k = e.key;
+  if (k === ' ') e.preventDefault();           // 空格别滚动页面
+  if (k === ' ') { Player.toggle(); return; }
+  if (k === 'n' || k === 'N') { Player.next(); return; }
+  var n = parseInt(k, 10);
+  if (n >= 1 && n <= SONGS.length) { Player.pick(n - 1); Box.tick(); }
+});
+
+/* ---------- 7. 通电（不出声，等住户亲手按播放） ---------- */
+tallySongs();
+Player.songIdx = clamp(parseInt(store.get(K_SONG, '0'), 10) || 0, 0, SONGS.length - 1);
+Player.volIdx = clamp(parseInt(store.get(K_VOL, '1'), 10) || 0, 0, VOL_LEVELS.length - 1);
+Player.chain = store.get(K_CHAIN, '0') === '1';
+updateTrackUI();
+updateVolumeUI();
+updateChainUI();
+setProgText('待机 · 已上《' + SONGS[Player.songIdx].name + '》，按播放起针');
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+.tmp*
+搬家备份_*.zip
+Thumbs.db
+.DS_Store

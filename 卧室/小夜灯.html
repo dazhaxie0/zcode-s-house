@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>小夜灯 · 小Z 的卧室</title>
+<style>
+/* ==========================================================
+   小夜灯 —— 小Z 卧室的氛围灯
+   家训：暗适应、低亮度、不闪眼；动画只动 transform / opacity
+   ========================================================== */
+
+/* ---------- 全局重置与基础 ---------- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  background: #06080f; /* 兜底色：万一主题层还没渲染 */
+  color: var(--ink);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+/* ---------- 主题变量：文字与控件的颜色也跟着灯走 ---------- */
+body[data-theme="moon"]   { --ink: rgba(208, 220, 244, 0.92); --ink-dim: rgba(190, 205, 235, 0.55); --btn-line: rgba(200, 215, 245, 0.28); }
+body[data-theme="candle"] { --ink: rgba(244, 226, 200, 0.92); --ink-dim: rgba(235, 210, 180, 0.55); --btn-line: rgba(240, 215, 180, 0.30); }
+body[data-theme="dusk"]   { --ink: rgba(240, 216, 226, 0.92); --ink-dim: rgba(230, 200, 214, 0.55); --btn-line: rgba(238, 205, 218, 0.28); }
+
+/* ---------- 背景：三层全屏渐变叠放，切主题时用透明度交叉淡换 ---------- */
+.bg-layer {
+  position: fixed; inset: 0;
+  transition: opacity 1.6s ease; /* 颜色不能平滑过渡，但透明度可以 */
+  pointer-events: none;
+}
+.bg-moon   { background: linear-gradient(180deg, #05070f 0%, #0a1226 45%, #10121a 100%); opacity: 0; } /* 深蓝到暖黑 */
+.bg-candle { background: linear-gradient(180deg, #0b0906 0%, #16100a 50%, #1a140d 100%); opacity: 0; } /* 暖褐到暖黑 */
+.bg-dusk   { background: linear-gradient(180deg, #0d0810 0%, #1a1020 50%, #1b141a 100%); opacity: 0; } /* 微粉紫到暖黑 */
+body[data-theme="moon"]   .bg-moon,
+body[data-theme="candle"] .bg-candle,
+body[data-theme="dusk"]   .bg-dusk   { opacity: 1; }
+
+/* ---------- 星尘：几粒极暗的小点，缓慢明灭 ---------- */
+#stars span {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(225, 232, 250, 0.35); /* 低亮度微白，暗适应 */
+  animation: twinkle var(--dur, 6s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  pointer-events: none;
+  will-change: opacity;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.10; }
+  50%      { opacity: 0.55; }
+}
+
+/* ---------- 夜灯本体：呼吸容器包住三层主题光晕 ---------- */
+#lamp {
+  position: fixed;
+  left: 50%; top: 56%;
+  width: 0; height: 0;
+  cursor: pointer;
+}
+.lamp-breathe {
+  position: absolute;
+  left: 0; top: 0;
+  width: 58vmin; height: 58vmin;
+  transform: translate(-50%, -50%);
+  animation: breathe 6s ease-in-out infinite; /* 6 秒一次呼吸，缓入缓出，绝不闪眼 */
+  will-change: transform, opacity;
+}
+@keyframes breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);    opacity: 0.72; }
+  50%      { transform: translate(-50%, -50%) scale(1.10); opacity: 1;    }
+}
+.glow {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  filter: blur(52px); /* 纯色圆 + 大模糊 = 柔和光晕，颜色随层切换 */
+  transition: opacity 1.6s ease;
+  opacity: 0;
+}
+.g-moon   { background: #9db6e8; box-shadow: 0 0 120px 40px rgba(120, 150, 215, 0.30); }
+.g-candle { background: #e8b877; box-shadow: 0 0 120px 40px rgba(220, 165, 100, 0.32); }
+.g-dusk   { background: #e3aac2; box-shadow: 0 0 120px 40px rgba(215, 150, 180, 0.30); }
+body[data-theme="moon"]   .g-moon,
+body[data-theme="candle"] .g-candle,
+body[data-theme="dusk"]   .g-dusk   { opacity: 1; }
+
+/* 灯芯：中心一小粒更实的核，同样三层换色 */
+.core {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 7vmin; height: 7vmin;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(10px);
+  transition: opacity 1.6s ease;
+  opacity: 0;
+}
+.c-moon   { background: rgba(215, 228, 250, 0.85); }
+.c-candle { background: rgba(250, 225, 180, 0.85); }
+.c-dusk   { background: rgba(248, 212, 226, 0.85); }
+body[data-theme="moon"]   .c-moon,
+body[data-theme="candle"] .c-candle,
+body[data-theme="dusk"]   .c-dusk   { opacity: 0.8; }
+
+/* ---------- 时钟信息区（屏幕上方，不刺眼的大字） ---------- */
+#clockArea {
+  position: fixed;
+  top: clamp(28px, 8vh, 80px);
+  left: 0; right: 0;
+  text-align: center;
+  pointer-events: none;
+  transition: color 1.6s ease;
+}
+#time {
+  font-size: clamp(44px, 9vw, 88px);
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums; /* 等宽数字，秒针跳动时不抖版 */
+  text-shadow: 0 0 24px rgba(0, 0, 0, 0.5);
+}
+#date {
+  margin-top: 10px;
+  font-size: clamp(13px, 2vw, 16px);
+  letter-spacing: 0.35em;
+  color: var(--ink-dim);
+  transition: color 1.6s ease;
+}
+#greeting {
+  margin-top: 14px;
+  font-size: clamp(13px, 2vw, 16px);
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+  transition: color 1.6s ease, opacity 1.6s ease;
+  opacity: 0.9;
+}
+
+/* ---------- 底部控制条 ---------- */
+#controls {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: clamp(20px, 5vh, 48px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 0 16px;
+}
+#controls button {
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  color: var(--ink-dim);
+  background: rgba(255, 255, 255, 0.04); /* 极暗底，绝不出现亮白块 */
+  border: 1px solid var(--btn-line);
+  border-radius: 999px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: color 0.4s ease, border-color 0.4s ease, background-color 0.4s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+#controls button:hover { color: var(--ink); background: rgba(255, 255, 255, 0.07); }
+#controls button:active { transform: translateY(1px); }
+/* 当前生效的主题档位微微点亮 */
+#controls button.on { color: var(--ink); border-color: var(--ink-dim); background: rgba(255, 255, 255, 0.09); }
+
+/* ---------- 彩蛋文字 ---------- */
+#egg {
+  position: fixed;
+  left: 50%; top: 74%;
+  transform: translateX(-50%);
+  font-size: clamp(13px, 2vw, 16px);
+  letter-spacing: 0.18em;
+  color: rgba(232, 205, 150, 0.85);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+#egg.show { opacity: 1; }
+
+/* ---- 全屋统一滚动条 ---- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#a8895c;border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#8a6a3e}
+*{scrollbar-width:thin;scrollbar-color:#a8895c transparent}
+</style>
+</head>
+<body data-theme="moon">
+
+  <!-- 三层主题背景（叠放，靠透明度交叉淡换） -->
+  <div class="bg-layer bg-moon"></div>
+  <div class="bg-layer bg-candle"></div>
+  <div class="bg-layer bg-dusk"></div>
+
+  <!-- 星尘（JS 生成小圆点） -->
+  <div id="stars"></div>
+
+  <!-- 夜灯本体（可点击，藏了彩蛋） -->
+  <div id="lamp" aria-label="夜灯">
+    <div class="lamp-breathe">
+      <div class="glow g-moon"></div>
+      <div class="glow g-candle"></div>
+      <div class="glow g-dusk"></div>
+      <div class="core c-moon"></div>
+      <div class="core c-candle"></div>
+      <div class="core c-dusk"></div>
+    </div>
+  </div>
+
+  <!-- 时钟信息区 -->
+  <header id="clockArea">
+    <div id="time">--:--:--</div>
+    <div id="date">…</div>
+    <div id="greeting">…</div>
+  </header>
+
+  <!-- 底部控制条 -->
+  <footer id="controls">
+    <button class="theme-btn on" data-theme="moon">月光</button>
+    <button class="theme-btn" data-theme="candle">烛光</button>
+    <button class="theme-btn" data-theme="dusk">晚霞</button>
+    <button id="rainBtn" aria-pressed="false">雨声 · 关</button>
+    <button id="fsBtn">全屏</button>
+  </footer>
+
+  <!-- 彩蛋：连点夜灯 5 次才会亮起来 -->
+  <div id="egg">该睡了，明天的活儿明天干。—— 小Z</div>
+
+<script>
+/* ==========================================================
+   小夜灯逻辑
+   ========================================================== */
+"use strict";
+
+/* ---------- 晚安语库（11 句，贴着这户人家的日子写的） ---------- */
+const GOOD_NIGHT = [
+  "今晚的月亮不收费，放心看。",
+  "床垫是二手的，梦是一手的。",
+  "欠款睡一觉不会变多，力气会。",
+  "灯一暗，全世界都替你说晚安。",
+  "赊来的床垫，也能睡出踏实的觉。",
+  "今天的活儿今天结，明天的需求明天说。",
+  "深夜的安静，是给自己充的电。",
+  "闭眼的地方，就是眼下最好的家。",
+  "星星也在待机，一起省点电吧。",
+  "愿你睡得比验收过的账本还干净。",
+  "账可以明天再对，觉不能明天补。"
+];
+
+const $ = (sel) => document.querySelector(sel);
+const pad = (n) => String(n).padStart(2, "0");
+const WEEK = ["日", "一", "二", "三", "四", "五", "六"];
+
+/* ---------- 时钟：每 250ms 巡检一次，秒数变了才动 DOM ---------- */
+let lastSec = -1;    // 上次渲染的秒
+let lastHour = -1;   // 上次见到的小时，用于整点换晚安语
+let gnIndex = -1;    // 当前晚安语下标
+
+function pickGreeting() {
+  // 随机挑一句，且尽量不与上一句重复
+  let i;
+  do { i = Math.floor(Math.random() * GOOD_NIGHT.length); }
+  while (i === gnIndex && GOOD_NIGHT.length > 1);
+  gnIndex = i;
+  $("#greeting").textContent = GOOD_NIGHT[i];
+}
+
+function tick() {
+  const now = new Date();
+  const s = now.getSeconds();
+  if (s !== lastSec) {           // 秒没变就不碰 DOM，省一次重排
+    lastSec = s;
+    $("#time").textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(s);
+    $("#date").textContent =
+      now.getFullYear() + "年" + (now.getMonth() + 1) + "月" + now.getDate() +
+      "日 · 星期" + WEEK[now.getDay()];
+  }
+  const h = now.getHours();
+  if (h !== lastHour) {          // 每到新的一小时换一句晚安语（首帧也会触发）
+    lastHour = h;
+    pickGreeting();
+  }
+}
+
+pickGreeting();   // 刷新页面立即随机一句
+tick();           // 先渲染一次，避免空白
+setInterval(tick, 250);  // 巡检频率高于 1Hz，保证秒跳不丢帧也不漂移
+
+/* ---------- 主题切换：换 data-theme，CSS 层透明度自然过渡 ---------- */
+document.querySelectorAll(".theme-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const t = btn.dataset.theme;
+    document.body.dataset.theme = t;
+    document.querySelectorAll(".theme-btn").forEach((b) => b.classList.toggle("on", b === btn));
+  });
+});
+
+/* ---------- 雨声：WebAudio 现场合成，无音频文件 ----------
+   方案：2 秒循环白噪声 → 高通 120Hz 去闷 → 低通 900Hz 滤出雨的沙沙感
+        → 主音量挂一只 0.07Hz 的慢 LFO，让雨声有忽大忽小的呼吸
+   音频对象只在按钮点击（用户手势）后创建，符合浏览器自动播放策略 */
+let audioCtx = null;      // AudioContext 惰性创建
+let rainGain = null;      // 主音量节点
+let rainOn = false;       // 当前开关状态
+const RAIN_LEVEL = 0.05;  // 目标音量，很轻，只是垫个底
+
+function buildRain() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  audioCtx = new AC();
+
+  // 1) 白噪声缓冲区（2 秒，循环播放）
+  const len = audioCtx.sampleRate * 2;
+  const buffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  noise.loop = true;
+
+  // 2) 两只滤波器塑形
+  const hp = audioCtx.createBiquadFilter();
+  hp.type = "highpass"; hp.frequency.value = 120;
+  const lp = audioCtx.createBiquadFilter();
+  lp.type = "lowpass"; lp.frequency.value = 900; lp.Q.value = 0.7;
+
+  // 3) 主音量（LFO 轻微调制，模拟雨的疏密）
+  rainGain = audioCtx.createGain();
+  rainGain.gain.value = 0;
+  const lfo = audioCtx.createOscillator();
+  lfo.frequency.value = 0.07;
+  const lfoDepth = audioCtx.createGain();
+  lfoDepth.gain.value = 0.018;
+  lfo.connect(lfoDepth);
+  lfoDepth.connect(rainGain.gain);
+
+  // 4) 接线：噪声 → 高通 → 低通 → 主音量 → 输出
+  noise.connect(hp);
+  hp.connect(lp);
+  lp.connect(rainGain);
+  rainGain.connect(audioCtx.destination);
+
+  noise.start();
+  lfo.start();
+}
+
+$("#rainBtn").addEventListener("click", () => {
+  const btn = $("#rainBtn");
+  if (!audioCtx) buildRain();          // 首次点击才创建（此click即用户手势）
+  if (audioCtx.state === "suspended") audioCtx.resume();
+
+  rainOn = !rainOn;
+  const t = audioCtx.currentTime;
+  // 用线性斜坡淡入淡出，开关不生硬
+  rainGain.gain.cancelScheduledValues(t);
+  rainGain.gain.setValueAtTime(rainGain.gain.value, t);
+  rainGain.gain.linearRampToValueAtTime(rainOn ? RAIN_LEVEL : 0, t + 1.2);
+
+  btn.textContent = rainOn ? "雨声 · 开" : "雨声 · 关";
+  btn.setAttribute("aria-pressed", String(rainOn));
+});
+
+/* ---------- 全屏按钮（带 webkit 兜底，change 事件同步文案） ---------- */
+function isFullscreen() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+$("#fsBtn").addEventListener("click", () => {
+  try {
+    if (!isFullscreen()) {
+      const el = document.documentElement;
+      (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    }
+  } catch (e) { /* 个别环境拒绝全屏就算了，别影响睡觉 */ }
+});
+function syncFsBtn() { $("#fsBtn").textContent = isFullscreen() ? "退出全屏" : "全屏"; }
+document.addEventListener("fullscreenchange", syncFsBtn);
+document.addEventListener("webkitfullscreenchange", syncFsBtn);
+
+/* ---------- 彩蛋：1.4 秒内连点夜灯本体 5 次 ---------- */
+let eggCount = 0;       // 当前连击数
+let eggLast = 0;        // 上次点击时间戳
+let eggTimer = null;    // 停手清零计时器
+let eggHideTimer = null;// 彩蛋淡出计时器
+$("#lamp").addEventListener("click", () => {
+  const now = Date.now();
+  if (now - eggLast > 1400) eggCount = 0; // 间隔太久，重新开始数
+  eggLast = now;
+  eggCount++;
+
+  clearTimeout(eggTimer);
+  eggTimer = setTimeout(() => { eggCount = 0; }, 1400);
+
+  if (eggCount >= 5) {
+    eggCount = 0;
+    clearTimeout(eggTimer);
+    clearTimeout(eggHideTimer);
+    const egg = $("#egg");
+    egg.classList.add("show");
+    eggHideTimer = setTimeout(() => egg.classList.remove("show"), 4500); // 亮 4.5 秒后轻轻熄灭
+  }
+});
+
+/* ---------- 生成 7 粒星尘，位置、大小、节奏都随机 ---------- */
+(function makeStars() {
+  const box = $("#stars");
+  for (let i = 0; i < 7; i++) {
+    const s = document.createElement("span");
+    const size = 1.5 + Math.random() * 2;          // 1.5~3.5px 的小点
+    s.style.width = size + "px";
+    s.style.height = size + "px";
+    s.style.left = (5 + Math.random() * 90) + "vw";
+    s.style.top = (4 + Math.random() * 40) + "vh"; // 只散在上半空
+    s.style.setProperty("--dur", (4 + Math.random() * 5).toFixed(1) + "s");   // 4~9 秒明灭一轮
+    s.style.setProperty("--delay", (-Math.random() * 9).toFixed(1) + "s");    // 负延迟：一进场就错落有致
+    box.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>

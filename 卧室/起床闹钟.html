@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>起床闹钟 · 小Z 的卧室</title>
+<style>
+/* ==========================================================
+   起床闹钟 —— 小Z 卧室的双铃马蹄表
+   家训（沿用小夜灯）：深夜蓝配暖黄、不闪眼、动画只动
+   transform / opacity、不引任何外部文件、存取必包 try-catch
+   ========================================================== */
+
+/* ---------- 全局重置与基础 ---------- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  color-scheme: dark;                       /* 让 <input type="time"> 的原生控件也走暗色 */
+  --ink: rgba(214, 226, 248, 0.92);         /* 夜里读得清、又不刺眼的月白 */
+  --ink-dim: rgba(190, 205, 235, 0.55);
+  --btn-line: rgba(200, 215, 245, 0.28);
+  --warm: #ffd98a;                          /* 暖黄：液晶、彩蛋、铃铛高光共用 */
+  --brass: #c8a568;                         /* 黄铜：表圈、铃铛、脚 */
+}
+
+html { height: 100%; }
+body {
+  min-height: 100%;
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  background: #06080f;                      /* 兜底色，渐变层没出来也不至于白屏 */
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- 背景：深夜蓝渐变 + 地板一点暖光，跟小夜灯同一间屋 ---------- */
+.bg-night {
+  position: fixed; inset: 0;
+  background: linear-gradient(180deg, #05070f 0%, #0a1226 45%, #10121a 100%);
+  pointer-events: none;
+}
+.bg-floor {
+  position: fixed; inset: 0;
+  background: radial-gradient(60% 26% at 50% 78%, rgba(232, 184, 119, 0.08), rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;                     /* 闹钟脚底下那一小片被灯烤暖的地板 */
+}
+
+/* ---------- 星尘：和小夜灯同一套做法，负延迟进场就错落 ---------- */
+#stars span {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(225, 232, 250, 0.35);
+  animation: twinkle var(--dur, 6s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  pointer-events: none;
+  will-change: opacity;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.10; }
+  50%      { opacity: 0.50; }
+}
+
+/* ---------- 页面骨架：一竖列，卧室里摆得下手机也摆得下显示器 ---------- */
+.stage {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 3vh, 26px);
+  padding: clamp(20px, 5vh, 44px) 16px 30px;
+}
+.head { text-align: center; }
+.head h1 {
+  font-size: clamp(20px, 4.5vw, 30px);
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;                       /* 补偿最后一个字的字距，视觉居中 */
+}
+.head .sub {
+  margin-top: 8px;
+  font-size: clamp(12px, 2.2vw, 15px);
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+}
+
+/* ==========================================================
+   马蹄表本体：纯 CSS 手绘
+   结构：提梁 + 双铃 + 小锤 + 四只脚 + 铜圈 + 表盘（刻度/数字/
+   液晶条/三根针/表冠），全部 absolute 摆在一个正方形里
+   ========================================================== */
+.clock-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  /* 铃铛和提梁往表体上方伸出（top: -13% / -30%），提梁弧顶最高伸出约
+     380px * 30% + 3px ≈ 117px，扣掉 stage 的 gap 后钟区还得自己让出 ~90px，
+     不然提梁会横穿副标语那一行字 */
+  margin-top: clamp(92px, 13vh, 118px);
+}
+.machine {
+  position: relative;
+  width: min(76vw, 48vh, 380px);
+  aspect-ratio: 1;
+  isolation: isolate;                       /* 给负 z-index 的后脚/提梁一个独立图层，别漏到背景后面去 */
+}
+body.ringing .machine { animation: wiggle 0.14s linear infinite alternate; }
+@keyframes wiggle {                        /* 响铃时整机哆嗦：只动 transform，不引起重排 */
+  from { transform: rotate(-0.7deg) translateX(-1px); }
+  to   { transform: rotate(0.7deg) translateX(1px); }
+}
+
+/* ---------- 提梁：一个只留上弧的椭圆边框 ---------- */
+.handle {
+  position: absolute;
+  left: 50%; top: -30%;
+  width: 52%; height: 34%;
+  transform: translateX(-50%);
+  border: 3px solid transparent;
+  border-top-color: var(--brass);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* ---------- 铃铛：黄铜渐变的半球，左右各一，微微外八字 ---------- */
+.bell {
+  position: absolute;
+  top: -13%;
+  width: 26%; height: 15%;
+  border-radius: 48% 48% 42% 42% / 82% 82% 34% 34%;
+  background: linear-gradient(135deg, #f4e2a8 0%, #c8a568 38%, #8a6d3f 62%, #e6cf94 100%);
+  box-shadow: inset 0 -3px 6px rgba(60, 42, 20, 0.45), inset 0 2px 3px rgba(255, 244, 214, 0.5);
+  transform-origin: 50% 100%;
+  z-index: 2;
+}
+.bell::after {                              /* 铃顶的小圆钮 */
+  content: "";
+  position: absolute;
+  top: -18%; left: 50%;
+  width: 18%; aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f4e2a8, #8a6d3f 75%);
+}
+.bell--l { left: 6%;  transform: rotate(-26deg); }
+.bell--r { right: 6%; transform: rotate(26deg); }
+body.ringing .bell { animation: bellPing var(--ring-speed, 0.3s) ease-in-out infinite alternate; }
+.bell--r { animation-delay: calc(var(--ring-speed, 0.3s) * -0.5); }
+@keyframes bellPing {                       /* 被敲到的瞬间亮一下：只动 filter */
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.45) drop-shadow(0 0 6px rgba(255, 214, 140, 0.55)); }
+}
+
+/* ---------- 小锤：立在双铃中间，响铃时左右开弓 ---------- */
+.hammer {
+  position: absolute;
+  left: 50%; top: -12.5%;
+  width: 9%; height: 13%;
+  transform: translateX(-50%) rotate(-6deg); /* 平时歪着歇会儿 */
+  transform-origin: 50% 100%;
+  z-index: 3;
+}
+.hammer .arm {
+  position: absolute;
+  left: 50%; bottom: 0;
+  width: 9%; height: 100%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(#d9c292, #7a6440);
+}
+.hammer .head {
+  position: absolute;
+  top: -14%; left: 50%;
+  width: 34%; aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f4e2a8, #8a6d3f 70%);
+}
+body.ringing .hammer { animation: hammering var(--ring-speed, 0.3s) ease-in-out infinite alternate; }
+@keyframes hammering {
+  from { transform: translateX(-50%) rotate(-24deg); }
+  to   { transform: translateX(-50%) rotate(24deg); }
+}
+
+/* ---------- 四只小脚：前两只亮、后两只暗，站得像只好表 ---------- */
+.foot {
+  position: absolute;
+  width: 8%; height: 10%;
+  border-radius: 34% 34% 48% 48%;
+  background: linear-gradient(#b09460, #6b543a);
+  z-index: 4;
+}
+.foot--fl { left: 14%;  bottom: -5%;   transform: rotate(20deg); }
+.foot--fr { right: 14%; bottom: -5%;   transform: rotate(-20deg); }
+.foot--bl { left: 31%;  bottom: -3.5%; transform: rotate(9deg);  height: 8%; filter: brightness(0.7); z-index: -1; }
+.foot--br { right: 31%; bottom: -3.5%; transform: rotate(-9deg); height: 8%; filter: brightness(0.7); z-index: -1; }
+
+/* ---------- 铜圈：conic-gradient 转出一圈拉丝高光 ---------- */
+.bezel {
+  position: absolute;
+  inset: 1.5%;
+  border-radius: 50%;
+  background: conic-gradient(from 210deg,
+    #f0dca0, #a8895a 18%, #e6cf94 33%, #7a6440 52%, #d9c292 68%, #8a6d3f 85%, #f0dca0);
+  padding: 4.5%;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+/* ---------- 表盘：奶油底子暖光烤过，夜里不扎眼 ---------- */
+.face {
+  position: relative;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #f7eed7 0%, #efe0b8 55%, #d9c292 100%);
+  box-shadow: inset 0 4px 14px rgba(90, 64, 30, 0.35), inset 0 -6px 12px rgba(120, 85, 40, 0.25);
+  font-size: calc(min(76vw, 48vh, 380px) * 0.048);  /* 跟着表走的一个字号基准，数字和液晶都吃它 */
+  overflow: hidden;
+}
+.face::after {                              /* 玻璃反光：一抹斜着的白 */
+  content: "";
+  position: absolute;
+  left: 8%; top: 5%;
+  width: 55%; height: 35%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 65%);
+  pointer-events: none;
+}
+
+/* ---------- 刻度：JS 生成 60 根，逢五一根粗的 ---------- */
+.ticks, .numerals { position: absolute; inset: 0; }
+.tick {
+  position: absolute;
+  width: 1px; height: 1.6%;
+  background: rgba(120, 95, 60, 0.5);
+  border-radius: 1px;
+}
+.tick--major {
+  width: 2px; height: 2.8%;
+  background: #8a6d3f;
+}
+
+/* ---------- 数字：12 点位让给液晶条，所以只有 1~11 ---------- */
+.num {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-weight: 600;
+  font-size: 0.95em;
+  color: #6b543a;
+}
+
+/* ---------- 液晶条：深夜蓝底暖黄字，冒号一秒一眨 ---------- */
+.lcd {
+  position: absolute;
+  top: 14%; left: 50%;
+  transform: translateX(-50%);
+  width: 44%;
+  padding: 2.2% 0;
+  background: linear-gradient(180deg, #0c1626 0%, #101d33 100%);
+  border: 1px solid rgba(255, 220, 150, 0.3);
+  border-radius: 0.55em;
+  color: var(--warm);
+  font-size: 0.72em;
+  letter-spacing: 0.14em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;       /* 等宽数字，分钟跳动不抖版 */
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.lcd .colon { animation: colonBlink 1s steps(1) infinite; }
+@keyframes colonBlink { 50% { opacity: 0.15; } }
+
+/* ---------- 表盘上的小落款 ---------- */
+.brand {
+  position: absolute;
+  top: 67%; left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.42em;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  color: rgba(107, 84, 58, 0.75);
+  white-space: nowrap;
+}
+
+/* ---------- 三根针：transform-origin 钉在表心上 ---------- */
+.hand {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(0deg);
+  border-radius: 999px;
+  will-change: transform;
+}
+.hand--hour {
+  width: 5.5%; height: 25%;
+  background: linear-gradient(#4a3a26, #6b543a);
+  z-index: 3;
+}
+.hand--minute {
+  width: 4%; height: 36%;
+  background: linear-gradient(#4a3a26, #7a6440);
+  z-index: 4;
+}
+.hand--second {
+  width: 1.8%; height: 41%;
+  background: #c96a3a;                      /* 秒针一点陶土橙，暖色系里最跳的那个 */
+  z-index: 5;
+}
+.hand--second::after {                      /* 秒针的小尾巴，甩起来才有劲儿 */
+  content: "";
+  position: absolute;
+  top: 100%; left: 0;
+  width: 100%; height: 18%;
+  border-radius: 999px;
+  background: inherit;
+}
+.cap {                                      /* 表心铜帽，压住三根针的交点 */
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 9%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f4e2a8, #8a6d3f 70%);
+  box-shadow: 0 1px 3px rgba(60, 42, 20, 0.6);
+  z-index: 6;
+}
+
+/* ---------- 彩蛋：响铃时才亮的那行字 ---------- */
+#egg {
+  font-size: clamp(13px, 2.4vw, 16px);
+  letter-spacing: 0.18em;
+  color: var(--warm);
+  text-shadow: 0 0 14px rgba(255, 217, 138, 0.35);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+body.ringing #egg { opacity: 1; }
+
+/* ---------- 状态栏 ---------- */
+#status {
+  min-height: 1.7em;
+  font-size: clamp(14px, 2.6vw, 17px);
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: var(--ink);
+  max-width: 34em;
+  transition: color 0.4s ease;
+}
+body.ringing #status { color: var(--warm); }
+
+/* ---------- 控制面板：胶囊按钮，和小夜灯一个手笔 ---------- */
+.panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  max-width: 640px;
+}
+.panel button, .time-label {
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--btn-line);
+  border-radius: 999px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: color 0.4s ease, border-color 0.4s ease, background-color 0.4s ease;
+}
+.panel button:hover, .time-label:hover { color: var(--ink); background: rgba(255, 255, 255, 0.07); }
+.panel button:active { transform: translateY(1px); }
+#alarmInput {
+  font-family: inherit;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 6.2em;
+  cursor: pointer;
+}
+#snoozeBtn, #upBtn { border-color: rgba(255, 217, 138, 0.4); color: var(--warm); }
+#snoozeBtn:hover, #upBtn:hover { color: #ffe7b0; background: rgba(255, 217, 138, 0.08); }
+
+/* ---------- 诚实说明书：页面底部的小卡片 ---------- */
+.manual {
+  max-width: 620px;
+  background: rgba(10, 16, 30, 0.55);
+  border: 1px solid rgba(200, 215, 245, 0.14);
+  border-radius: 16px;
+  padding: 18px 22px 16px;
+  color: var(--ink-dim);
+  font-size: 13.5px;
+  line-height: 1.95;
+}
+.manual h2 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.manual ul { padding-left: 1.3em; }
+.manual li { margin: 2px 0; }
+
+/* ---------- 落款 ---------- */
+.sign {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: rgba(190, 205, 235, 0.4);
+  text-align: center;
+}
+
+/* ---------- 移动端：表稍微放大占比，字距收一收 ---------- */
+@media (max-width: 480px) {
+  .machine { width: min(84vw, 46vh, 340px); }
+  .head h1 { letter-spacing: 0.2em; text-indent: 0.2em; }
+  .panel { gap: 10px; }
+  .panel button, .time-label { padding: 8px 14px; font-size: 13.5px; }
+  .manual { padding: 16px 18px 14px; font-size: 13px; }
+}
+/* 竖屏矮机（横过来躺床上看）：表以高度为准，别顶出屏幕 */
+@media (max-height: 620px) and (orientation: landscape) {
+  .machine { width: min(60vw, 52vh, 320px); }
+  .stage { gap: 12px; padding-top: 16px; }
+}
+
+#status{display:none}
+.bell,.hammer,.handle,.face,.foot,#stars span{cursor:pointer}
+.machine.wig{animation:wiggle .3s ease}
+.bell.ping{animation:bellPing .25s ease-in-out 2}
+.hand--alarm{width:2.2%;height:19%;background:linear-gradient(180deg,#d0685c,#a34a40);z-index:4;box-shadow:0 0 5px rgba(208,104,92,.55)}
+.hand--alarm::after{content:"";position:absolute;left:50%;top:-7%;width:330%;height:8%;transform:translateX(-50%);background:#d0685c;border-radius:99px}
+/* ---- 全屋统一滚动条 ---- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#a8895c;border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#8a6a3e}
+*{scrollbar-width:thin;scrollbar-color:#a8895c transparent}
+</style>
+</head>
+<body>
+
+  <!-- 背景两层：深夜蓝渐变 + 地板暖光 -->
+  <div class="bg-night"></div>
+  <div class="bg-floor"></div>
+
+  <!-- 星尘（JS 生成小圆点） -->
+  <div id="stars"></div>
+
+  <main class="stage">
+
+    <!-- 门口的牌子 -->
+    <header class="head">
+      <h1>起床闹钟</h1>
+    </header>
+
+    <!-- 马蹄表本体 -->
+    <div class="clock-zone">
+      <div class="machine" id="machine">
+        <div class="handle"></div>
+        <div class="foot foot--bl"></div>
+        <div class="foot foot--br"></div>
+        <div class="bell bell--l"></div>
+        <div class="bell bell--r"></div>
+        <div class="hammer">
+          <div class="arm"></div>
+          <div class="head"></div>
+        </div>
+        <div class="bezel">
+          <div class="face">
+            <div class="ticks" id="ticks"></div>
+            <div class="numerals" id="numerals"></div>
+            <div class="lcd"><span id="lcdH">--</span><span class="colon">:</span><span id="lcdM">--</span></div>
+            <div class="hand hand--hour" id="hourHand"></div>
+            <div class="hand hand--minute" id="minHand"></div>
+            <div class="hand hand--second" id="secHand"></div>
+            <div class="hand hand--alarm" id="alarmHand" style="display:none"></div>
+            <div class="cap"></div>
+          </div>
+        </div>
+        <div class="foot foot--fl"></div>
+        <div class="foot foot--fr"></div>
+      </div>
+    </div>
+
+    <!-- 状态栏：倒计时 / 贪睡 / 响铃提示都走这里 -->
+    <p id="status" aria-live="polite">…</p>
+
+    <!-- 控制面板 -->
+    <section class="panel">
+      <label class="time-label"><input type="time" id="alarmInput"></label>
+      <button id="setBtn">定</button>
+      <button id="testBtn">试铃</button>
+      <button id="cancelBtn" hidden>取消</button>
+      <button id="snoozeBtn" hidden>贪睡</button>
+      <button id="upBtn" hidden>起了</button>
+    </section>
+
+
+  </main>
+
+<script>
+/* ==========================================================
+   起床闹钟逻辑 —— 小Z 的卧室
+   ========================================================== */
+"use strict";
+
+/* ---------- 小工具 ---------- */
+const $ = (sel) => document.querySelector(sel);
+const pad = (n) => String(n).padStart(2, "0");
+const todayStr = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+
+/* ---------- 星尘：跟小夜灯同一片夜空，免得两扇窗看见两个宇宙 ---------- */
+(function makeStars() {
+  const box = $("#stars");
+  for (let i = 0; i < 9; i++) {
+    const s = document.createElement("span");
+    const size = 1.5 + Math.random() * 2;
+    s.style.width = size + "px";
+    s.style.height = size + "px";
+    s.style.left = (4 + Math.random() * 92) + "vw";
+    s.style.top = (3 + Math.random() * 46) + "vh";
+    s.style.setProperty("--dur", (4 + Math.random() * 5).toFixed(1) + "s");
+    s.style.setProperty("--delay", (-Math.random() * 9).toFixed(1) + "s");
+    box.appendChild(s);
+  }
+})();
+
+/* ---------- 表盘刻度与数字 ----------
+   60 根刻度、11 个数字，都用三角函数摆到百分比坐标上；
+   12 点的位置让给液晶条，老式马蹄表本来就爱这么干 */
+(function makeDial() {
+  const ticks = $("#ticks");
+  for (let i = 0; i < 60; i++) {
+    const t = document.createElement("span");
+    t.className = i % 5 === 0 ? "tick tick--major" : "tick";
+    const a = (i / 60) * Math.PI * 2;
+    const r = 43.5;                          // 刻度圈半径（表盘的百分比）
+    t.style.left = (50 + r * Math.sin(a)) + "%";
+    t.style.top = (50 - r * Math.cos(a)) + "%";
+    t.style.transform = "translate(-50%, -50%) rotate(" + (i * 6) + "deg)";
+    ticks.appendChild(t);
+  }
+  const nums = $("#numerals");
+  for (let n = 1; n <= 12; n++) {
+    if (n === 12) continue;                  // 12 点位让给液晶条
+    const s = document.createElement("span");
+    s.className = "num";
+    s.textContent = n;
+    const a = (n / 12) * Math.PI * 2;
+    const r = 30;
+    s.style.left = (50 + r * Math.sin(a)) + "%";
+    s.style.top = (50 - r * Math.cos(a)) + "%";
+    nums.appendChild(s);
+  }
+})();
+
+/* ---------- 闹钟状态（localStorage 里的长期记忆） ----------
+   time      "HH:MM" 闹钟点，null = 没定
+   doneDate  "YYYY-MM-DD" 哪天的铃已经消过（我起了 / 响满三分钟自停） */
+const STORE_KEY = "zcode.bedroom.alarmClock.v1";
+const state = { time: null, doneDate: null };
+let snoozeUntil = 0;      // 贪睡到几点（时间戳，0 = 没在贪睡）；只放内存，刷新即丢
+let lastFiredKey = "";    // "日期 HH:MM"，防止同一分钟重复触发
+
+function saveState() {
+  try {
+    if (state.time) localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    else localStorage.removeItem(STORE_KEY);
+  } catch (e) { /* 隐私模式 / 存储被禁：存不下就当一次性闹钟用 */ }
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    if (o && typeof o.time === "string" && /^\d{2}:\d{2}$/.test(o.time)) {
+      state.time = o.time;
+      state.doneDate = typeof o.doneDate === "string" ? o.doneDate : null;
+    }
+  } catch (e) { /* 读不出来就当没定过，不吵醒主人 */ }
+}
+
+/* ---------- WebAudio：双铃"叮铃叮铃"现场敲 ----------
+   家规：AudioContext 只在用户手势里创建 / resume，绝不自己出声 */
+let audioCtx = null;
+let ringerOut = null;     // 铃声总线，挂一只低通把高频磨柔和
+let audioArmed = false;   // 上膛标记，状态栏用它提醒主人
+
+function ensureAudio() {
+  try {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      audioCtx = new AC();
+      ringerOut = audioCtx.createGain();
+      ringerOut.gain.value = 1;
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 6200;
+      ringerOut.connect(lp);
+      lp.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    audioArmed = true;
+  } catch (e) { return false; }
+  return true;
+}
+/* 进页面后第一次随便点哪儿，都算给铃上膛 */
+document.addEventListener("pointerdown", () => { ensureAudio(); }, { once: true });
+
+/* 敲一下铃：正弦基音 + 三角波金属泛音，指数衰减，每次微走音更像手工锤 */
+let strikeGain = 0.06;    // 当前每一锤的力度（响铃循环里会渐强）
+function strikeBell(which) {
+  if (!audioCtx || audioCtx.state !== "running") return;   // 没上膛就敲空气，别报错
+  const t = audioCtx.currentTime;
+  const base = which === 0 ? 2260 : 2850;   // 左铃低、右铃高，交替才有"叮铃叮铃"
+  const detune = Math.random() * 22 - 11;   // 每一锤都差那么一点点音高
+  const g = audioCtx.createGain();
+  const osc = audioCtx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.value = base;
+  osc.detune.value = detune;
+  const part = audioCtx.createOscillator();
+  part.type = "triangle";
+  part.frequency.value = base * 2.76;       // 非整数倍泛音 = 金属味
+  part.detune.value = detune;
+  const pg = audioCtx.createGain();
+  pg.gain.value = 0.3;
+  osc.connect(g);
+  part.connect(pg);
+  pg.connect(g);
+  g.connect(ringerOut);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(strikeGain, t + 0.006);  // 起锤极快
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);        // 余音散掉
+  osc.start(t);
+  part.start(t);
+  osc.stop(t + 0.24);
+  part.stop(t + 0.24);
+}
+
+/* ---------- 响铃主循环：递归 setTimeout，左一锤右一锤 ----------
+   前 5 秒温柔（间隔约 300ms，力度微升）；
+   之后 30 秒内越敲越急（间隔压到 100ms）、越敲越响（力度翻一倍多） */
+let ringing = false;
+let testMode = false;     // 试铃模式：响 3 秒就收，不算数、不记档
+let ringStart = 0;
+let ringTimer = 0;
+let ringFlip = 0;         // 0 左铃 1 右铃，轮流敲
+let hammerStage = -1;     // 锤子摆速档位，变了才改 CSS 变量，省得动画老重启
+
+function startRing(isTest) {
+  if (ringing) return;
+  ensureAudio();                            // 到点那下未必有手势，但上过膛就能响
+  ringing = true;
+  testMode = !!isTest;
+  ringStart = Date.now();
+  ringFlip = 0;
+  hammerStage = -1;
+  document.body.classList.add("ringing");   // CSS 接管：锤子摆、铃铛亮、整机抖、彩蛋亮
+  flashTitle(true);
+  syncButtons();
+  ringLoop();
+}
+
+function ringLoop() {
+  const elapsed = (Date.now() - ringStart) / 1000;
+  if (testMode && elapsed >= 3) {
+    haltRing();
+    setStatus("试铃完毕。真到点就是这个动静，只会更急。");
+    return;
+  }
+  if (!testMode && elapsed >= 180) {
+    /* 敲满三分钟没人理：自己下班，今天的不再响 */
+    haltRing();
+    state.doneDate = todayStr(new Date());
+    saveState();
+    setStatus("按了三分钟没人理，铃自己停了……今天的到此为止，设定留给明天。");
+    return;
+  }
+  let gap, gain;
+  if (elapsed < 5) {
+    gap = 300 - elapsed * 8;                // 温柔期：300 → 260ms 一锤
+    gain = 0.05 + elapsed * 0.003;
+  } else {
+    const k = Math.min((elapsed - 5) / 30, 1);  // 加急期：30 秒内匀速升级
+    gap = 260 - 160 * k;                    // 260 → 100ms
+    gain = 0.065 + 0.095 * k;               // 0.065 → 0.16
+  }
+  strikeGain = gain;
+  strikeBell(ringFlip);
+  ringFlip = 1 - ringFlip;
+  syncHammer(gap);
+  ringTimer = setTimeout(ringLoop, gap);
+}
+
+function haltRing() {
+  if (!ringing) return;
+  ringing = false;
+  testMode = false;
+  clearTimeout(ringTimer);
+  document.body.classList.remove("ringing");
+  flashTitle(false);
+  syncButtons();
+}
+
+/* 锤子的 CSS 摆速跟铃声分四挡换（一次全摆 = 左右各一锤） */
+function syncHammer(gapMs) {
+  const full = gapMs * 2;
+  let idx, dur;
+  if (full > 540)      { idx = 0; dur = 0.3; }
+  else if (full > 380) { idx = 1; dur = 0.2; }
+  else if (full > 260) { idx = 2; dur = 0.14; }
+  else                 { idx = 3; dur = 0.09; }
+  if (idx !== hammerStage) {
+    hammerStage = idx;
+    $("#machine").style.setProperty("--ring-speed", dur + "s");
+  }
+}
+
+/* ---------- 标题闪烁：响铃时在标签页上隔空喊 ---------- */
+const TITLE = document.title;
+let titleTimer = 0;
+let titleFlip = false;
+function flashTitle(on) {
+  clearTimeout(titleTimer);
+  if (on) {
+    titleFlip = !titleFlip;
+    document.title = titleFlip ? "⏰ 起床了！" : "起床了！别等第二声！";
+    titleTimer = setTimeout(() => { flashTitle(true); }, 700);
+  } else {
+    document.title = TITLE;
+  }
+}
+
+/* ---------- 到点判定：每秒比对一次，精确到分 ---------- */
+function checkAlarm(now) {
+  if (!state.time || ringing) return;
+  if (snoozeUntil) {
+    /* 贪睡中：不看表盘，只看闹钟（时间戳一到就重新开敲） */
+    if (Date.now() >= snoozeUntil) {
+      snoozeUntil = 0;
+      startRing(false);
+    }
+    return;
+  }
+  const day = todayStr(now);
+  if (state.doneDate === day) return;       // 今天已经消过铃，等明天
+  const hhmm = pad(now.getHours()) + ":" + pad(now.getMinutes());
+  const key = day + " " + hhmm;
+  if (hhmm === state.time && key !== lastFiredKey) {   // 到点且这一分钟没响过
+    lastFiredKey = key;
+    startRing(false);
+  }
+}
+
+/* ---------- 距下次响铃还有多久（过了点或今天已消，就数到明天） ---------- */
+function nextRingDate(now) {
+  const parts = state.time.split(":");
+  const t = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+                     Number(parts[0]), Number(parts[1]), 0);
+  if (t.getTime() <= now.getTime() || state.doneDate === todayStr(now)) {
+    t.setDate(t.getDate() + 1);
+  }
+  return t;
+}
+
+/* ---------- 状态栏与按钮 ---------- */
+function setStatus(text) { $("#status").textContent = text; }
+
+function renderStatus(now) {
+  if (ringing) {
+    let txt = testMode ? "试铃中——大概就是这个动静。" : "⏰ 叮铃叮铃——到点了！";
+    if (!audioCtx || audioCtx.state !== "running") txt += "（听不见？点一下页面，给铃上膛）";
+    setStatus(txt);
+    return;
+  }
+  if (snoozeUntil) {
+    const left = Math.max(0, snoozeUntil - Date.now());
+    const m = Math.floor(left / 60000);
+    const s = Math.floor((left % 60000) / 1000);
+    setStatus("贪睡中，5 分钟后再响（还剩 " + m + " 分 " + pad(s) + " 秒）。就这一下，下不为例。");
+    return;
+  }
+  if (state.time) {
+    if (state.doneDate === todayStr(now)) {
+      setStatus("今天的铃已经消了。设定还在，明早同一时间继续。");
+    } else {
+      const diff = nextRingDate(now).getTime() - now.getTime();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      let txt = "闹钟已定 " + state.time + "，还有 " + h + " 小时 " + m + " 分";
+      if (!audioArmed) txt += "（点一下页面给铃上膛，不然到时候只有哑铃）";
+      setStatus(txt);
+    }
+    return;
+  }
+  setStatus("还没定闹钟。赊来的床垫，等不起懒觉。");
+}
+
+function syncButtons() {
+  $("#cancelBtn").hidden = !state.time;
+  $("#snoozeBtn").hidden = !ringing;
+  $("#upBtn").hidden = !ringing;
+}
+
+/* ---------- 走针：每秒动一次三根针和液晶条 ---------- */
+function renderClock(now) {
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+  const hourAng = (h % 12 + m / 60 + s / 3600) * 30;   // 时针：每小时 30 度，带分秒小数
+  const minAng = (m + s / 60) * 6;                     // 分针：每分钟 6 度
+  const secAng = s * 6;                                // 秒针：跳格走，老表的脾气
+  const ah = $("#alarmHand");
+  if (state.time) {
+    const p = state.time.split(":");
+    ah.style.display = "";
+    ah.style.transform = "translate(-50%, -100%) rotate(" + ((Number(p[0]) % 12 + Number(p[1]) / 60) * 30).toFixed(1) + "deg)";
+    if (s % 4 === 0) { $("#lcdH").textContent = p[0]; $("#lcdM").textContent = p[1]; return; }
+  } else { ah.style.display = "none"; }
+  $("#hourHand").style.transform = "translate(-50%, -100%) rotate(" + hourAng.toFixed(2) + "deg)";
+  $("#minHand").style.transform = "translate(-50%, -100%) rotate(" + minAng.toFixed(2) + "deg)";
+  $("#secHand").style.transform = "translate(-50%, -100%) rotate(" + secAng + "deg)";
+  $("#lcdH").textContent = pad(h);
+  $("#lcdM").textContent = pad(m);
+}
+
+/* ---------- 心跳：250ms 巡检，秒数变了才碰 DOM（跟小夜灯一个习惯） ---------- */
+let lastSec = -1;
+function tick() {
+  const now = new Date();
+  if (now.getSeconds() !== lastSec) {
+    lastSec = now.getSeconds();
+    renderClock(now);
+    checkAlarm(now);
+    renderStatus(now);
+  }
+}
+
+/* ---------- 按钮 ---------- */
+$("#setBtn").addEventListener("click", () => {
+  const v = $("#alarmInput").value;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(v)) {
+    setStatus("得先挑个正经时间（HH:MM），表才认。");
+    return;
+  }
+  ensureAudio();           // 定闹钟这一下就是手势，顺手把铃上膛
+  state.time = v;
+  state.doneDate = null;   // 新设定新气象，昨天的"已消"不作数
+  snoozeUntil = 0;
+  lastFiredKey = "";
+  saveState();
+  syncButtons();
+  renderStatus(new Date());
+});
+
+$("#cancelBtn").addEventListener("click", () => {
+  haltRing();
+  state.time = null;
+  state.doneDate = null;
+  snoozeUntil = 0;
+  lastFiredKey = "";
+  saveState();
+  syncButtons();
+  setStatus("闹钟撤了。睡到自然醒，账明天再算。");
+});
+
+$("#snoozeBtn").addEventListener("click", () => {
+  if (!ringing) return;
+  if (testMode) { haltRing(); setStatus("试铃而已，别紧张。"); return; }
+  haltRing();
+  snoozeUntil = Date.now() + 5 * 60 * 1000;   // 贪睡 5 分钟
+  setStatus("贪睡中，5 分钟后再响。就这一下，下不为例。");
+});
+
+$("#upBtn").addEventListener("click", () => {
+  if (!ringing) return;
+  if (testMode) { haltRing(); setStatus("试铃而已，不用真起。"); return; }
+  haltRing();
+  state.doneDate = todayStr(new Date());      // 只消今天，设定留着明天
+  saveState();
+  setStatus("主人说起了，那就起了。今天的铃消了，设定留着明早继续。");
+});
+
+$("#testBtn").addEventListener("click", () => { startRing(true); });
+
+/* ---------- 万物皆可互动 ---------- */
+function ping(el) { el.classList.add("ping"); setTimeout(() => el.classList.remove("ping"), 520); }
+function wig() { const m = $("#machine"); m.classList.add("wig"); setTimeout(() => m.classList.remove("wig"), 320); }
+document.querySelectorAll(".bell--l, .bell--r").forEach(b => b.addEventListener("click", () => {
+  ensureAudio(); strikeBell(b.classList.contains("bell--l") ? 0 : 1); ping(b);
+}));
+$(".hammer").addEventListener("click", () => {
+  ensureAudio(); strikeBell(0); setTimeout(() => strikeBell(1), 160); wig();
+});
+$(".handle").addEventListener("click", () => { ensureAudio(); strikeBell(1); wig(); });
+$(".face").addEventListener("click", () => { ensureAudio(); strikeBell(0); });
+document.querySelectorAll(".foot").forEach(ft => ft.addEventListener("click", wig));
+$("#stars").addEventListener("click", e => {
+  if (e.target.tagName !== "SPAN") return;
+  e.target.style.transform = "scale(2.4)";
+  e.target.style.opacity = "1";
+  setTimeout(() => { e.target.style.transform = ""; e.target.style.opacity = ""; }, 520);
+});
+
+/* ---------- 开机：读档、摆针、走起 ---------- */
+loadState();
+if (state.time) $("#alarmInput").value = state.time;
+syncButtons();
+renderClock(new Date());
+renderStatus(new Date());
+tick();
+setInterval(tick, 250);
+</script>
+</body>
+</html>
