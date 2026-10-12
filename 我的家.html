@@ -566,26 +566,26 @@ display: flex; align-items: center; justify-content: center;
 position: absolute; right: 14px; bottom: 8px; color: #f0c46a;
 font-size: 13px; animation: breathe 1.4s infinite;
 }
-.ach-list { display: flex; flex-direction: column; gap: 8px; }
-.ach-row {
-display: flex; align-items: center; gap: 13px;
+.cup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(102px, 1fr)); gap: 8px; margin-top: 14px; }
+.cup-card {
 background: var(--paper-3); border: 2px solid var(--line);
-border-radius: var(--r-sm); padding: 9px 13px;
+border-radius: 10px; padding: 10px 6px 8px; text-align: center;
+transition: .15s; cursor: pointer;
 }
-.ach-row .cup {
-width: 38px; height: 38px; flex: none; border-radius: 50%;
+.cup-card:hover { transform: translateY(-2px); border-color: var(--gold-2); }
+.cup-card .cup {
+width: 34px; height: 34px; margin: 0 auto 6px; border-radius: 50%;
 display: flex; align-items: center; justify-content: center;
-font-size: 19px; color: #fff;
+font-size: 17px; color: #fff;
 }
+.cup-card .ctx b { font-size: 11.5px; display: block; letter-spacing: .05em; }
+.cup-card .ctx span { font-size: 10px; color: var(--ink-3); display: block; }
 .cup-bronze { background: radial-gradient(circle at 32% 28%, #d09272, #8a5136 70%); }
 .cup-silver { background: radial-gradient(circle at 32% 28%, #e6ecf4, #8a94a6 70%); }
 .cup-gold   { background: radial-gradient(circle at 32% 28%, #f8df9a, #c9880e 70%); }
 .cup-plat   { background: radial-gradient(circle at 32% 28%, #e2f4fa, #77b8cc 65%, #4a8aa0); }
-.ach-row .atx { min-width: 0; }
-.ach-row .atx b { font-size: 13.5px; display: block; }
-.ach-row .atx span { font-size: 11.5px; color: var(--ink-2); }
-.ach-row.lock { opacity: .55; }
-.ach-row.lock .cup { filter: grayscale(1) brightness(.8); }
+.cup-card.lock { opacity: .6; }
+.cup-card.lock .cup { filter: grayscale(1) brightness(.8); }
 .toast.trophy { border-color: #d9a441; background: linear-gradient(160deg, #2b3050, #171d33); }
 .toast.trophy .cup {
 width: 32px; height: 32px; font-size: 16px; border-radius: 50%;
@@ -669,8 +669,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 </div>
 <div class="title-menu">
 <button class="tmenu-item" id="t-start"><svg class="ic"><use href="#i-house"/></svg>进入小家</button>
-<button class="tmenu-item" id="t-gallery"><svg class="ic"><use href="#i-image"/></svg>回忆画廊</button>
-<button class="tmenu-item" id="t-achv"><svg class="ic"><use href="#i-trophy"/></svg>奖杯</button>
+<button class="tmenu-item" id="t-gallery"><svg class="ic"><use href="#i-trophy"/></svg>陈列馆</button>
 <button class="tmenu-item" id="t-quests"><svg class="ic"><use href="#i-list-todo"/></svg>任务</button>
 <button class="tmenu-item" id="t-credits"><svg class="ic"><use href="#i-image"/></svg>制作名单</button>
 <button class="tmenu-item" id="t-settings"><svg class="ic"><use href="#i-settings"/></svg>设置</button>
@@ -688,8 +687,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <span class="spacer"></span>
 <button class="ico-btn" data-modal="quests"   data-tip="任务"><svg class="ic"><use href="#i-list-todo"/></svg></button>
 <button class="ico-btn" data-modal="shop"     data-tip="商城"><svg class="ic"><use href="#i-shopping-bag"/></svg></button>
-<button class="ico-btn" data-modal="gallery"  data-tip="画廊"><svg class="ic"><use href="#i-image"/></svg></button>
-<button class="ico-btn" data-modal="achv"    data-tip="奖杯"><svg class="ic"><use href="#i-trophy"/></svg></button>
+<button class="ico-btn" data-modal="gallery"  data-tip="陈列馆"><svg class="ic"><use href="#i-trophy"/></svg></button>
 <button class="ico-btn" id="btn-firework"     data-tip="烟花" style="display:none"><svg class="ic"><use href="#i-sparkles"/></svg></button>
 <button class="ico-btn" id="btn-clock"        data-tip="怀表"><svg class="ic"><use href="#i-watch"/></svg></button>
 <button class="ico-btn" id="btn-music"        data-tip="音乐"><svg class="ic"><use href="#i-music"/></svg></button>
@@ -1381,15 +1379,15 @@ el.innerHTML = '<span class="cup cup-' + a.t + '">' + ic("trophy") + "</span>" +
 box.appendChild(el);
 setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 320); }, 3800);
 }
-function showAchv() {
-const got = Object.keys(S.achv).length;
-openModal(ic("trophy") + "奖杯", got + " / " + ACHV.length,
-'<div class="ach-list">' + ACHV.map(a => {
+function showHall() {
+const got = Object.keys(S.cgs).length, ad = Object.keys(S.achv).length;
+openModal(ic("trophy") + "陈列馆", "回忆 " + got + " / " + CGS.length + " · 奖杯 " + ad + " / " + ACHV.length,
+'<div class="cg-grid">' + CGS.map(cgCardHTML).join("") + "</div>" +
+'<div class="cup-grid">' + ACHV.map(a => {
 const ok = !!S.achv[a.id];
-return '<div class="ach-row' + (ok ? "" : " lock") + '">' +
+return '<div class="cup-card' + (ok ? "" : " lock") + '" data-cup="' + a.id + '">' +
 '<span class="cup cup-' + a.t + '">' + ic("trophy") + "</span>" +
-'<div class="atx"><b>' + a.name + "</b><span>" + a.desc + "</span></div>" +
-(ok ? "" : ic("lock", "font-size:16px;color:var(--ink-3);flex:none")) + "</div>";
+'<div class="ctx"><b>' + (ok ? a.name : "？？？") + "</b><span>" + a.desc + "</span></div></div>";
 }).join("") + "</div>");
 }
 function unlockCG(id) {
@@ -1505,12 +1503,14 @@ return '<div class="cg-card' + (got ? "" : " locked") + '" data-cg="' + cg.id + 
 '<div class="cname">' + (got ? cg.name : "？？？") + "</div>" +
 (got ? "" : '<div class="hint">' + cg.hint + "</div>") + "</div>";
 }
-function showGallery() {
-const got = Object.keys(S.cgs).length;
-openModal(ic("image") + "回忆画廊", "收集进度 " + got + " / " + CGS.length,
-'<div class="cg-grid">' + CGS.map(cgCardHTML).join("") + "</div>");
-}
 mbox.addEventListener("click", e => {
+const cup = e.target.closest ? e.target.closest("[data-cup]") : null;
+if (cup) {
+const ok = !!S.achv[cup.dataset.cup];
+AU.sfx(ok ? "achv" : "cancel");
+if (ok) { cup.style.transform = "scale(.9)"; setTimeout(() => { cup.style.transform = ""; }, 150); }
+return;
+}
 const card = e.target.closest ? e.target.closest("[data-cg]") : null;
 if (!card) return;
 const cg = CGS.find(c => c.id === card.dataset.cg);
@@ -2028,8 +2028,7 @@ b.addEventListener("click", () => {
 	const m = b.dataset.modal;
 	if (m === "quests") showQuests();
 	else if (m === "shop") showShop();
-	else if (m === "gallery") showGallery();
-	else if (m === "achv") showAchv();
+	else if (m === "gallery") showHall();
 	else if (m === "settings") showSettings();
 });
 b.addEventListener("mouseenter", () => AU.sfx("tick"));
@@ -2133,8 +2132,7 @@ track("entered");
 updPhase();
 });
 });
-document.getElementById("t-gallery").addEventListener("click", () => { AU.sfx("click"); showGallery(); });
-document.getElementById("t-achv").addEventListener("click", () => { AU.sfx("click"); showAchv(); });
+document.getElementById("t-gallery").addEventListener("click", () => { AU.sfx("click"); showHall(); });
 document.getElementById("t-quests").addEventListener("click", () => { AU.sfx("click"); showQuests(); });
 document.getElementById("t-credits").addEventListener("click", () => {
 AU.sfx("click");
