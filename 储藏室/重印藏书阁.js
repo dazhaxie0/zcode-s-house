@@ -1,6 +1,7 @@
 // 重新生成 书房/藏书阁.html（把 书房/书架/*.md 原文注入阅读器模板）
 // 用法：node 重印藏书阁.js   （在房子根目录跑；改完书或档案后重跑即可重印）
-// 生成 书房/藏书阁.html —— 把书架全部书注入阅读器模板（书单只在 BOOKS 维护）
+// 阅读器是「翻书式」的：全书排进 CSS 多列，一列一页，宽屏左右跨页，
+// 点书页两侧 / 方向键 / 下方按钮都能翻，翻完为止；字号和夜灯随喜好调。
 const fs = require('fs');
 const BOOKS = [
   { id: 'git',   icon: 'git',   name: 'Git 家常菜',            file: '书房/书架/Git 家常菜.md' },
@@ -40,10 +41,11 @@ a{color:inherit}
 .topbar .ch-name{font-size:12.5px;color:var(--ink-2);letter-spacing:1px}
 .topbar .sp{flex:1}
 .tbtn{border:2px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:9px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:.15s}
-button:active,.tbtn:active,.ptab:active{transform:scale(.94)}
+button:active,.tbtn:active{transform:scale(.94)}
 .tbtn:hover{border-color:var(--gold);color:var(--gold)}
+.tbtn:disabled{opacity:.35;cursor:default}
 .home-link{text-decoration:none}
-.wrap{display:flex;max-width:1060px;margin:0 auto;gap:18px;padding:18px 14px 60px}
+.wrap{display:flex;max-width:1120px;margin:0 auto;gap:18px;padding:18px 14px 44px}
 /* 书架侧栏 */
 .shelf{width:210px;flex:none;position:sticky;top:64px;align-self:flex-start;display:flex;flex-direction:column;gap:8px}
 .shelf-title{font-size:11px;letter-spacing:4px;color:var(--ink-2);margin:4px 2px 2px}
@@ -55,35 +57,45 @@ button:active,.tbtn:active,.ptab:active{transform:scale(.94)}
 /* 章节目录 */
 .toc{margin-top:10px;background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px;max-height:40vh;overflow:auto}
 .toc h4{font-size:11px;letter-spacing:3px;color:var(--ink-2);margin-bottom:6px}
-.toc a{display:block;font-size:12px;color:var(--ink-2);text-decoration:none;padding:4px 8px;border-radius:6px;line-height:1.5}
+.toc a{display:block;font-size:12px;color:var(--ink-2);text-decoration:none;padding:4px 8px;border-radius:6px;line-height:1.5;cursor:pointer}
 .toc a:hover{background:var(--paper-2);color:var(--ink)}
 .toc a.on{color:var(--gold);background:var(--paper-2)}
-/* 阅读区 */
-.read{flex:1;min-width:0;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:34px 40px 46px;box-shadow:0 16px 40px rgba(60,32,8,.18);position:relative}
-.progress{position:absolute;top:0;left:0;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--gold),#e0b054);width:0%;transition:width .1s}
-.book-body{font-family:Georgia,"Times New Roman","Songti SC","SimSun",serif;font-size:15.5px;line-height:2.05;color:var(--ink)}
-.book-body h1{font-family:"Microsoft YaHei",sans-serif;font-size:24px;letter-spacing:3px;margin:6px 0 4px;color:var(--wood)}
+/* 翻书式阅读区 */
+.read{flex:1;min-width:0;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:16px 14px 12px;box-shadow:0 16px 40px rgba(60,32,8,.18);display:flex;flex-direction:column}
+.book{position:relative;height:min(74vh,700px);min-height:440px;overflow:hidden;border-radius:8px;background:linear-gradient(180deg,rgba(60,40,10,.045),rgba(60,40,10,0) 26px)}
+.book-body{position:absolute;top:26px;bottom:26px;left:34px;width:400px;font-family:Georgia,"Times New Roman","Songti SC","SimSun",serif;font-size:16px;line-height:2.12;color:var(--ink);column-fill:auto;column-gap:68px;will-change:transform;transition:transform .55s cubic-bezier(.36,.04,.24,1)}
+.book-body h1{font-family:"Microsoft YaHei",sans-serif;font-size:23px;letter-spacing:3px;margin:4px 0 6px;color:var(--wood)}
 body.night .book-body h1{color:#e0b054}
-.book-body h2{font-family:"Microsoft YaHei",sans-serif;font-size:18px;letter-spacing:2px;margin:30px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line);color:var(--wood)}
+.book-body h2{font-family:"Microsoft YaHei",sans-serif;font-size:17.5px;letter-spacing:2px;margin:26px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line);color:var(--wood)}
 body.night .book-body h2{color:#e0b054}
 .book-body h3{font-family:"Microsoft YaHei",sans-serif;font-size:15.5px;margin:20px 0 8px;color:var(--ink)}
-.book-body p{margin:10px 0}
-.book-body blockquote{margin:14px 0;padding:10px 18px;border-left:4px solid var(--gold);background:var(--paper-2);border-radius:0 10px 10px 0;color:var(--ink-2);font-size:14px}
-.book-body code{font-family:Consolas,"Courier New",monospace;font-size:.86em;background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
-.book-body pre{margin:14px 0;background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;line-height:1.75}
-.book-body pre code{background:none;border:none;padding:0;font-size:13px}
-.book-body table{border-collapse:collapse;margin:14px 0;width:100%;font-size:13.5px;font-family:"Microsoft YaHei",sans-serif}
-.book-body th,.book-body td{border:1px solid var(--line);padding:7px 12px;text-align:left;line-height:1.7}
+.book-body p{margin:9px 0;text-align:justify}
+.book-body blockquote{margin:13px 0;padding:9px 16px;border-left:4px solid var(--gold);background:var(--paper-2);border-radius:0 10px 10px 0;color:var(--ink-2);font-size:14px}
+.book-body code{font-family:Consolas,"Courier New",monospace;font-size:.85em;background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+.book-body pre{margin:13px 0;background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;line-height:1.72}
+.book-body pre code{background:none;border:none;padding:0;font-size:12.5px}
+.book-body table{border-collapse:collapse;margin:13px 0;width:100%;font-size:13px;font-family:"Microsoft YaHei",sans-serif}
+.book-body th,.book-body td{border:1px solid var(--line);padding:6px 11px;text-align:left;line-height:1.68}
 .book-body th{background:var(--paper-2);letter-spacing:1px}
-.book-body ul,.book-body ol{margin:10px 0 10px 26px}
-.book-body li{margin:6px 0}
-.book-body hr{border:none;border-top:2px dashed var(--line);margin:26px 0}
+.book-body ul,.book-body ol{margin:9px 0 9px 24px}
+.book-body li{margin:5px 0}
+.book-body hr{border:none;border-top:2px dashed var(--line);margin:24px 0}
 .book-body strong{color:var(--gold)}
 body.night .book-body strong{color:#e0b054}
-.foot-nav{display:flex;justify-content:space-between;gap:10px;margin-top:34px;padding-top:16px;border-top:2px solid var(--line)}
-.foot-nav button{flex:1;border:2px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:10px;padding:10px;font-family:inherit;font-size:13px;cursor:pointer;letter-spacing:1px}
-.foot-nav button:hover{border-color:var(--gold);color:var(--gold)}
-@media(max-width:760px){.wrap{flex-direction:column}.shelf{width:100%;position:static;flex-direction:row;flex-wrap:wrap}.spine{flex:1 1 40%}.toc{display:none}.read{padding:22px 18px 34px}}
+/* 书脊折影 + 纸边 */
+.fold{position:absolute;top:0;bottom:0;left:50%;width:76px;transform:translateX(-50%);pointer-events:none;display:none;background:linear-gradient(90deg,rgba(60,40,10,0),rgba(60,40,10,.09) 38%,rgba(60,40,10,.17) 50%,rgba(60,40,10,.09) 62%,rgba(60,40,10,0))}
+.book.spread .fold{display:block}
+.book::before,.book::after{content:'';position:absolute;top:0;bottom:0;width:14px;pointer-events:none;z-index:3}
+.book::before{left:0;background:linear-gradient(90deg,rgba(60,40,10,.10),rgba(60,40,10,0))}
+.book::after{right:0;background:linear-gradient(-90deg,rgba(60,40,10,.10),rgba(60,40,10,0))}
+/* 点书页翻页：左右两片热区 */
+.edge{position:absolute;top:0;bottom:0;width:27%;border:none;background:transparent;color:var(--ink-2);font-size:36px;cursor:pointer;opacity:0;transition:opacity .2s;font-family:Georgia,serif;z-index:4}
+.edge:hover:not(:disabled){opacity:.55}
+.eL{left:0}.eR{right:0}
+.edge:disabled{opacity:0;cursor:default}
+.pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}
+.pgnum{font-size:12px;color:var(--ink-2);letter-spacing:2px;min-width:92px;text-align:center}
+@media(max-width:760px){.wrap{flex-direction:column}.shelf{width:100%;position:static;flex-direction:row;flex-wrap:wrap}.spine{flex:1 1 40%}.toc{display:none}.read{padding:12px 8px 10px}.book{min-height:400px;height:66vh}}
 
 /* ---- 全屋统一滚动条 ---- */
 ::-webkit-scrollbar{width:10px;height:10px}
@@ -105,28 +117,34 @@ body.night .book-body strong{color:#e0b054}
 </div>
 <div class="wrap">
 <aside class="shelf">
-<div class="shelf-title">书 架 · ${BOOKS.length} 本</div>
+<div class="shelf-title">书 架</div>
 ${spines}
 <div class="toc" id="toc"><h4>本 书 目 录</h4><div id="tocList"></div></div>
 </aside>
 <article class="read">
-<div class="progress" id="prog"></div>
+<div class="book" id="book">
 <div class="book-body" id="body"></div>
-<div class="foot-nav">
-<button id="prevBtn">← 上一章</button>
-<button id="nextBtn">下一章 →</button>
+<div class="fold"></div>
+<button class="edge eL" id="edgeL" aria-label="上一页">&#8249;</button>
+<button class="edge eR" id="edgeR" aria-label="下一页">&#8250;</button>
+</div>
+<div class="pager">
+<button class="tbtn" id="prevBtn">上一页</button>
+<span class="pgnum" id="pgNum"></span>
+<button class="tbtn" id="nextBtn">下一页</button>
 </div>
 </article>
 </div>
 ${blocks}
 <script>
 'use strict';
-/* 藏书阁：家常菜书的内嵌阅读器。内容来自 书房/书架/*.md 原文。 */
+/* 藏书阁：翻书式阅读器。内容来自 书房/书架/*.md 原文，全书排进多列，一列一页。 */
 var BOOK_IDS = ${idsJs};
 var BOOK_NAMES = ${namesJs};
 var K_LAST = 'library_last';
-var cur = { b:'git', fs:15.5 };
+var cur = { b:'git', fs:16, pg:{} };
 try { var s = JSON.parse(localStorage.getItem(K_LAST) || 'null'); if (s && BOOK_IDS.indexOf(s.b) >= 0) cur = s; } catch(e){}
+cur.pg = cur.pg || {};
 var qs = new URLSearchParams(location.search);
 if (qs.get('b') && BOOK_IDS.indexOf(qs.get('b')) >= 0) cur.b = qs.get('b');
 
@@ -152,9 +170,9 @@ function md2html(src){
       var rows = [];
       while (i < lines.length && /^\\s*\\|/.test(lines[i])) rows.push(lines[i++]);
       var trs = rows.map(function(r){ return r.replace(/^\\s*\\|/,'').replace(/\\|\\s*$/,'').split('|').map(function(c){return c.trim();}); });
-      var head = trs[0], body = trs.slice(2);
+      var head = trs[0], body2 = trs.slice(2);
       var h = '<tr>' + head.map(function(c){ return '<th>' + inline(c) + '</th>'; }).join('') + '</tr>';
-      var bs = body.map(function(r){ return '<tr>' + r.map(function(c){ return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>'; }).join('');
+      var bs = body2.map(function(r){ return '<tr>' + r.map(function(c){ return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>'; }).join('');
       out.push('<table>' + h + bs + '</table>'); continue;
     }
     var m;
@@ -183,15 +201,74 @@ function md2html(src){
   return out.join('\\n');
 }
 function getBook(id){ return document.getElementById('bk-' + id).textContent.trim(); }
-/* 全书渲染 + 按章（## 切片）导航 */
+/* ---------- 分页：全书一列一页，宽屏左右跨页 ---------- */
+var body = document.getElementById('body'), bookEl = document.getElementById('book');
+var PAD = 34, GAP = 68, PAGE_W = 400, single = false, cols = 1, base = 0;
+function per(){ return single ? 1 : 2; }
+function layout(){
+  single = window.innerWidth < 760;
+  var avail = bookEl.clientWidth;
+  PAGE_W = single ? Math.floor(avail - 2 * PAD) : Math.min(430, Math.floor((avail - 4 * PAD) / 2));
+  if (PAGE_W < 210) { single = true; PAGE_W = Math.max(170, Math.floor(avail - 2 * PAD)); }
+  GAP = single ? 48 : 2 * PAD;
+  body.style.width = PAGE_W + 'px';
+  body.style.columnWidth = PAGE_W + 'px';
+  body.style.columnGap = GAP + 'px';
+  cols = Math.max(1, Math.round(body.scrollWidth / (PAGE_W + GAP)));
+  bookEl.classList.toggle('spread', !single);
+  clampBase();
+  paint(true);
+}
+function clampBase(){
+  var maxB = cols - 1 - ((cols - 1) % per());
+  base = Math.max(0, Math.min(maxB, base - (base % per())));
+}
+function paint(inst){
+  if (inst) { body.style.transition = 'none'; }
+  body.style.transform = 'translateX(' + (-base * (PAGE_W + GAP)) + 'px)';
+  if (inst) { void body.offsetWidth; body.style.transition = ''; }
+  var last = Math.min(cols - 1, base + per() - 1);
+  document.getElementById('pgNum').textContent = (base + 1) + (single || last === base ? '' : '–' + (last + 1)) + ' / ' + cols;
+  document.getElementById('prevBtn').disabled = base === 0;
+  document.getElementById('edgeL').disabled = base === 0;
+  document.getElementById('nextBtn').disabled = base + per() > cols - 1;
+  document.getElementById('edgeR').disabled = base + per() > cols - 1;
+  cur.pg[cur.b] = base;
+  saveState();
+}
+function flip(d, silent){
+  var nb = base + d * per();
+  var maxB = cols - 1 - ((cols - 1) % per());
+  if (nb < 0 || nb > maxB) return;
+  base = nb;
+  paint(false);
+  if (!silent) paper();
+}
+/* 翻页的纸声：白噪蹭一下，轻得像翻一页纸 */
+var AC = null;
+function paper(){
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    var n = Math.floor(AC.sampleRate * 0.18), b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0);
+    for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+    var src = AC.createBufferSource(); src.buffer = b;
+    var f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1400;
+    var g = AC.createGain(); g.gain.value = 0.05;
+    src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+  } catch (e) {}
+}
+function saveState(){ try { localStorage.setItem(K_LAST, JSON.stringify(cur)); } catch(e){} }
+/* ---------- 换书 / 目录 ---------- */
 var chapters = [];
-function loadBook(id){
+function loadBook(id, keepPage){
   cur.b = id;
   document.getElementById('bkName').textContent = BOOK_NAMES[id];
   document.querySelectorAll('.spine').forEach(function(s){ s.classList.toggle('on', s.dataset.b === id); });
   var src = getBook(id);
   /* 按 ## 切章：首页(第一个##之前)也算一章 */
   var parts = [], re = /^##\\s+/m, idx = src.search(re);
+  chapters = [];
   if (idx < 0) parts = [src];
   else {
     if (idx > 0) parts.push(src.slice(0, idx));
@@ -205,53 +282,70 @@ function loadBook(id){
   var html = parts.map(function(p, n){
     return '<section class="chap" id="ch' + n + '" data-t="' + (chapters[n] || '卷首') + '">' + md2html(p) + '</section>';
   }).join('');
-  document.getElementById('body').innerHTML = html;
+  body.innerHTML = html;
   var tl = '';
-  chapters.forEach(function(c, n){ tl += '<a href="#ch' + n + '" data-n="' + n + '">' + c + '</a>'; });
+  chapters.forEach(function(c, n){ tl += '<a data-n="' + n + '">' + c + '</a>'; });
   document.getElementById('tocList').innerHTML = tl;
+  document.querySelectorAll('#tocList a').forEach(function(a){
+    a.addEventListener('click', function(){
+      var sec = document.getElementById('ch' + a.dataset.n);
+      if (!sec) return;
+      var col = Math.max(0, Math.round((sec.offsetLeft) / (PAGE_W + GAP)));
+      if (!single && col % 2) col--;
+      base = col;
+      clampBase();
+      paint(false);
+      paper();
+      markChapter(a.dataset.n);
+    });
+  });
+  base = (keepPage && cur.pg[id]) || 0;
+  layout();
+  markChapter();
   saveState();
 }
-function saveState(){ try { localStorage.setItem(K_LAST, JSON.stringify(cur)); } catch(e){} }
+/* 当前章高亮：翻到哪页，就看那页最上面的章 */
+function markChapter(hit){
+  var curN = -1;
+  /* 用每章第一列位置和当前 base 比一比，省得逐字测量 */
+  document.querySelectorAll('.chap').forEach(function(s, n){
+    var col = Math.round(s.offsetLeft / (PAGE_W + GAP));
+    if (col <= base + 1) curN = n;
+  });
+  if (hit !== undefined) curN = +hit;
+  document.querySelectorAll('#tocList a').forEach(function(a){ a.classList.toggle('on', +a.dataset.n === curN); });
+  document.getElementById('chName').textContent = curN >= 0 && chapters[curN] ? '· ' + chapters[curN] : '';
+}
 document.querySelectorAll('.spine').forEach(function(s){
-  s.addEventListener('click', function(){ loadBook(s.dataset.b); window.scrollTo(0, 0); markChapter(); });
+  s.addEventListener('click', function(){ loadBook(s.dataset.b, false); });
 });
-/* 滚动进度 + 当前章高亮 */
-var body = document.getElementById('body');
-function markChapter(){
-  var cur5 = 0, secs = document.querySelectorAll('.chap');
-  secs.forEach(function(s, n){ if (s.getBoundingClientRect().top < 160) cur5 = n; });
-  document.querySelectorAll('#tocList a').forEach(function(a){ a.classList.toggle('on', +a.dataset.n === cur5); });
-  var t = secs[cur5] ? secs[cur5].dataset.t : '';
-  document.getElementById('chName').textContent = t ? '· ' + t : '';
-}
-window.addEventListener('scroll', function(){
-  var h = document.documentElement;
-  var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
-  document.getElementById('prog').style.width = (p * 100) + '%';
-  markChapter();
-});
-/* 章节跳转 */
-function jump(d){
-  var secs = document.querySelectorAll('.chap'), cur6 = 0;
-  secs.forEach(function(s, n){ if (s.getBoundingClientRect().top < 160) cur6 = n; });
-  var to = secs[Math.max(0, Math.min(secs.length - 1, cur6 + d))];
-  if (to) to.scrollIntoView({ behavior: 'smooth' });
-}
-document.getElementById('prevBtn').onclick = function(){ jump(-1); };
-document.getElementById('nextBtn').onclick = function(){ jump(1); };
+/* 翻页入口：书页热区 / 按钮 / 方向键，怎么顺手怎么来 */
+document.getElementById('edgeL').onclick = function(){ flip(-1); };
+document.getElementById('edgeR').onclick = function(){ flip(1); };
+document.getElementById('prevBtn').onclick = function(){ flip(-1); };
+document.getElementById('nextBtn').onclick = function(){ flip(1); };
 window.addEventListener('keydown', function(e){
-  if (e.key === 'ArrowLeft') jump(-1);
-  if (e.key === 'ArrowRight') jump(1);
+  if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); flip(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); flip(-1); }
+  if (e.key === 'Home') { base = 0; paint(false); }
+  if (e.key === 'End') { base = cols - 1 - ((cols - 1) % per()); paint(false); }
 });
-/* 字号 / 夜间 */
-document.getElementById('fontMinus').onclick = function(){ cur.fs = Math.max(13, cur.fs - 1); body.style.fontSize = cur.fs + 'px'; saveState(); };
-document.getElementById('fontPlus').onclick = function(){ cur.fs = Math.min(21, cur.fs + 1); body.style.fontSize = cur.fs + 'px'; saveState(); };
+/* 字号 / 夜间：字号变了页数会变，重排再翻回原页附近 */
+function refont(d){
+  cur.fs = Math.max(13, Math.min(22, cur.fs + d));
+  body.style.fontSize = cur.fs + 'px';
+  setTimeout(function(){ layout(); paper(); }, 60);
+}
+document.getElementById('fontMinus').onclick = function(){ refont(-1); };
+document.getElementById('fontPlus').onclick = function(){ refont(1); };
 document.getElementById('modeBtn').onclick = function(){
   document.body.classList.toggle('night');
   this.textContent = document.body.classList.contains('night') ? '日间' : '夜间';
 };
+var rsT = null;
+window.addEventListener('resize', function(){ clearTimeout(rsT); rsT = setTimeout(layout, 160); });
 body.style.fontSize = cur.fs + 'px';
-loadBook(cur.b);
+loadBook(cur.b, true);
 </script>
 </body>
 </html>`;

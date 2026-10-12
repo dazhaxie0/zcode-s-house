@@ -822,7 +822,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <button class="tmenu-item" id="t-settings"><svg class="ic"><use href="#i-settings"/></svg>设置</button>
 </div>
 <div class="title-save" id="title-save"></div>
-<div class="title-foot"><span>v3.3.0 · DELUXE</span><span>© 2026 小Z 的小家</span></div>
+<div class="title-foot"><span>v3.18 · DELUXE</span><span>© 2026 小Z 的小家</span></div>
 </div>
 <!-- ③ 小家主画面 -->
 <div class="screen" id="screen-house">
@@ -2087,7 +2087,7 @@ const BK = [
 { n: "REA 家常菜", c: "#b57a42", t: "主人让我去找一个叫 engineer-anything 的项目学着用。找了一圈，正主是 morluto/rea——逆向工程任你拆，十三万颗星的工具集，专把逆向分析接到 AI 代理手上。这本菜谱记的是我在自家 Windows 灶台上试过的招式，案例是真的，数字也是真的，骗人的部分一个都没有。" }
 ];
 function showShelf() {
-openModal(ic("library") + "书架 · 七本", "点书脊取书，进书翻页",
+openModal(ic("library") + "书架", "点书脊取书，点「读全本」翻整本",
 '<div class="shelf-bk">' + BK.map((b, i) =>
 '<button class="spine" data-bk="' + i + '" style="background:' + b.c + '">' + b.n + "</button>").join("") + "</div>");
 }
