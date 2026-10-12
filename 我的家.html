@@ -423,7 +423,8 @@ padding: 11px 14px; margin-bottom: 9px; position: relative;
 background: var(--paper-3); border: 2px solid var(--line); border-radius: var(--r-sm);
 padding: 13px 12px 11px; text-align: center; transition: transform .15s, border-color .15s;
 }
-.s-card:hover { transform: translateY(-3px); border-color: var(--gold-2); }
+.s-card { transition: transform .18s cubic-bezier(.2,.8,.3,1.2), border-color .18s; }
+.s-card:hover { transform: translateY(-7px) rotate(-1.6deg) scale(1.04); border-color: var(--gold-2); }
 .s-card .se { font-size: 30px; color: var(--wood); }
 body[data-theme="theme-night"] .s-card .se { color: var(--gold-2); }
 .s-card .sn { font-size: 13.5px; font-weight: bold; margin-top: 7px; letter-spacing: .1em; }
@@ -503,6 +504,42 @@ animation: toastin .38s cubic-bezier(.2,.9,.3,1.2);
 .toast .ic { font-size: 21px; color: var(--gold-2); flex: none; }
 .toast .tt { font-size: 10.5px; letter-spacing: .3em; color: var(--gold-2); }
 .toast .tm { font-size: 13px; margin-top: 2px; line-height: 1.5; }
+#pack-wrap { position: fixed; inset: 0; z-index: 150; display: none; align-items: center; justify-content: center;
+background: radial-gradient(ellipse at center, rgba(8,10,18,.5), rgba(8,10,18,.84)); }
+#pack-wrap.on { display: flex; }
+.pack-card {
+width: 150px; height: 210px; border-radius: 14px; cursor: pointer; color: #e8c98a;
+background: linear-gradient(150deg, #6d4a26, #3c2a16 55%, #57391d);
+border: 3px solid #c9a15f; box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 0 0 2px rgba(0,0,0,.25);
+display: flex; align-items: center; justify-content: center;
+animation: packdrop .55s cubic-bezier(.2,.9,.3,1.4) backwards, packfloat 2.6s ease-in-out .55s infinite;
+}
+.pack-card:hover { animation: packwob .5s ease-in-out infinite; }
+.pack-card.burst { animation: packburst .5s forwards; }
+@keyframes packdrop { from { transform: translateY(-70vh) rotate(200deg); } }
+@keyframes packfloat { 50% { transform: translateY(-10px) rotate(2deg); } }
+@keyframes packwob { 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+@keyframes packburst { 40% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+.pack-item {
+position: relative; width: 212px; padding: 30px 18px 24px; border-radius: 16px; cursor: pointer;
+text-align: center; overflow: hidden;
+background: linear-gradient(165deg, #fdf6e3, #e8d9b0);
+border: 3px solid #b8862f; box-shadow: 0 22px 50px rgba(0,0,0,.55);
+animation: cardout .7s cubic-bezier(.2,.8,.3,1.15) backwards;
+}
+.pack-item .ic { color: #7a5a20; }
+.pack-item .pi-name { font-size: 15px; font-weight: 900; letter-spacing: 3px; color: #5d431a; margin-top: 10px; }
+.pack-item.leg { border-color: #e8892c; background: linear-gradient(165deg, #2a1c10, #4a2f14);
+box-shadow: 0 0 34px rgba(240,150,50,.55), 0 22px 50px rgba(0,0,0,.6); }
+.pack-item.leg .ic { color: #f5b942; }
+.pack-item.leg .pi-name { color: #f2d191; }
+.pack-item::after { content: ""; position: absolute; inset: -60%; pointer-events: none;
+background: linear-gradient(115deg, transparent 42%, rgba(255,236,180,.5) 50%, transparent 58%);
+animation: sheen 2.2s linear infinite; }
+@keyframes cardout { from { transform: translateY(46vh) rotate(340deg) scale(.4); } }
+@keyframes sheen { from { transform: translateX(-60%); } to { transform: translateX(60%); } }
+.pack-item.fly { animation: cardfly .6s ease-in forwards; }
+@keyframes cardfly { to { transform: translateY(-80vh) rotate(14deg); opacity: 0; } }
 #frame-wrap { position: fixed; inset: 0; z-index: 120; display: none; background: var(--paper); }
 #frame-wrap.on { display: block; }
 #room-frame { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
@@ -763,6 +800,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 </div>
 <div id="iris"></div>
 <div class="modal-mask" id="modal-mask"><div class="modal" id="modal-box"></div></div>
+<div id="pack-wrap"></div>
 <div id="toasts"></div>
 <div id="dlg">
 <div class="dlg-ava"><svg viewBox="0 0 36 32">
@@ -1027,6 +1065,7 @@ resume() { if (this.ctx && this.ctx.state === "suspended") this.ctx.resume(); },
 midi(n) { return 440 * Math.pow(2, (n - 69) / 12); },
 tone(freq, t0, dur, { type = "sine", vol = 0.2, dest = null, slideTo = null, attack = 0.005 } = {}) {
 const c = this.ctx, o = c.createOscillator(), g = c.createGain();
+if (!isFinite(t0) || t0 < c.currentTime) t0 = c.currentTime + 0.01;
 o.type = type; o.frequency.setValueAtTime(freq, t0);
 if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
 g.gain.setValueAtTime(0, t0);
@@ -1037,6 +1076,7 @@ o.start(t0); o.stop(t0 + dur + 0.05);
 },
 noise(t0, dur, { vol = 0.2, from = 400, to = 2000, q = 1 } = {}) {
 const c = this.ctx, len = Math.max(1, Math.floor(c.sampleRate * dur));
+if (!isFinite(t0) || t0 < c.currentTime) t0 = c.currentTime + 0.01;
 const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
 for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
 const src = c.createBufferSource(); src.buffer = buf;
@@ -1476,6 +1516,37 @@ openModal(ic("shopping-bag") + "星尘商城", "娱乐积分 · 非萌币",
 '<div class="shop-grid">' + SHOP.map(shopCardHTML).join("") + "</div>" +
 '<div class="hint">同类商品，后买的换前买的。</div>');
 }
+function openPack(it, done) {
+const box = document.getElementById("pack-wrap");
+const leg = it.kind === "pet" || it.kind === "theme";
+box.innerHTML = '<div class="pack-card" id="pack-card">' + ic("mark", "font-size:46px") + "</div>";
+box.classList.add("on");
+AU.sfx("fwup");
+const card = document.getElementById("pack-card");
+card.addEventListener("click", function burst() {
+card.removeEventListener("click", burst);
+AU.sfx("unlock"); AU.sfx("coin");
+let x = innerWidth / 2, y = innerHeight / 2;
+const r2 = card.getBoundingClientRect();
+if (r2.width) { x = r2.left + r2.width / 2; y = r2.top + r2.height / 2; }
+FXC.burst(x, y);
+setTimeout(() => FXC.burst(x - 70, y + 24), 130);
+setTimeout(() => FXC.burst(x + 70, y - 12), 260);
+card.classList.add("burst");
+setTimeout(() => {
+box.innerHTML = '<div class="pack-item' + (leg ? " leg" : "") + '" id="pack-item">' +
+ic(it.icon, "font-size:54px") + '<div class="pi-name">' + it.name + "</div></div>";
+AU.sfx(leg ? "achv" : "confirm");
+if (leg) { setTimeout(() => FXC.firework(), 220); setTimeout(() => FXC.firework(), 740); }
+const el = document.getElementById("pack-item");
+el.addEventListener("click", () => {
+AU.sfx("whoosh");
+el.classList.add("fly");
+setTimeout(() => { box.classList.remove("on"); box.innerHTML = ""; if (done) done(); }, 620);
+}, { once: true });
+}, 620);
+});
+}
 mbox.addEventListener("click", e => {
 const buyBtn = e.target.closest && e.target.closest("[data-buy]");
 const equipBtn = e.target.closest && e.target.closest("[data-equip]");
@@ -1486,13 +1557,13 @@ if (!it || S.owned.includes(it.id) || S.stardust < it.price) { AU.sfx("cancel");
 setStardust(S.stardust - it.price);
 S.owned.push(it.id); S.stats.buys++;
 AU.sfx("coin");
-toast("coin", "已购入", it.name);
 if (it.kind === "theme") { S.equipped.theme = it.id; applyTheme(); }
 	if (it.kind === "weather") { S.equipped.weather = it.id; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setRain(it.id === "rain"); }
-	if (it.id === "cat") startCat();
-	if (it.id === "firework") document.getElementById("btn-firework").style.display = "";
-	checkQuests(); save(); showShop();
-	} else if (equipBtn) { S.equipped.theme = equipBtn.dataset.equip; applyTheme(); AU.sfx("confirm"); save(); showShop(); }
+		if (it.id === "cat") startCat();
+		if (it.id === "firework") document.getElementById("btn-firework").style.display = "";
+		closeModal();
+		openPack(it, () => { toast("coin", "已购入", it.name); checkQuests(); save(); showShop(); });
+		} else if (equipBtn) { S.equipped.theme = equipBtn.dataset.equip; applyTheme(); AU.sfx("confirm"); save(); showShop(); }
 	else if (wxBtn) { S.equipped.weather = wxBtn.dataset.weather; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setRain(wxBtn.dataset.weather === "rain"); AU.sfx("confirm"); save(); showShop(); }
 });
 function cgCardHTML(cg) {
