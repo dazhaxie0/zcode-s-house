@@ -1621,8 +1621,20 @@ if (it.kind === "theme") { S.equipped.theme = it.id; applyTheme(); }
 		if (it.id === "firework") document.getElementById("btn-firework").style.display = "";
 			closeModal();
 			openPack(it, () => { if (S.owned.length >= SHOP.length + 1) unlockCG("cg8"); checkQuests(); save(); });
-		} else if (equipBtn) { S.equipped.theme = equipBtn.dataset.equip; applyTheme(); AU.sfx("confirm"); save(); showShop(); }
-		else if (wxBtn) { S.equipped.weather = wxBtn.dataset.weather; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setWx(wxBtn.dataset.weather); AU.sfx("confirm"); save(); showShop(); }
+		} else if (equipBtn) {
+		const eid = equipBtn.dataset.equip;
+		const off = S.equipped.theme === eid && eid !== "theme-warm";
+		S.equipped.theme = off ? "theme-warm" : eid;
+		applyTheme(); AU.sfx(off ? "cancel" : "confirm"); save(); showShop();
+		}
+		else if (wxBtn) {
+		const wid = wxBtn.dataset.weather;
+		const off = S.equipped.weather === wid;
+		S.equipped.weather = off ? "none" : wid;
+		FXC.ambient = FXC.ambient.filter(a => a.kind === "fly");
+		AU.setWx(off ? "none" : wid);
+		AU.sfx(off ? "cancel" : "confirm"); save(); showShop();
+		}
 });
 function cgCardHTML(cg) {
 const got = !!S.cgs[cg.id];
