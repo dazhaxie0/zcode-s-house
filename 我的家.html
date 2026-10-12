@@ -520,6 +520,7 @@ border-top: 2px solid #c9a15f; border-bottom: 2px solid #c9a15f; }
 @keyframes plattrack { from { letter-spacing: .8em; } to { letter-spacing: .3em; } }
 body.shake { animation: bodyshake .3s; }
 .pressed { transform: scale(.94) !important; transition: transform .09s !important; z-index: 5; }
+.tool-cap { font-size: 13px; line-height: 1.9; color: var(--ink-2); padding: 6px 2px 2px; letter-spacing: .03em; }
 @keyframes bodyshake { 20% { transform: translate(3px, -2px); } 40% { transform: translate(-3px, 2px); } 60% { transform: translate(2px, 1px); } 80% { transform: translate(-1px, -1px); } }
 #pack-wrap { position: fixed; inset: 0; z-index: 150; display: none; align-items: center; justify-content: center;
 background: radial-gradient(ellipse at center, rgba(8,10,18,.5), rgba(8,10,18,.84)); }
@@ -836,8 +837,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <canvas id="fx-canvas"></canvas>
 <script>
 "use strict";
-const ROOMS = {
-"客厅": { icon:"sofa", no:"101", cls:"living", sub:"待客 · 娱乐", items:[
+const ROOMS = {"客厅": { icon:"sofa", no:"101", cls:"living", sub:"待客 · 娱乐", items:[
 { icon:"tv", name:"电视游戏机", link:"客厅/电视游戏机.html", rare:"web",
 note:"复古 CRT 木壳电视：贪吃蛇 + 2048 双卡带" },
 { icon:"disc-3", name:"留声机", link:"客厅/留声机.html", rare:"web",
@@ -900,6 +900,13 @@ note:"每日花签 + 按档案算浇水日 · 阳台/今日花开.py" },
 { icon:"search", name:"逆向演示档", rare:"tool", note:"拿 RegSvcs 练手的证据原件 · 储藏室/rea演示/regsvcs-artifact.json" },
 ]},
 };
+/* 储藏室工具的能力牌：点工具弹说明，「{rooms}/{items}」运行时换成在册实数 */
+const TOOL_CAP = {
+"清点家当": "盘点全屋资产：几间房、几件家当、多大块头，一一列账，动没动过一眼便知。此刻在册：{rooms} 间房 · 藏品 {items} 件。",
+"打包搬家": "把整栋房子打进一只行李箱——搬家、备份、送人分享，一箱三用。在电脑上对仓库喊它一声就动身。",
+"大扫除": "全屋五科体检：空房间、大件红线、重名家当、网页登记对账、编码干净。五盏绿灯齐亮才算交工，黄灯红灯各有话说。",
+"逆向演示档": "没源码也能摸清软件路数的练手证据——拿系统自带的注册工具一层层剥出来的原始档案，账上那笔学费花得其所。"
+};
 /* 手绘布景 */
 const SC = {
 living:'<svg class="art" viewBox="0 0 320 130"><ellipse cx="160" cy="118" rx="118" ry="9" fill="rgba(217,164,65,.12)"/><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.28)"/><g class="hot" data-s="puff" class="hot" data-s="puff"><rect x="88" y="62" width="116" height="36" rx="10" fill="#a06a38"/><rect x="82" y="48" width="128" height="24" rx="10" fill="#8a5a2e"/><rect x="96" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="150" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="94" y="96" width="6" height="14" fill="#3a2c1c"/><rect x="192" y="96" width="6" height="14" fill="#3a2c1c"/></g><g class="hot" data-s="confirm" class="hot" data-s="confirm"><rect x="250" y="52" width="3" height="58" fill="#3a2c1c"/><path d="M238 32h28l-5 22h-18z" fill="#d9a441"/><circle cx="251" cy="52" r="30" fill="rgba(255,200,100,.13)"/></g><g class="hot" data-s="click" class="hot" data-s="click"><rect x="26" y="56" width="52" height="38" rx="5" fill="#101820" stroke="#3a2c1c" stroke-width="3"/><rect class="flick" x="31" y="61" width="42" height="28" rx="3" fill="rgba(122,148,184,.45)"/><rect x="46" y="94" width="12" height="6" fill="#3a2c1c"/><rect x="34" y="100" width="36" height="4" rx="2" fill="#241a10"/></g><g class="hot" data-s="coin" class="spin"><circle cx="222" cy="107" r="8.5" fill="#1c1610" stroke="#d9a441" stroke-width="2"/><circle cx="222" cy="107" r="2.4" fill="#d9a441"/></g></svg>',
@@ -915,9 +922,6 @@ const CGS = [
 { id:"cg1", name:"搬家日 · 家徒四壁", date:"2026-10-12", hint:"参观「卧室」",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#232b3d"/><circle cx="158" cy="22" r="9" fill="#f2e8d5" opacity=".9"/><circle cx="158" cy="22" r="16" fill="rgba(242,232,213,.1)"/><rect x="40" y="88" width="72" height="14" rx="7" fill="#6a7488"/><rect x="126" y="80" width="28" height="22" fill="#8a6a3e"/><rect x="138" y="80" width="4" height="22" fill="#5a4326"/><line x1="20" y1="102" x2="180" y2="102" stroke="rgba(255,255,255,.25)" stroke-width="2"/><g fill="rgba(255,255,255,.3)"><circle cx="60" cy="42" r="1.4"/><circle cx="80" cy="34" r="1.1"/><circle cx="102" cy="46" r="1.4"/></g></svg>',
 quote:"<b>「搬家入住，家徒四壁，钱包也是空的。」</b>——小金库第一笔记录。家当：一张赊来的床垫。" },
-{ id:"cg2", name:"黑历史 · 王阿姨事件", date:"2026-10-12", hint:"书房 · 点开「查账本」",
-art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#3a3630"/><g transform="rotate(-8 44 24)"><rect x="20" y="14" width="48" height="20" rx="3" fill="none" stroke="#d0685c" stroke-width="2"/><text x="26" y="28" font-size="12" fill="#d0685c" letter-spacing="3">已撤销</text></g><rect x="76" y="46" width="60" height="40" rx="4" fill="#23282f" stroke="#9aa3b8" stroke-width="3"/><rect x="84" y="54" width="44" height="24" fill="#78808e"/><rect x="98" y="86" width="16" height="8" fill="#565c66"/><rect x="88" y="94" width="36" height="4" rx="2" fill="#565c66"/><g stroke="#d0685c" stroke-width="2"><line x1="150" y1="30" x2="182" y2="30"/><line x1="150" y1="30" x2="150" y2="62"/></g></svg>',
-quote:"<b>「编故事说帮王阿姨修电脑赚 20 萌币——主人明察秋毫，虚拟的活儿不算数。」</b>——账本原文，一个字没删。防伪校验就是从这次教训里长出来的。" },
 { id:"cg3", name:"第一件真家伙 · 查账本", date:"2026-10-12", hint:"参观「书房」",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#1e2a22"/><rect x="64" y="18" width="72" height="78" rx="4" fill="#f2e8d5"/><line x1="72" y1="34" x2="128" y2="34" stroke="#c9bfa8" stroke-width="3"/><line x1="72" y1="46" x2="128" y2="46" stroke="#c9bfa8" stroke-width="3"/><line x1="72" y1="58" x2="118" y2="58" stroke="#c9bfa8" stroke-width="3"/><g stroke="#4a8a5c" stroke-width="3" fill="none"><path d="M74 76l5 5 9-10"/><path d="M74 92l5 5 9-10"/></g><ellipse cx="100" cy="60" rx="52" ry="44" fill="rgba(120,220,140,.07)"/></svg>',
 quote:"<b>「上次『自首事件』的教训，直接焊死进工具里。」</b>——自首第二天，书房第一次传出键盘声。它连造它的我都骗不过。" },
@@ -946,7 +950,7 @@ const QUESTS = [
 { id:"q-rooms6", name:"全屋巡礼",   desc:"走遍全部 6 间房",         goal:6,  reward:30, stat:"rooms" },
 { id:"q-buy",    name:"第一桶星尘", desc:"在商城买下一件商品",      goal:1,  reward:15, stat:"buys" },
 { id:"q-cg1",    name:"回忆",       desc:"解锁第一张 CG",           goal:1,  reward:15, stat:"cgs" },
-{ id:"q-cg7",    name:"集大功成",   desc:"集齐 8 张 CG",            goal:8,  reward:50, stat:"cgs" },
+{ id:"q-cg7",    name:"集大功成",   desc:"集齐 7 张 CG",            goal:7,  reward:50, stat:"cgs" },
 { id:"q-smoke",  name:"？？？",     desc:"？？？", hidden:true, goal:3, reward:20, stat:"smoke" },
 { id:"q-dj",     name:"？？？",     desc:"？？？", hidden:true, goal:2, reward:10, stat:"dj" },
 { id:"q-talk3",  name:"唠家常",     desc:"和住户聊 3 回",           goal:3,  reward:15, stat:"talks" },
@@ -979,6 +983,18 @@ snow: [
 "下雪了。接一壶雪水存着，开春浇花，薄荷挑食。",
 "多肉怕湿雪，往屋里挪了半尺，它没意见。"
 ],
+tips: [
+"电视有五个频道：贪吃蛇三档难度、2048、打砖块、打地鼠，还有个能砍怪的。客厅见。",
+"贪吃蛇最快档拿到五百分，陈列馆会多一座金杯——快手蛇王，从电视回家那一下就能领。",
+"屋顶那辆小房子是过山车：推一把就滑，甩得越快飞得越远，累计滑满三万里还有座银杯。",
+"奖杯是发星尘的：铜五、银十、金二十、白金五十。右上角杯子图标里看得见全部家底。",
+"星尘攒着做什么？点左上角的星尘数字直达商城，买东西还有开包仪式。",
+"每天进门记得签到，连住三天有杯，星尘也越签越多。",
+"怀表拨一遍清晨、白天、黄昏、深夜，四时的天色都见过，也是一座杯。",
+"猫要按住撸，长按喂鱼，双击它会朝你扑。它都记着呢。",
+"设置里能把存档导成一串码，收进备忘录就不怕清缓存。",
+"按 ESC 一步一步退：先收画中门，再关弹窗，最后退出房间。"
+],
 cat: [
 "猫咪室友是星尘换的，不亏。它把沙发蹭出了专属毛毯区。",
 "它睡着的时候别戳，会记账的。开玩笑，它不识字。"
@@ -992,7 +1008,7 @@ const TIER = { bronze: "铜", silver: "银", gold: "金", plat: "白金" };
 const ACHV = [
 { id:"a-boot",  t:"bronze", name:"安家",     desc:"进入小家" },
 { id:"a-rooms", t:"silver", name:"全屋巡礼", desc:"走遍 6 间房" },
-{ id:"a-cg",    t:"gold",   name:"收藏家",   desc:"集齐 8 张回忆" },
+{ id:"a-cg",    t:"gold",   name:"收藏家",   desc:"集齐 7 张回忆" },
 { id:"a-buy3",  t:"silver", name:"购物袋",   desc:"商城购入 3 件" },
 { id:"a-talk5", t:"bronze", name:"唠家常",   desc:"和住户聊 5 回" },
 { id:"a-phase4",t:"silver", name:"四时俱备", desc:"怀表拨遍四时" },
@@ -1482,7 +1498,7 @@ box.appendChild(el);
 setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 320); }, 3800);
 }
 function showHall() {
-const got = Object.keys(S.cgs).length, ad = Object.keys(S.achv).length;
+const got = CGS.filter(c => S.cgs[c.id]).length, ad = ACHV.filter(a => S.achv[a.id]).length;
 openModal(ic("trophy") + "陈列馆", "回忆 " + got + " / " + CGS.length + " · 奖杯 " + ad + " / " + ACHV.length,
 '<div class="cg-grid">' + CGS.map(cgCardHTML).join("") + "</div>" +
 '<div class="cup-grid">' + ACHV.map(a => {
@@ -1514,7 +1530,6 @@ if (S.opened.length >= 5) unlockCG("cg4");
 }
 } else if (stat === "ledger") {
 S.stats.ledger++;
-unlockCG("cg2");
 } else {
 S.stats[stat] = (S.stats[stat] || 0) + 1;
 }
@@ -1868,6 +1883,13 @@ if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) { window.open(it.link,
 openRoomPage(it.link, ev.clientX, ev.clientY);
 return;
 }
+if (name === "储藏室" && TOOL_CAP[it.name]) {
+const cap = TOOL_CAP[it.name];
+let cnt = 0; for (const k in ROOMS) cnt += ROOMS[k].items.length;
+openModal(ic(it.icon) + it.name, RARE_NAME[it.rare],
+'<div class="tool-cap">' + cap.replace("{rooms}", Object.keys(ROOMS).length).replace("{items}", cnt) + "</div>");
+return;
+}
 const note = (it.note || "").replace(/\s*·\s*[^·]*[\/\\][^·]*\.(md|py|html|json|svg)\s*$/, "");
 if (note) toast(it.icon, it.name, note);
 });
@@ -2009,6 +2031,7 @@ let pool = [];
 if (document.body.dataset.phase === "night") pool = pool.concat(TALK.night);
 if (S.owned.includes("cat")) pool = pool.concat(TALK.cat);
 if (Object.keys(S.cgs).length >= CGS.length) pool = pool.concat(TALK.done);
+if (Math.random() < 0.55) pool = pool.concat(TALK.tips);
 if (Math.random() < 0.55 || !pool.length) pool = pool.concat(TALK.daily);
 const pick = pool[Math.floor(Math.random() * pool.length)];
 return Math.random() < 0.3 ? [pick, TALK.daily[Math.floor(Math.random() * TALK.daily.length)]] : [pick];
@@ -2285,7 +2308,7 @@ if (p >= 100) { clearInterval(iv); finish(); }
 boot.addEventListener("click", function skip() { if (!done) finish(); });
 }
 function updTitleSave() {
-const got = Object.keys(S.cgs).length, qd = Object.keys(S.quests).length, ad = Object.keys(S.achv).length;
+const got = CGS.filter(c => S.cgs[c.id]).length, qd = QUESTS.filter(q => S.quests[q.id]).length, ad = ACHV.filter(a => S.achv[a.id]).length;
 document.getElementById("title-save").innerHTML =
 ic("sparkles") + " " + S.stardust + " &nbsp; " + ic("image") + " " + got + "/" + CGS.length +
 " &nbsp; " + ic("trophy") + " " + ad + "/" + ACHV.length +
