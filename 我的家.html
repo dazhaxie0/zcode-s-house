@@ -2120,16 +2120,26 @@ mark.addEventListener("pointerdown", e => {
 });
 mark.addEventListener("pointermove", e => {
   if (!drag) return;
-  const ns = projS(e.clientX, e.clientY), now = performance.now(), dt = Math.max(16, now - drag.t) / 1000;
+  const ns = projS(e.clientX, e.clientY), now = performance.now(), dt = Math.max(6, now - drag.t) / 1000;
   let d = ns - drag.s; if (d > L / 2) d -= L; if (d < -L / 2) d += L;
-  v = Math.max(-2600, Math.min(2600, d / dt * 0.85));
+  (drag.vs = drag.vs || []).push(d / dt);
+  if (drag.vs.length > 6) drag.vs.shift();
   drag.moved += Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy); drag.sx = e.clientX; drag.sy = e.clientY;
+  drag.t = now;
   drag.s = ns; s = ns; place();
 });
 mark.addEventListener("pointerup", () => {
-  if (drag && drag.moved < 6) { v += (v >= 0 ? 1 : -1) * 300; AU.sfx("door"); }
+  if (drag) {
+  const vs = drag.vs || [];
+  if (vs.length) {
+  let wsum = 0, vsum = 0;
+  vs.forEach((vv, i) => { const w = i + 1; wsum += w; vsum += vv * w; });
+  v = Math.max(-2600, Math.min(2600, vsum / wsum * 0.9));
+  }
+  if (drag.moved < 6) { v += (v >= 0 ? 1 : -1) * 300; AU.sfx("door"); }
   else if (Math.abs(v) > 900) AU.sfx("whoosh");
-  if (drag && Math.abs(v) > 1500) { S.stats.coaster = 1; checkQuests(); }
+  if (Math.abs(v) > 1500) { S.stats.coaster = 1; checkQuests(); }
+  }
   drag = null;
 });
 })();
