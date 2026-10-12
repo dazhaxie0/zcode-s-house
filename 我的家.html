@@ -741,7 +741,6 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <span class="pill" id="pill-stardust"><svg class="ic"><use href="#i-sparkles"/></svg><b id="stardust-num">0</b></span>
 <span class="spacer"></span>
 <button class="ico-btn" data-modal="quests"   data-tip="任务"><svg class="ic"><use href="#i-list-todo"/></svg></button>
-<button class="ico-btn" data-modal="shop"     data-tip="商城"><svg class="ic"><use href="#i-shopping-bag"/></svg></button>
 <button class="ico-btn" data-modal="gallery"  data-tip="陈列馆"><svg class="ic"><use href="#i-trophy"/></svg></button>
 <button class="ico-btn" id="btn-firework"     data-tip="烟花" style="display:none"><svg class="ic"><use href="#i-sparkles"/></svg></button>
 <button class="ico-btn" id="btn-clock"        data-tip="怀表"><svg class="ic"><use href="#i-watch"/></svg></button>
@@ -1003,6 +1002,7 @@ const ACHV = [
 { id:"a-pets",  t:"bronze", name:"猫奴",     desc:"撸猫 10 下" },
 { id:"a-feed",  t:"bronze", name:"开饭了",   desc:"喂猫 3 回" },
 { id:"a-coaster",t:"bronze",name:"过山车",   desc:"把屋顶小屋甩出速度" },
+{ id:"a-coaster2",t:"silver",name:"长途跋涉", desc:"小房子累计滑行三万里" },
 { id:"a-snake500",t:"gold", name:"快手蛇王", desc:"贪吃蛇最快档拿到 500 分" },
 { id:"a-week",  t:"silver", name:"常客",     desc:"连续入住 3 天" },
 { id:"a-plat",  t:"plat",   name:"这个家",   desc:"集齐其余全部奖杯" },
@@ -1020,6 +1020,7 @@ const achvCond = {
 "a-pets":  () => (S.stats.pets || 0) >= 10,
 "a-feed":  () => (S.stats.feeds || 0) >= 3,
 "a-coaster":() => (S.stats.coaster || 0) >= 1,
+"a-coaster2":() => (S.stats.coasterDist || 0) >= 30000,
 "a-snake500":() => { try { return localStorage.getItem("mengtv_snake_hard500") === "1"; } catch (e) { return false; } },
 "a-week":  () => (S.stats.streak || 0) >= 3,
 };
@@ -1043,7 +1044,7 @@ owned: ["theme-warm"], equipped: { theme: "theme-warm", weather: "none" },
 settings: { sfx: true, bgm: true, sfxVol: 0.5, bgmVol: 0.32,
 reduceMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches },
 stats: { entered: 0, rooms: 0, items: 0, ledger: 0, buys: 0, cgs: 0, smoke: 0, dj: 0,
-talks: 0, pets: 0, feeds: 0, coaster: 0, phases: [], days: 0, streak: 0, lastDay: "" },
+talks: 0, pets: 0, feeds: 0, coaster: 0, coasterDist: 0, phases: [], days: 0, streak: 0, lastDay: "" },
 });
 let S = defaultState();
 let memOnly = false;
@@ -1458,6 +1459,8 @@ const ok = a.id === "a-plat"
 : achvCond[a.id]();
 if (ok) {
 S.achv[a.id] = 1;
+const AWARD = { bronze: 5, silver: 10, gold: 20, plat: 50 };   // 奖杯按等级发星尘，经济总账见日记
+addStardust(AWARD[a.t] || 5);
 AU.sfx("achv");
 trophyToast(a);
 if (a.id === "a-plat") { for (let i = 0; i < 5; i++) setTimeout(() => FXC.firework(), i * 520);
@@ -2111,6 +2114,7 @@ function loop(now) {
     const ty = (q.y - p.y) / d;
     v += (1900 * ty - 0.55 * v) * dt;
     if (Math.abs(v) < 3 && Math.abs(ty) < 0.06) v = 0;
+    S.stats.coasterDist = (S.stats.coasterDist || 0) + Math.abs(v) * dt;   // 里程表：成就「长途跋涉」认它
     s = (s + v * dt + L) % L; place();
   }
   requestAnimationFrame(loop);
