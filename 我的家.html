@@ -504,13 +504,6 @@ animation: toastin .38s cubic-bezier(.2,.9,.3,1.2);
 .toast .ic { font-size: 21px; color: var(--gold-2); flex: none; }
 .toast .tt { font-size: 10.5px; letter-spacing: .3em; color: var(--gold-2); }
 .toast .tm { font-size: 13px; margin-top: 2px; line-height: 1.5; }
-#area-splash { position: fixed; inset: 0; z-index: 135; display: flex; align-items: center; justify-content: center;
-pointer-events: none; opacity: 0;
-font-family: Georgia, "Times New Roman", "STZhongsong", "SimSun", serif; font-weight: 900;
-font-size: clamp(36px, 7.5vw, 68px); color: #f5ead0; letter-spacing: .6em; text-indent: .6em;
-text-shadow: 0 2px 26px rgba(0,0,0,.65), 0 0 46px rgba(240,196,106,.35); }
-#area-splash.go { animation: areasplash 1.9s ease-out forwards; }
-@keyframes areasplash { 0% { opacity: 0; letter-spacing: .6em; } 16% { opacity: 1; } 68% { opacity: 1; letter-spacing: .22em; } 100% { opacity: 0; letter-spacing: .2em; } }
 .star-float { position: fixed; z-index: 155; pointer-events: none; display: flex; gap: 4px; align-items: center;
 font-weight: 900; font-size: 15px; color: var(--gold-2); animation: starfloat 1.05s ease-out forwards; }
 .star-float.neg { color: var(--danger); }
@@ -825,7 +818,6 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 </div>
 <div id="iris"></div>
 <div class="modal-mask" id="modal-mask"><div class="modal" id="modal-box"></div></div>
-<div id="area-splash"></div>
 <div id="plat-banner"><span>这 个 家</span></div>
 <div id="pack-wrap"></div>
 <div id="toasts"></div>
@@ -1428,11 +1420,6 @@ f.style.top = r.bottom + 8 + "px";
 document.body.appendChild(f);
 setTimeout(() => f.remove(), 1100);
 }
-function areaSplash(t) {
-const el = document.getElementById("area-splash");
-el.textContent = t;
-el.classList.remove("go"); void el.offsetWidth; el.classList.add("go");
-}
 function screenShake() {
 document.body.classList.remove("shake"); void document.body.offsetWidth; document.body.classList.add("shake");
 }
@@ -1873,7 +1860,6 @@ roomOverlay.classList.add("on");
 document.getElementById("screen-house").style.overflow = "hidden";
 roomOverlay.scrollTop = 0;
 track("room", name);
-areaSplash(name);
 renderRooms();
 });
 }
@@ -1892,11 +1878,7 @@ document.getElementById("screen-house").style.overflow = "";
 const frameWrap = document.getElementById("frame-wrap"), roomFrame = document.getElementById("room-frame");
 function openRoomPage(link, cx, cy) {
 AU.sfx("door");
-irisOpen2(cx, cy, () => {
-roomFrame.src = link;
-frameWrap.classList.add("on");
-areaSplash(decodeURIComponent(link.split("/").pop().replace(/\.html$/, "")));
-});
+irisOpen2(cx, cy, () => { roomFrame.src = link; frameWrap.classList.add("on"); });
 }
 function closeRoomPage() {
 AU.sfx("door");
