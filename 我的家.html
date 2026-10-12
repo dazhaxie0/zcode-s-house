@@ -214,7 +214,7 @@ background: linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
 border-radius: var(--r-lg); padding: 56px 26px 22px;
 box-shadow: var(--shadow-lg); position: relative;
 }
-.roofline { position: absolute; left: 0; top: 0; width: 62px; cursor: grab; touch-action: none;
+.roofline { position: absolute; left: 0; top: 0; width: 62px; cursor: grab; touch-action: none; will-change: transform;
 color: var(--wood); filter: drop-shadow(0 6px 10px rgba(0,0,0,.25)); will-change: transform; z-index: 12; }
 .chimney-smoke {
 position: absolute; top: -10px; right: calc(50% - 128px);
@@ -2066,10 +2066,11 @@ document.querySelectorAll(".win").forEach(w => w.addEventListener("click", () =>
 /* 屋顶小屋 · 过山车：沿门面外框滚动，重力切向加速 + 摩擦，可拖拽甩出 */
 (function () {
 const mark = document.querySelector(".roofline"), box = document.getElementById("facade");
-let pts = [], L = 0, s = 0, v = 0, drag = null, last = performance.now();
+let pts = [], L = 0, s = 0, v = 0, drag = null, last = performance.now(), lastW = 0, built = false;
 function build() {
-  pts = [];
   const w = box.offsetWidth, h = box.offsetHeight, r = 20;
+  if (w < 40 || h < 40) return;
+  pts = [];
   const seg = (x1, y1, x2, y2) => { const d = Math.hypot(x2 - x1, y2 - y1), n = Math.max(1, Math.round(d / 8));
     for (let i = 0; i < n; i++) pts.push({ x: x1 + (x2 - x1) * i / n, y: y1 + (y2 - y1) * i / n }); };
   const arc = (cx, cy, a0, a1) => { for (let i = 0; i < 5; i++) { const a = a0 + (a1 - a0) * i / 5;
@@ -2077,12 +2078,19 @@ function build() {
   seg(r, 0, w - r, 0); arc(w - r, r, -Math.PI / 2, 0); seg(w, r, w, h - r); arc(w - r, h - r, 0, Math.PI / 2);
   seg(w - r, h, r, h); arc(r, h - r, Math.PI / 2, Math.PI); seg(0, h - r, 0, r); arc(r, r, Math.PI, Math.PI * 1.5);
   L = pts.length * 8;
+  if (!built) { s = (box.offsetWidth - 40) / 2; built = true; }
 }
-function at(sv) { const i = ((Math.round(sv / 8) % pts.length) + pts.length) % pts.length;
-  return { p: pts[i], q: pts[(i + 1) % pts.length] }; }
+function at(sv) {
+const f = (((sv / 8) % pts.length) + pts.length) % pts.length;
+const i = Math.floor(f), u = f - i;
+const a = pts[i % pts.length], b = pts[(i + 1) % pts.length];
+return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u };
+}
 function place() {
-  const { p, q } = at(s), ang = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI;
-  mark.style.transform = "translate(" + (p.x - 31) + "px," + (p.y - 28) + "px) rotate(" + ang.toFixed(1) + "deg)";
+  if (!pts.length) return;
+  const p = at(s), p2 = at(s + 4);
+const ang = Math.atan2(p2.y - p.y, p2.x - p.x) * 180 / Math.PI;
+mark.style.transform = "translate3d(" + (p.x - 31).toFixed(2) + "px," + (p.y - 28).toFixed(2) + "px,0) rotate(" + ang.toFixed(2) + "deg)";
 }
 function projS(cx, cy) {
   const rc = box.getBoundingClientRect(), k = rc.width / box.offsetWidth;
@@ -2093,8 +2101,10 @@ function projS(cx, cy) {
 }
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (box.offsetWidth > 40 && Math.abs(box.offsetWidth - lastW) > 1) { lastW = box.offsetWidth; build(); }
   if (!drag && pts.length) {
-    const { p, q } = at(s), d = Math.hypot(q.x - p.x, q.y - p.y) || 1;
+    const p = at(s), q = at(s + 8);
+    const d = Math.hypot(q.x - p.x, q.y - p.y) || 1;
     const ty = (q.y - p.y) / d;
     v += (1900 * ty - 0.55 * v) * dt;
     if (Math.abs(v) < 3 && Math.abs(ty) < 0.06) v = 0;
@@ -2102,8 +2112,7 @@ function loop(now) {
   }
   requestAnimationFrame(loop);
 }
-build(); s = box.offsetWidth / 2; place(); requestAnimationFrame(loop);
-window.addEventListener("resize", build);
+requestAnimationFrame(loop);
 mark.addEventListener("pointerdown", e => {
   e.preventDefault();
   try { mark.setPointerCapture(e.pointerId); } catch (er) {}
