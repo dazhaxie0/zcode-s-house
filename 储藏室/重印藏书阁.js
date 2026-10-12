@@ -256,6 +256,8 @@ loadBook(cur.b);
 </html>`;
 fs.writeFileSync('书房/藏书阁.html', page);
 console.log('藏书阁.html written:', fs.statSync('书房/藏书阁.html').size, 'bytes');
-// 语法校验（书里可能出现 <script> 字样，须锚定 </body> 前的阅读器脚本块）
-const m = page.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
-try { new Function(m[1]); console.log('reader JS OK'); } catch (e) { console.log('reader JS BROKEN:', e.message); process.exit(1); }
+// 语法校验（书里可能出现 <script> 字样，取最后一个 <script> 块=阅读器本体）
+const s0 = page.lastIndexOf('<script>');
+const s1 = page.indexOf('</script>', s0);
+const readerJs = page.slice(s0 + 8, s1);
+try { new Function(readerJs); console.log('reader JS OK'); } catch (e) { console.log('reader JS BROKEN:', e.message); process.exit(1); }
