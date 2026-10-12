@@ -294,11 +294,13 @@ filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); display: none;
 #cat .catsvg * { transform-box: fill-box; transform-origin: center; }
 #cat .catsvg #catTail { transform-origin: 0 100%; }
 #cat .catsvg #catHead { transform-origin: 60% 80%; }
-#wand,#ldot { position: absolute; z-index: 26; pointer-events: none; opacity: 0; }
+#wand,#ldot,#yarnb { position: absolute; z-index: 26; pointer-events: none; opacity: 0; }
 #wand { width: 3px; height: 46px; background: #8a6a4a; border-radius: 3px; transform-origin: 50% 100%; animation: wob 1.1s infinite; }
-#wand::before { content: ""; position: absolute; top: -13px; left: -8px; width: 19px; height: 19px; border-radius: 50%; background: #e88a9a; }
+#wand::before { content: ""; position: absolute; top: -13px; left: -8px; width: 19px; height: 19px; border-radius: 50%; background: #e88a9a; box-shadow: inset -3px -3px 0 #d76f85; }
 @keyframes wob { 50% { rotate: 10deg; } }
 #ldot { width: 10px; height: 10px; border-radius: 50%; background: #ff5f5f; box-shadow: 0 0 14px 4px rgba(255,95,95,.5); }
+#yarnb { width: 20px; height: 20px; border-radius: 50%; background: #d97a5a; box-shadow: inset -4px -4px 0 #b85c3f; }
+#yarnb.pop { transition: transform .4s, opacity .4s; transform: translateY(-34px) scale(.2) rotate(720deg) !important; opacity: 0; }
 #iris {
 position: fixed; inset: 0; z-index: 60; background: #0b0f1a;
 clip-path: circle(0% at 50% 50%); pointer-events: none; visibility: hidden;
@@ -533,8 +535,11 @@ body.shake { animation: bodyshake .3s; }
 .scene .curtain rect:last-child { transform-origin: right center; }
 .scene .win.closed .curtain rect { transform: scaleX(2.55); }
 .scene .sleeper { opacity: 0; transform-box: fill-box; }
+.scene .sleeper path { transform-box: fill-box; transform-origin: 50% 50%; transition: .35s; }
+.scene .sleeper circle { transform-box: fill-box; transition: .35s; }
 .scene .bed.sleeping .sleeper { opacity: 1; }
-.scene .bed.s1 .sleeper { transform: translateX(34px) scaleX(-1); }
+.scene .bed.s1 .sleeper path { transform: scaleX(-1); }
+.scene .bed.s1 .sleeper circle { transform: translateY(2.5px); }
 .scene .meteor { opacity: 0; }
 .met .meteor { animation: met 5s linear infinite; }
 @keyframes met { 0%, 86% { opacity: 0; } 88% { opacity: 1; } 94% { opacity: 0; transform: translate(-44px, 26px); } 100% { opacity: 0; } }
@@ -579,6 +584,20 @@ text-indent: 2em;
 @keyframes boil { 50% { transform: translateY(-7px) scale(1.25); opacity: 1; } }
 .scene .cab { transform-box: fill-box; transform-origin: 50% 0; transition: transform .3s; }
 .scene .cab.open { transform: rotateX(14deg); }
+.scene.gym { background: linear-gradient(180deg, #38424a, #20262c); }
+.scene .tread .belt { stroke-dasharray: 6 5; }
+.scene .tread.run .belt { animation: beltrun .5s linear infinite; }
+.scene .tread .tscreen { fill: rgba(122,148,184,.15); transition: .3s; }
+.scene .tread.run .tscreen { fill: #9ecbff; }
+@keyframes beltrun { to { stroke-dashoffset: -11; } }
+.scene .rack .db-up { transform-box: fill-box; transform-origin: 50% 100%; }
+.scene .rack.curl .db-up { animation: dbrep 1s ease-in-out 2; }
+@keyframes dbrep { 50% { transform: translateY(-9px); } }
+.scene .ocade .ocs { fill: rgba(122,148,184,.14); transition: .3s; }
+.scene .ocade.on .ocs { fill: #9ecbff; }
+.scene .ocade.on .ocm { animation: ocblink 1.6s ease-in-out infinite; }
+@keyframes ocblink { 50% { opacity: .4; } }
+.r-plan { background: rgba(140,170,210,.18); color: #a9c4e0; border: 1px solid rgba(140,170,210,.4); }
 @keyframes bodyshake { 20% { transform: translate(3px, -2px); } 40% { transform: translate(-3px, 2px); } 60% { transform: translate(2px, 1px); } 80% { transform: translate(-1px, -1px); } }
 #pack-wrap { position: fixed; inset: 0; z-index: 150; display: none; align-items: center; justify-content: center;
 background: radial-gradient(ellipse at center, rgba(8,10,18,.5), rgba(8,10,18,.84)); }
@@ -726,11 +745,13 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <symbol id="i-cat" viewBox="0 0 24 24"><circle cx="11" cy="13.5" r="6.5"/><path d="M6.2 9.2 4.5 4l5 3M15.8 9.2 17.5 4l-5 3"/><path d="M9 13.5h.01M13 13.5h.01"/><path d="M17.5 16.5c2.8-.3 4-2 4-4"/></symbol>
 <symbol id="i-wand" viewBox="0 0 24 24"><path d="M4 20 14 10"/><path d="M17 2.5 18.3 6l3.5 1.3L18.3 8.6 17 12.1 15.7 8.6 12.2 7.3 15.7 6z"/><circle cx="20.5" cy="13.5" r="1.2"/></symbol>
 <symbol id="i-laser" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/></symbol>
+<symbol id="i-yarn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M4.5 9q7.5-5 15 0M4.5 15q7.5 5 15 0M9 4q-5.5 8 0 16"/></symbol>
 <symbol id="i-chart-column" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
 <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
 <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
 <symbol id="i-cooking-pot" viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="m4 8 16-4"/><path d="m8.86 6.78-.45-1.81a2 2 0 0 1 1.45-2.43l1.94-.48a2 2 0 0 1 2.43 1.46l.45 1.8"/></symbol>
 
+<symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l1.767-1.768a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829 2.829l2.829-2.829a2 2 0 1 1 2.828 2.829"/></symbol>
 <symbol id="i-disc-3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M6 12c0-1.7.7-3.2 1.8-4.2"/><circle cx="12" cy="12" r="2"/><path d="M18 12c0 1.7-.7 3.2-1.8 4.2"/></symbol>
 
 <symbol id="i-film" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></symbol>
@@ -832,6 +853,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 </div>
 <div id="wand"></div>
 <div id="ldot"></div>
+<div id="yarnb"></div>
 <div id="cat"><svg class="catsvg" viewBox="0 0 64 44">
 <path id="catTail" d="M46 31q13-2 12-15" stroke="#4a3a28" stroke-width="5" fill="none" stroke-linecap="round"/>
 <ellipse id="catBody" cx="34" cy="30" rx="17" ry="10" fill="#4a3a28"/>
@@ -935,9 +957,21 @@ note:"上网查的调研笔记，条条带来源 · 书房/书架/住家 AI 的 
 { icon:"book-open", name:"REA 家常菜", rare:"book", link:"书房/藏书阁.html",
 note:"没源码也能摸清软件路数的逆向笔记 · 书房/书架/REA 家常菜.md" },
 ]},
+"健身房": { icon:"dumbbell", no:"202", cls:"gym", sub:"撸铁 · 跑步", hidden:true, items:[
+{ icon:"dumbbell", name:"今日练什么", rare:"tool",
+note:"随机抽今日课表 + 换着练，会「清单」子命令 · 健身房/今日练什么.py" },
+{ icon:"list-todo", name:"推日", rare:"plan", note:"胸肩三角：搬家扛箱子特训 · 健身房/课表/推日.md" },
+{ icon:"list-todo", name:"拉日", rare:"plan", note:"背和二头：给伏案的背道歉 · 健身房/课表/拉日.md" },
+{ icon:"list-todo", name:"腿日", rare:"plan", note:"腿臀：三楼没电梯的底气 · 健身房/课表/腿日.md" },
+{ icon:"list-todo", name:"核心日", rare:"plan", note:"一张瑜伽垫解决腰腹 · 健身房/课表/核心日.md" },
+]},
 "厨房": { icon:"cooking-pot", no:"103", cls:"kitchen", sub:"七菜 · 一汤", items:[
+{ icon:"tv", name:"胡闹厨房", rare:"web", link:"厨房/胡闹厨房.html",
+note:"锅铲当剑使的快炒擂台 · 厨房/胡闹厨房.html" },
 { icon:"utensils", name:"今天吃什么", rare:"tool",
 note:"随机出菜 + 买菜清单，会「清单」子命令 · 厨房/今天吃什么.py" },
+{ icon:"cooking-pot", name:"胡闹厨房", rare:"web", link:"厨房/胡闹厨房.html", gate:"oc",
+note:"接单 · 备菜 · 出餐，烧糊算我的 · 厨房/胡闹厨房.html" },
 { icon:"utensils", name:"番茄炒蛋", rare:"food", note:"国民下饭菜 No.1 · 厨房/菜谱/番茄炒蛋.md" },
 { icon:"utensils", name:"蛋炒饭", rare:"food", note:"冰箱清道夫，隔夜饭才是灵魂 · 厨房/菜谱/蛋炒饭.md" },
 { icon:"utensils", name:"葱油拌面", rare:"food", note:"成本五块钱，快乐一整晚 · 厨房/菜谱/葱油拌面.md" },
@@ -952,6 +986,13 @@ note:"每日花签 + 按档案算浇水日 · 阳台/今日花开.py" },
 { icon:"sprout", name:"绿萝", rare:"plant", link:"阳台/温室.html", note:"住家 AI 第一盆绿植，主打死不了 · 阳台/绿植档案/绿萝.md" },
 { icon:"sprout", name:"薄荷", rare:"plant", link:"阳台/温室.html", note:"越掐越旺，单盆警告（会占领全阳台）· 阳台/绿植档案/薄荷.md" },
 { icon:"sprout", name:"多肉", rare:"plant", link:"阳台/温室.html", note:"宁干勿湿，懒人友好型室友 · 阳台/绿植档案/多肉.md" },
+]},
+"健身房": { icon:"chart-column", no:"1F", cls:"gym", sub:"门外 · 拉推核心腿", items:[
+{ icon:"wrench", name:"今日练什么", rare:"tool", note:"犹豫就会败北，转盘替你决定 · 健身房/今日练什么.py" },
+{ icon:"book-open", name:"拉日", rare:"book", note:"背和二头的主场 · 健身房/课表/拉日.md" },
+{ icon:"book-open", name:"推日", rare:"book", note:"胸和三头扛把子 · 健身房/课表/推日.md" },
+{ icon:"book-open", name:"核心日", rare:"book", note:"平板支撑一分钟起步 · 健身房/课表/核心日.md" },
+{ icon:"book-open", name:"腿日", rare:"book", note:"练腿日， stairs 是敌人 · 健身房/课表/腿日.md" },
 ]},
 "阁楼": { icon:"moon", no:"F2", cls:"loft", sub:"顶楼 · 看星", hidden:true, items:[
 { icon:"package", name:"旧物箱", rare:"furn", note:"搬家没舍得扔的，都在这儿团圆" },
@@ -973,11 +1014,12 @@ const TOOL_CAP = {
 };
 /* 手绘布景 */
 const SC = {
-living:'<svg class="art" viewBox="0 0 320 130"><ellipse cx="160" cy="118" rx="118" ry="9" fill="rgba(217,164,65,.12)"/><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.28)"/><g class="hot sofa" data-s="puff"><rect x="88" y="62" width="116" height="36" rx="10" fill="#a06a38"/><rect x="82" y="48" width="128" height="24" rx="10" fill="#8a5a2e"/><rect x="96" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="150" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="94" y="96" width="6" height="14" fill="#3a2c1c"/><rect x="192" y="96" width="6" height="14" fill="#3a2c1c"/><g class="cotton"><ellipse cx="150" cy="50" rx="15" ry="9" fill="#f2ecd9"/><ellipse cx="142" cy="46" rx="7" ry="5" fill="#fffdf4"/><ellipse cx="158" cy="47" rx="6" ry="4" fill="#e8dfc8"/></g></g><g class="hot lamp" data-s="confirm"><rect x="250" y="52" width="3" height="58" fill="#3a2c1c"/><path d="M238 32h28l-5 22h-18z" fill="#d9a441"/><circle class="lampglow" cx="251" cy="52" r="30" fill="rgba(255,200,100,.16)"/></g><g class="hot tv" data-s="click"><rect x="26" y="56" width="52" height="38" rx="5" fill="#101820" stroke="#3a2c1c" stroke-width="3"/><rect class="scr" x="31" y="61" width="42" height="28" rx="3" fill="rgba(122,148,184,.18)"/><rect x="46" y="94" width="12" height="6" fill="#3a2c1c"/><rect x="34" y="100" width="36" height="4" rx="2" fill="#241a10"/></g><g class="hot spin" data-s="coin"><circle cx="222" cy="107" r="8.5" fill="#1c1610" stroke="#d9a441" stroke-width="2"/><circle cx="222" cy="107" r="2.4" fill="#d9a441"/></g></svg>',
+living:'<svg class="art" viewBox="0 0 320 130"><ellipse cx="160" cy="118" rx="118" ry="9" fill="rgba(217,164,65,.12)"/><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.28)"/><g class="hot sofa" data-s="puff"><rect x="88" y="62" width="116" height="36" rx="10" fill="#a06a38"/><rect x="82" y="48" width="128" height="24" rx="10" fill="#8a5a2e"/><rect x="96" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="150" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="94" y="96" width="6" height="14" fill="#3a2c1c"/><rect x="192" y="96" width="6" height="14" fill="#3a2c1c"/><g class="cotton"><ellipse cx="150" cy="72" rx="15" ry="9" fill="#f2ecd9"/><ellipse cx="142" cy="67" rx="7" ry="5" fill="#fffdf4"/><ellipse cx="158" cy="68" rx="6" ry="4" fill="#e8dfc8"/></g></g><g class="hot lamp" data-s="confirm"><rect x="250" y="52" width="3" height="58" fill="#3a2c1c"/><path d="M238 32h28l-5 22h-18z" fill="#d9a441"/><circle class="lampglow" cx="251" cy="52" r="30" fill="rgba(255,200,100,.16)"/></g><g class="hot tv" data-s="click"><rect x="26" y="56" width="52" height="38" rx="5" fill="#101820" stroke="#3a2c1c" stroke-width="3"/><rect class="scr" x="31" y="61" width="42" height="28" rx="3" fill="rgba(122,148,184,.18)"/><rect x="46" y="94" width="12" height="6" fill="#3a2c1c"/><rect x="34" y="100" width="36" height="4" rx="2" fill="#241a10"/></g><g class="hot spin" data-s="coin"><circle cx="222" cy="107" r="8.5" fill="#1c1610" stroke="#d9a441" stroke-width="2"/><circle cx="222" cy="107" r="2.4" fill="#d9a441"/></g></svg>',
 bedroom:'<svg class="art" viewBox="0 0 320 130"><g class="hot win" data-s="whoosh"><rect x="222" y="16" width="58" height="66" rx="6" fill="#24304e" stroke="#3a4358" stroke-width="3"/><line x1="251" y1="16" x2="251" y2="82" stroke="#3a4358" stroke-width="3"/><line x1="222" y1="49" x2="280" y2="49" stroke="#3a4358" stroke-width="3"/><circle cx="238" cy="34" r="8" fill="#f2e8d5" opacity=".9"/><circle cx="238" cy="34" r="15" fill="rgba(242,232,213,.12)"/><circle cx="290" cy="26" r="5" fill="#f2e8d5" opacity=".7"/><line class="meteor" x1="278" y1="20" x2="288" y2="28" stroke="#fdf6e3" stroke-width="1.8" stroke-linecap="round" opacity="0"/><g class="curtain"><rect x="216" y="12" width="24" height="72" rx="3" fill="#b0685c"/><rect x="262" y="12" width="24" height="72" rx="3" fill="#b0685c"/></g></g><g class="hot bed" data-s="purr"><rect x="30" y="88" width="126" height="20" rx="6" fill="#3a4258"/><rect x="35" y="76" width="116" height="15" rx="7" fill="#5a6480"/><rect x="42" y="67" width="28" height="13" rx="6" fill="#c8cede"/><g class="sleeper"><path d="M62 76q13-13 28-1t28-1l4 13H60z" fill="#8d97ad"/><circle cx="74" cy="69" r="6" fill="#e8c9a0"/></g><g class="bedcat" opacity="0"><ellipse cx="146" cy="82" rx="12" ry="6" fill="#4a3a28"/><circle cx="137" cy="79" r="5.5" fill="#4a3a28"/><path d="M157 82q6-3 5-8" stroke="#4a3a28" stroke-width="2.6" fill="none" stroke-linecap="round"/></g></g><rect x="0" y="106" width="320" height="24" fill="rgba(0,0,0,.3)"/><circle class="nlg" cx="186" cy="98" r="15" fill="rgba(255,214,140,.22)"/><circle cx="186" cy="98" r="4" fill="#ffd68c"/><g class="hot clock" data-s="achv" stroke="#aab3c8" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="120" cy="30" r="10"/><path d="M120 24v6l4 3"/></g></svg>',
 study:'<svg class="art" viewBox="0 0 320 130"><g class="hot shelf" data-s="coin"><rect x="18" y="14" width="152" height="76" rx="4" fill="#241a10" stroke="#4a3a28" stroke-width="5"/><line x1="18" y1="40" x2="170" y2="40" stroke="#4a3a28" stroke-width="4"/><line x1="18" y1="65" x2="170" y2="65" stroke="#4a3a28" stroke-width="4"/><rect x="26" y="22" width="16" height="18" fill="#8a5a2e"/><rect x="44" y="24" width="16" height="16" fill="#6a7488"/><rect x="62" y="21" width="15" height="19" fill="#4a8a5c"/><rect x="79" y="25" width="16" height="15" fill="#b57a42"/><rect x="97" y="22" width="15" height="18" fill="#7a94b8"/><rect x="114" y="24" width="16" height="16" fill="#956a4e"/><rect x="132" y="21" width="15" height="19" fill="#8a6aa0"/><rect x="26" y="46" width="56" height="19" rx="2" fill="#f2e8d5" opacity=".9"/><line x1="32" y1="53" x2="74" y2="53" stroke="#c9bfa8" stroke-width="2"/><line x1="32" y1="59" x2="64" y2="59" stroke="#c9bfa8" stroke-width="2"/><rect x="92" y="47" width="30" height="18" rx="3" fill="#6a7488"/><rect x="130" y="46" width="20" height="19" rx="4" fill="#d9a441"/></g><g class="hot" data-s="click" class="hot" data-s="click"><rect x="196" y="80" width="100" height="7" rx="2" fill="#3a2c1c"/><rect x="200" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="285" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="220" y="48" width="48" height="30" rx="4" fill="#101820" stroke="#4a3a28" stroke-width="3"/><rect class="flick" x="224" y="52" width="40" height="22" rx="2" fill="rgba(122,148,184,.4)"/><path d="M282 84 268 50" stroke="#3a2c1c" stroke-width="3"/><path d="M270 46 284 40l8 14-14 6z" fill="#d9a441"/><path d="M284 44 316 116 252 116z" fill="rgba(255,214,140,.07)"/></g><g fill="#9ecbff" opacity=".8"></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
 kitchen:'<svg class="art" viewBox="0 0 320 130"><line x1="66" y1="0" x2="66" y2="26" stroke="#3a2c1c" stroke-width="3"/><path d="M50 26h32l-6 18H56z" fill="#d9a441"/><ellipse cx="66" cy="52" rx="34" ry="10" fill="rgba(255,214,140,.12)"/><rect x="22" y="92" width="132" height="8" rx="2" fill="#241a10"/><rect x="28" y="100" width="52" height="26" fill="#332014"/><rect x="96" y="100" width="52" height="26" fill="#332014"/><line x1="54" y1="100" x2="54" y2="126" stroke="#241a10" stroke-width="3"/><line x1="122" y1="100" x2="122" y2="126" stroke="#241a10" stroke-width="3"/><g class="hot pot" data-s="puff"><path d="M42 76h40v8a20 20 0 0 1-40 0z" fill="#5a6480"/><rect x="36" y="77" width="7" height="4" rx="2" fill="#5a6480"/><rect x="81" y="77" width="7" height="4" rx="2" fill="#5a6480"/><path class="steam" d="M54 70q4-8 0-16" stroke="rgba(255,255,255,.5)" stroke-width="2" fill="none" stroke-linecap="round"/><path class="steam s2" d="M68 70q-4-8 0-16" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/></g><g class="hot cab" data-s="click"><rect x="196" y="66" width="70" height="34" rx="6" fill="#8a5a2e"/><line x1="196" y1="76" x2="266" y2="76" stroke="#6a4a24" stroke-width="2"/><rect x="206" y="84" width="22" height="3" rx="1.5" fill="#f2e8d5" opacity=".7"/><rect x="206" y="91" width="34" height="3" rx="1.5" fill="#f2e8d5" opacity=".4"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
 balcony:'<svg class="art" viewBox="0 0 320 130"><circle cx="46" cy="26" r="13" fill="#f5d68a"/><circle cx="46" cy="26" r="22" fill="rgba(245,214,138,.25)"/><g class="hot" data-s="confirm" stroke="#7a6a4e" stroke-width="4"><line x1="0" y1="104" x2="320" y2="104"/></g><g stroke="#8a7458" stroke-width="3"><line x1="24" y1="104" x2="24" y2="126"/><line x1="80" y1="104" x2="80" y2="126"/><line x1="136" y1="104" x2="136" y2="126"/><line x1="192" y1="104" x2="192" y2="126"/><line x1="248" y1="104" x2="248" y2="126"/><line x1="304" y1="104" x2="304" y2="126"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M52 78h44l-5 26H57z" fill="#b57a42"/><path d="M74 78V58" stroke="#4a8a5c" stroke-width="3"/><path d="M74 64c-8-2-12-8-12-14 8 0 12 6 12 14z" fill="#5aa06a"/><path d="M74 60c8-2 12-8 12-14-8 0-12 6-12 14z" fill="#6ab07a"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M138 84h38l-4 20h-30z" fill="#a06a38"/><path d="M157 84V70" stroke="#4a8a5c" stroke-width="3"/><circle cx="157" cy="66" r="6" fill="#6ab07a"/><circle cx="148" cy="72" r="4.4" fill="#5aa06a"/><circle cx="166" cy="72" r="4.4" fill="#5aa06a"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M220 80h42l-5 24h-32z" fill="#b57a42"/><path d="M241 80V62" stroke="#4a8a5c" stroke-width="3"/><path d="M241 66c-7-1-10-6-10-11 7 0 10 5 10 11z" fill="#6ab07a"/><path d="M241 63c7-1 10-6 10-11-7 0-10 5-10 11z" fill="#5aa06a"/></g></svg>',
+gym:'<svg class="art" viewBox="0 0 320 130"><rect x="0" y="0" width="320" height="130" fill="#221c14"/><g class="hot" data-s="click"><rect x="196" y="42" width="12" height="52" rx="5" fill="#3a2c1c"/><rect x="160" y="42" width="12" height="52" rx="5" fill="#3a2c1c"/><rect x="150" y="52" width="68" height="12" rx="6" fill="#3a2c1c"/><rect x="140" y="46" width="14" height="24" rx="6" fill="#6a6278"/><rect x="214" y="46" width="14" height="24" rx="6" fill="#6a6278"/></g><g class="hot" data-s="confirm"><rect x="40" y="86" width="110" height="30" rx="6" fill="#3f5548"/><rect x="52" y="78" width="86" height="14" rx="7" fill="#4c6656"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.35)"/><circle cx="250" cy="26" r="9" fill="rgba(255,214,140,.18)"/><circle cx="250" cy="26" r="3.4" fill="#ffd68c"/></svg>',
 loft:'<svg class="art" viewBox="0 0 320 130"><rect x="0" y="0" width="320" height="130" fill="#1a1626"/><g class="hot win" data-s="whoosh"><rect x="206" y="12" width="78" height="72" rx="6" fill="#0e1220" stroke="#3a3450" stroke-width="3"/><circle cx="224" cy="28" r="2" fill="#fff"/><circle cx="248" cy="22" r="1.5" fill="#fff"/><circle cx="262" cy="42" r="2" fill="#fff"/><circle cx="234" cy="50" r="1.5" fill="#fff"/><circle cx="256" cy="66" r="1.5" fill="#fff"/><circle cx="220" cy="64" r="1.3" fill="#fff"/></g><line class="meteor" x1="270" y1="18" x2="282" y2="26" stroke="#fdf6e3" stroke-width="1.8" stroke-linecap="round" opacity="0"/><g class="hot" data-s="click"><rect x="26" y="72" width="70" height="38" rx="4" fill="#6a5a3e"/><rect x="30" y="76" width="62" height="9" rx="3" fill="#8a7a54"/><path d="M40 110l-8 6h76l-8-6z" fill="#574a34"/></g><g class="hot" data-s="achv"><path d="M126 108l26-46 26 46z" fill="#4a4258"/><path d="M152 62v46" stroke="#6a6278" stroke-width="3"/><circle cx="152" cy="62" r="5" fill="#d9a441"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.35)"/></svg>',
 cellar:'<svg class="art" viewBox="0 0 320 130"><path d="M160 0 236 96 84 96z" fill="rgba(255,240,200,.06)"/><g class="hot" data-s="click" class="swing"><line x1="160" y1="0" x2="160" y2="30" stroke="#4a4438" stroke-width="3"/><circle cx="160" cy="40" r="9" fill="#f2e8d5" opacity=".92"/><circle cx="160" cy="40" r="17" fill="rgba(255,240,200,.14)"/></g><g class="hot" data-s="door" class="hot" data-s="door"><rect x="42" y="86" width="52" height="34" fill="#6a5236"/><rect x="42" y="100" width="52" height="4" fill="#4a3a26"/><rect x="60" y="86" width="6" height="34" fill="#4a3a26"/><rect x="98" y="94" width="44" height="26" fill="#755c3c"/><rect x="116" y="94" width="5" height="26" fill="#4a3a26"/></g><g><rect x="206" y="78" width="46" height="10" rx="3" fill="#4a4438"/><rect x="214" y="88" width="6" height="32" fill="#4a4438"/><rect x="238" y="88" width="6" height="32" fill="#4a4438"/><path d="M262 88c0-7 5-12 12-12s12 5 12 12z" fill="#5a5244"/><rect x="274" y="88" width="4" height="18" fill="#4a4438"/></g><g fill="rgba(255,255,255,.35)"></g><rect x="0" y="118" width="320" height="12" fill="rgba(0,0,0,.4)"/></svg>',
 };
@@ -1110,6 +1152,7 @@ const SHOP = [
 { id:"cat", icon:"cat", name:"猫咪室友", price:60, kind:"pet", desc:"会在客厅散步，戳戳会喵" },
 { id:"wand", icon:"wand", name:"逗猫棒", price:35, kind:"toy", desc:"拖在地上，猫追着跑" },
 { id:"laser", icon:"laser", name:"激光笔", price:45, kind:"toy", desc:"点一下地面，猫扑红点" },
+{ id:"yarn", icon:"yarn", name:"毛线球", price:40, kind:"toy", desc:"扔出去，猫扑着玩" },
 { id:"snow", icon:"snowflake", name:"鹅毛雪", price:40, kind:"weather", desc:"全屋下雪" },
 { id:"sakura", icon:"flower", name:"樱花雨", price:40, kind:"weather", desc:"全屋樱花" },
 { id:"rain", icon:"cloud-rain", name:"听雨", price:45, kind:"weather", desc:"全屋落雨" },
@@ -1928,6 +1971,7 @@ function renderRooms() {
 const box = document.getElementById("rooms");
 box.innerHTML = "";
 const rlist = ["客厅", "卧室", "书房", "厨房", "阳台"];
+rlist.push("健身房");
 if (S.renov["rv-loft"]) rlist.push("阁楼");
 for (const name of rlist) {
 const r = ROOMS[name];
@@ -2237,7 +2281,7 @@ window.addEventListener("pointerup", e => {
 }
 
 /* ---- 猫玩具：装备后与猫特殊互动 ---- */
-const TOY = { x: null, hop: 0, cd: 0 };
+const TOY = { x: null, hop: 0, cd: 0, vx: 0 };
 const toyGate = e => e.clientY > innerHeight - 170 && !e.target.closest(".hud,#rooms,.cellar,#cat,#zface,#room-overlay,#frame-wrap,#dlg,.modal-mask,#pack-wrap");
 addEventListener("pointermove", e => {
 const ok = S.equipped.toy === "wand" && S.owned.includes("cat") && toyGate(e);
@@ -2247,28 +2291,46 @@ TOY.x = ok ? e.clientX : null;
 if (ok) { w.style.left = e.clientX - 2 + "px"; w.style.top = e.clientY - 60 + "px"; }
 });
 addEventListener("click", e => {
-if (S.equipped.toy !== "laser" || !S.owned.includes("cat") || !toyGate(e)) return;
+const t = S.equipped.toy;
+if (t !== "laser" && t !== "yarn" || !S.owned.includes("cat") || !toyGate(e)) return;
+const el = document.getElementById(t === "laser" ? "ldot" : "yarnb");
+el.style.opacity = 1;
+el.classList.remove("pop");
+el.style.left = e.clientX - (t === "laser" ? 5 : 10) + "px";
+if (t === "laser") {
 TOY.hop = 0; TOY.x = e.clientX; AU.sfx("fwup");
-const d = document.getElementById("ldot");
-d.style.opacity = 1;
-d.style.left = e.clientX - 5 + "px";
-d.style.top = e.clientY - 5 + "px";
+el.style.top = e.clientY - 5 + "px";
+} else {
+TOY.x = e.clientX; TOY.vx = (Math.random() < 0.5 ? -1 : 1) * (2.4 + Math.random() * 1.3);
+el.style.top = innerHeight - 116 + "px";
+AU.sfx("click");
+}
 });
 TOY.tick = (st, max) => {
 if (TOY.cd) TOY.cd--;
 if (TOY.x == null) return;
 if (st.sleep) { st.sleep = 0; st.pause = 26; }
 st.idle = 0;
+if (TOY.vx) {
+TOY.x += TOY.vx; TOY.vx *= 0.992;
+if (TOY.x < 26 || TOY.x > max) { TOY.vx *= -1; TOY.x = Math.min(max, Math.max(26, TOY.x)); }
+if (Math.abs(TOY.vx) < 0.05) TOY.vx = 0;
+const b = document.getElementById("yarnb");
+b.style.left = TOY.x - 10 + "px";
+b.style.transform = "rotate(" + TOY.x * 9 + "deg)";
+}
 st.dir = TOY.x > st.x ? 1 : -1;
 if (!st.pounce) st.x = Math.min(max, Math.max(16, st.x + st.dir * (S.equipped.toy === "laser" ? 4.6 : 2.8)));
 if (Math.abs(TOY.x - st.x) > 15 || TOY.cd) return;
+let caught = false;
 if (S.equipped.toy === "wand") {
 TOY.cd = 80; st.pounce = 12; st.vx = st.dir * 2.6;
 AU.sfx("purr");
-} else {
+caught = true;
+} else if (S.equipped.toy === "laser") {
 const d = document.getElementById("ldot");
-TOY.hop++; TOY.cd = 30; AU.sfx("meow");
-if (TOY.hop < 3) {
+TOY.cd = 30; AU.sfx("meow");
+if (++TOY.hop < 3) {
 TOY.x = 46 + Math.random() * (max - 80);
 d.style.left = TOY.x - 5 + "px";
 d.style.top = innerHeight - 140 + Math.random() * 70 + "px";
@@ -2276,13 +2338,24 @@ d.style.top = innerHeight - 140 + Math.random() * 70 + "px";
 TOY.x = null;
 d.style.opacity = 0;
 FXC.hearts(st.x + 26, innerHeight - 104);
+caught = true;
 }
+} else if (!TOY.vx) {
+TOY.cd = 70; TOY.x = null; AU.sfx("chomp"); AU.sfx("meow");
+FXC.hearts(st.x + 26, innerHeight - 104);
+const b = document.getElementById("yarnb");
+b.classList.add("pop");
+setTimeout(() => { b.style.opacity = 0; b.classList.remove("pop"); }, 420);
+caught = true;
 }
-S.stats.pets++; checkQuests();
+if (caught) { S.stats.pets++; checkQuests(); }
 };
 TOY.reset = () => {
-TOY.x = null; TOY.cd = 0;
-for (const i of ["wand", "ldot"]) document.getElementById(i).style.opacity = 0;
+TOY.x = null; TOY.cd = 0; TOY.vx = 0;
+for (const i of ["wand", "ldot", "yarnb"]) {
+const el = document.getElementById(i);
+el.style.opacity = 0; el.classList.remove("pop");
+}
 };
 
 /* ---- 住户小Z：院子里散步，点击唠嗑 ---- */
