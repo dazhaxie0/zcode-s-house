@@ -336,6 +336,9 @@
         <div class="channels">
           <button class="chbtn" id="ch1" title="换到频道 1：贪吃蛇">1<small>贪吃蛇</small></button>
           <button class="chbtn" id="ch2" title="换到频道 2：2048">2<small>2048</small></button>
+          <button class="chbtn" id="ch3" title="换到频道 3：打砖块">3<small>砖块</small></button>
+          <button class="chbtn" id="ch4" title="换到频道 4：打地鼠">4<small>地鼠</small></button>
+          <button class="chbtn" id="ch5" title="换到频道 5：砍怪">5<small>砍怪</small></button>
           <button class="chbtn reset" id="resetBtn" title="重新开始当前频道的游戏">R<small>重来</small></button>
         </div>
 
@@ -367,8 +370,11 @@
       <p>
         按面板 <b>1 / 2</b> 换台（也可直接按键盘 <kbd>1</kbd><kbd>2</kbd>），换台时会有一点雪花，属正常现象。<br>
         <b>没有键盘？</b>用电视下方的<b>十字键</b>，或直接在屏幕上<b>滑动</b>。<br>
-        <b>频道 1 贪吃蛇</b>：方向键（或 WASD）控制，<kbd>空格</kbd> 暂停 / 继续，撞墙撞自己会结束。<br>
+        <b>频道 1 贪吃蛇</b>：先 <kbd>←</kbd><kbd>→</kbd> 挑难度（慢 / 中 / 快，越快越难），方向键出发，<kbd>空格</kbd> 暂停，撞墙撞自己会结束；最快档拿到 500 分是一枚藏在家里的奖杯。<br>
         <b>频道 2 · 2048</b>：方向键滑动合并，相同数字碰一起会变大，合出 2048 就赢啦。<br>
+        <b>频道 3 · 打砖块</b>：<kbd>←</kbd><kbd>→</kbd> 接球，<kbd>空格</kbd> 发球，三条命，砖清光就过关。<br>
+        <b>频道 4 · 打地鼠</b>：方向键挪锤子，<kbd>空格</kbd> 砸，三十秒内看你能敲几只。<br>
+        <b>频道 5 · 砍怪</b>：方向键走位，<kbd>空格</kbd> 朝面前砍一刀，怪物摸到会掉血，红心补命，撑得越久分越高。<br>
         <kbd>R</kbd> 或面板 <b>重来</b> 键：重新开始当前游戏；<kbd>M</kbd> 或音效旋钮：开关音效（默认安静）。<br>
         最高分记在电视肚子里（浏览器本地），下次打开还在。
       </p>
@@ -395,6 +401,10 @@
 var W = 480, H = 360;                 // 屏幕逻辑分辨率（4:3）
 var K_SNAKE = 'mengtv_snake_high';    // 存档键：贪吃蛇最高分
 var K_2048  = 'mengtv_2048_high';     // 存档键：2048 最高分
+var K_BRICK = 'mengtv_brick_high';    // 存档键：打砖块最高分
+var K_MOLE  = 'mengtv_mole_high';     // 存档键：打地鼠最高分
+var K_RPG   = 'mengtv_rpg_high';      // 存档键：砍怪最高分
+var K_S500  = 'mengtv_snake_hard500'; // 存档键：贪吃蛇最快档 500 分（家里的奖杯认它）
 var K_SOUND = 'mengtv_sound';         // 存档键：音效开关
 
 // localStorage 在个别环境（比如某些 file:// 安全设置）会抛异常，包一层稳一点
@@ -567,11 +577,364 @@ var Sfx = {
   bootUp: function () { this.tone(70, .7, 'sine', .15, 0, 240); this.tone(140, .7, 'sine', .07, .05, 480); }
 };
 
-/* ---------- 4. 电视状态机 ---------- */
+/* ---------- 6.5 打砖块 ---------- */
+var B = {
+  px: W / 2, pw: 64,              // 挡板位置与宽度
+  bx: 0, by: 0, vx: 0, vy: 0, br: 5,   // 球
+  bricks: [], cols: 10, rows: 5,
+  score: 0, high: 0, lives: 3,
+  running: false, over: false, win: false
+};
+function initBrick() {
+  B.px = W / 2; B.score = 0; B.lives = 3; B.over = false; B.win = false; B.running = false;
+  B.bricks = [];
+  for (var r = 0; r < B.rows; r++) for (var c = 0; c < B.cols; c++)
+    B.bricks.push({ c: c, r: r, alive: true });
+  resetBall();
+}
+function resetBall() {            // 球贴在挡板上，等空格发球
+  B.bx = B.px; B.by = H - 40;
+  B.vx = 0; B.vy = 0;
+}
+function brickDir(d) {
+  if (B.over) return;
+  B.px = Math.max(B.pw / 2 + 6, Math.min(W - B.pw / 2 - 6, B.px + d.x * 26));
+  if (!B.running) B.bx = B.px;
+}
+function brickSpace() {
+  if (B.over) { initBrick(); return; }
+  if (!B.running) {
+    B.running = true;
+    var ang = -Math.PI / 2 + (Math.random() * 0.8 - 0.4);   // 大致朝上，略偏
+    var sp = 240;
+    B.vx = Math.cos(ang) * sp; B.vy = Math.sin(ang) * sp;
+    Sfx.eat();
+  }
+}
+function stepBrick(dt) {
+  if (!B.running || B.over) return;
+  var nx = B.bx + B.vx * dt, ny = B.by + B.vy * dt;
+  if (nx < B.br || nx > W - B.br) { B.vx = -B.vx; nx = B.bx; Sfx.click(); }
+  if (ny < 34 + B.br) { B.vy = -B.vy; ny = B.by; Sfx.click(); }
+  // 挡板：只有下落时才判接球
+  if (B.vy > 0 && ny + B.br >= H - 26 && ny + B.br <= H - 14 &&
+      Math.abs(nx - B.px) <= B.pw / 2 + B.br) {
+    B.vy = -Math.abs(B.vy);
+    B.vx += (nx - B.px) * 3.2;                       // 打在挡板边上会甩出去
+    B.vx = Math.max(-320, Math.min(320, B.vx));
+    ny = H - 26 - B.br;
+    Sfx.eat();
+  }
+  // 砖块：格子碰撞，反弹纵为主
+  var bw = (W - 24) / B.cols, bh = 16;
+  var c = Math.floor((nx - 12) / bw), r = Math.floor((ny - 44) / bh);
+  if (r >= 0 && r < B.rows && c >= 0 && c < B.cols) {
+    var bk = B.bricks[r * B.cols + c];
+    if (bk && bk.alive) {
+      bk.alive = false;
+      B.vy = -B.vy;
+      B.score += 10;
+      Sfx.merge(4);
+      if (!B.bricks.some(function (x) { return x.alive; })) {
+        B.win = true; B.over = true; B.running = false;
+        if (B.score > B.high) { B.high = B.score; store.set(K_BRICK, B.high); }
+        Sfx.win();
+      }
+    }
+  }
+  // 落底：掉一条命
+  if (ny - B.br > H) {
+    B.lives--;
+    B.running = false;
+    Sfx.die();
+    if (B.lives <= 0) {
+      B.over = true;
+      if (B.score > B.high) { B.high = B.score; store.set(K_BRICK, B.high); }
+    } else resetBall();
+    return;
+  }
+  B.bx = nx; B.by = ny;
+  // 每敲 6 块砖，球提速一点
+  var left = B.bricks.filter(function (x) { return x.alive; }).length;
+  var sp2 = Math.hypot(B.vx, B.vy);
+  var want = 240 + (B.rows * B.cols - left) * 3;
+  if (sp2 > 0) { B.vx *= want / sp2; B.vy *= want / sp2; }
+}
+function drawBrick(now) {
+  ctx.fillStyle = '#241610'; ctx.fillRect(0, 0, W, H);
+  drawHudBar('得分 ' + B.score, '最高 ' + B.high + ' · 命 ' + B.lives, '频道 3 · 打砖块');
+  var bw = (W - 24) / B.cols;
+  for (var i = 0; i < B.bricks.length; i++) {
+    var bk = B.bricks[i];
+    if (!bk.alive) continue;
+    var hue = 14 + bk.r * 16;
+    ctx.fillStyle = 'hsl(' + hue + ',72%,' + (58 - bk.r * 5) + '%)';
+    rr(12 + bk.c * bw + 2, 44 + bk.r * 16 + 2, bw - 4, 12, 3);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#ffd98a';
+  rr(B.px - B.pw / 2, H - 26, B.pw, 9, 4); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(B.bx, B.by, B.br, 0, Math.PI * 2); ctx.fill();
+  if (!B.running && !B.over) overlay(B.lives === 3 ? '打砖块' : '还有 ' + B.lives + ' 条命', '←→ 移动 · 空格发球');
+  else if (B.over) overlay(B.win ? '砖清光啦！' : '游戏结束', '本局 ' + B.score + ' 分 · 最高 ' + B.high + ' · 空格再来');
+}
+
+/* ---------- 6.6 打地鼠 ---------- */
+var M = {
+  gx: 1, gy: 1,                   // 锤子光标（3×3）
+  hole: { c: 0, r: 0, t0: 0, up: 0 },   // 哪个洞、何时冒头、冒多久
+  score: 0, high: 0, timeLeft: 30, running: false,
+  lastT: 0, nextT0: 0, combo: 0
+};
+function initMole() {
+  M.gx = 1; M.gy = 1; M.score = 0; M.timeLeft = 30; M.running = false;
+  M.combo = 0; M.hole.up = 0; M.lastT = 0; M.nextT0 = 0;
+}
+function moleDir(d) {
+  if (!M.running) return;
+  M.gx = Math.max(0, Math.min(2, M.gx + d.x));
+  M.gy = Math.max(0, Math.min(2, M.gy + d.y));
+  Sfx.click();
+}
+function moleSpace() {
+  if (!M.running) { M.running = true; M.lastT = performance.now(); M.nextT0 = 0; return; }
+  // 砸：光标对准冒头洞才算中
+  if (M.hole.up > 0 && M.gx === M.hole.c && M.gy === M.hole.r) {
+    var fast = M.hole.up - (performance.now() - M.hole.t0) < 320;
+    M.combo++;
+    M.score += fast ? 20 : 10;
+    M.hole.up = 0;
+    M.nextT0 = performance.now() + 120;
+    Sfx.eat();
+  } else {
+    M.combo = 0;
+    M.score = Math.max(0, M.score - 2);
+    Sfx.lose();
+  }
+}
+function stepMole(now) {
+  if (!M.running) return;
+  var dt = (now - M.lastT) / 1000;
+  M.lastT = now;
+  M.timeLeft -= dt;
+  if (M.timeLeft <= 0) {
+    M.timeLeft = 0; M.running = false;
+    if (M.score > M.high) { M.high = M.score; store.set(K_MOLE, M.high); }
+    Sfx.win();
+    return;
+  }
+  // 洞的节奏：越到后面冒头越勤、露头越短
+  var el = 30 - M.timeLeft;
+  if (M.hole.up > 0) {
+    if (now - M.hole.t0 > M.hole.up) { M.hole.up = 0; M.combo = 0; M.nextT0 = now + 260; }
+  } else if (now >= M.nextT0) {
+    var stay = Math.max(420, 980 - el * 18);
+    M.hole.c = Math.floor(Math.random() * 3);
+    M.hole.r = Math.floor(Math.random() * 3);
+    M.hole.t0 = now; M.hole.up = stay;
+  }
+}
+function drawMole(now) {
+  ctx.fillStyle = '#241610'; ctx.fillRect(0, 0, W, H);
+  drawHudBar('得分 ' + M.score, M.running ? '剩 ' + Math.ceil(M.timeLeft) + ' 秒' : '最高 ' + M.high, '频道 4 · 打地鼠');
+  var gw = 108, gap = 22, ox = (W - gw * 3 - gap * 2) / 2, oy = 58;
+  for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) {
+    var x = ox + c * (gw + gap), y = oy + r * (gw + gap);
+    ctx.fillStyle = '#171009';
+    ctx.beginPath(); ctx.ellipse(x + gw / 2, y + gw - 18, gw / 2 - 8, 16, 0, 0, Math.PI * 2); ctx.fill();
+    // 冒头的地鼠
+    if (M.hole.up > 0 && M.hole.c === c && M.hole.r === r) {
+      var p = Math.min(1, (now - M.hole.t0) / 120);
+      var dy = (1 - p) * 40;
+      ctx.fillStyle = '#a97c50';
+      rr(x + 24, y + 18 + dy, gw - 48, gw - 44, 14); ctx.fill();
+      ctx.fillStyle = '#5d3f24';
+      ctx.beginPath(); ctx.arc(x + gw / 2 - 13, y + 40 + dy, 5, 0, Math.PI * 2);
+      ctx.arc(x + gw / 2 + 13, y + 40 + dy, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2a1508';
+      ctx.beginPath(); ctx.arc(x + gw / 2 - 11, y + 32 + dy, 3, 0, Math.PI * 2);
+      ctx.arc(x + gw / 2 + 11, y + 32 + dy, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e8a0a0';
+      ctx.beginPath(); ctx.arc(x + gw / 2, y + 42 + dy, 6, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  // 锤子光标
+  var hx = ox + M.gx * (gw + gap) + gw / 2, hy = oy + M.gy * (gw + gap) + gw / 2;
+  ctx.strokeStyle = M.combo >= 3 ? '#ffd98a' : '#e8b77a';
+  ctx.lineWidth = 3;
+  rr(hx - 46, hy - 46, 92, 92, 12); ctx.stroke();
+  ctx.lineWidth = 2;                                       // 中心准星
+  ctx.beginPath();
+  ctx.moveTo(hx - 10, hy); ctx.lineTo(hx + 10, hy);
+  ctx.moveTo(hx, hy - 10); ctx.lineTo(hx, hy + 10);
+  ctx.stroke();
+  if (M.combo >= 3) { ctx.font = 'bold 13px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#ffd98a'; ctx.fillText('连击 ×' + M.combo, hx, hy + 24); }
+  if (!M.running) overlay(M.score > 0 ? '时间到！' : '打地鼠', M.score > 0
+    ? '本局 ' + M.score + ' 分 · 最高 ' + M.high + ' · 空格再来'
+    : '方向键挪锤子 · 空格砸 · 快砸双倍分');
+}
+
+/* ---------- 6.7 砍怪（小 RPG） ---------- */
+var RC = 14, RR = 10;                     // 竞技场网格
+var P = {
+  x: 6, y: 8, dir: { x: 0, y: -1 },       // 勇士：位置与朝向
+  hp: 5, maxHp: 5, inv: 0,                // 血量 + 受击无敌帧
+  atkCd: 0, walkCd: 0,
+  mons: [], score: 0, high: 0,
+  running: false, over: false,
+  wave: 1, spawnT: 0, lastT: 0, shakeT: 0
+};
+function initRpg() {
+  P.x = Math.floor(RC / 2); P.y = RR - 2; P.dir = { x: 0, y: -1 };
+  P.hp = 5; P.maxHp = 5; P.inv = 0; P.atkCd = 0; P.walkCd = 0;
+  P.mons = []; P.score = 0; P.over = false; P.running = false;
+  P.wave = 1; P.spawnT = 0; P.lastT = 0; P.shakeT = 0;
+}
+function monType(wave) {                  // 波次越高怪越凶
+  var roll = Math.random();
+  if (wave >= 4 && roll < 0.25) return { hp: 3, sp: 1500, dmg: 2, col: '#b06ad4', pts: 50 };   // 大紫怪
+  if (wave >= 2 && roll < 0.55) return { hp: 2, sp: 900, dmg: 1, col: '#d4773f', pts: 30 };   // 橙狼
+  return { hp: 1, sp: 700, dmg: 1, col: '#8fae4a', pts: 15 };                                  // 绿史莱姆
+}
+function spawnMon() {
+  var side = Math.floor(Math.random() * 4);
+  var x = side === 0 ? 0 : side === 1 ? RC - 1 : Math.floor(Math.random() * RC);
+  var y = side === 2 ? 0 : side === 3 ? RR - 1 : Math.floor(Math.random() * RR);
+  if (Math.abs(x - P.x) + Math.abs(y - P.y) < 3) return;   // 别贴脸刷新
+  var t = monType(P.wave);
+  P.mons.push({ x: x, y: y, hp: t.hp, sp: t.sp, dmg: t.dmg, col: t.col, pts: t.pts, t0: 0 });
+}
+function rpgDir(d) {
+  if (P.over) return;
+  if (!P.running) return;                 // 站在待机画面：空格开赴
+  P.dir = d;                              // 先转身
+  if (P.walkCd > 0) return;
+  var nx = P.x + d.x, ny = P.y + d.y;
+  if (nx < 0 || nx >= RC || ny < 0 || ny >= RR) return;
+  if (P.mons.some(function (m) { return m.x === nx && m.y === ny; })) return;   // 怪占着就不走
+  P.x = nx; P.y = ny;
+  P.walkCd = 130;
+  Sfx.click();
+}
+function rpgSpace() {
+  if (P.over) { initRpg(); return; }
+  if (!P.running) { P.running = true; P.lastT = performance.now(); return; }
+  if (P.atkCd > 0) return;
+  P.atkCd = 220;
+  var tx = P.x + P.dir.x, ty = P.y + P.dir.y;
+  var hit = null;
+  for (var i = 0; i < P.mons.length; i++)
+    if (P.mons[i].x === tx && P.mons[i].y === ty) { hit = P.mons[i]; break; }
+  if (hit) {
+    hit.hp--;
+    if (hit.hp <= 0) {
+      P.score += hit.pts;
+      P.mons.splice(P.mons.indexOf(hit), 1);
+      Sfx.eat();
+      if (Math.random() < 0.18 && P.hp < P.maxHp) {       // 掉红心
+        P.hp++;
+        Sfx.win();
+      }
+    } else Sfx.merge(8);
+  } else Sfx.click();
+}
+function stepRpg(now) {
+  if (!P.running || P.over) return;
+  var dt = now - P.lastT;
+  P.lastT = now;
+  P.atkCd = Math.max(0, P.atkCd - dt);
+  P.walkCd = Math.max(0, P.walkCd - dt);
+  P.inv = Math.max(0, P.inv - dt);
+  // 出怪节奏：波次随分数涨
+  P.wave = 1 + Math.floor(P.score / 150);
+  P.spawnT -= dt;
+  if (P.spawnT <= 0 && P.mons.length < 3 + P.wave) {
+    spawnMon();
+    P.spawnT = Math.max(700, 2400 - P.wave * 180);
+  }
+  // 怪物各自按自己的节奏朝勇士挪
+  for (var i = 0; i < P.mons.length; i++) {
+    var m = P.mons[i];
+    m.t0 -= dt;
+    if (m.t0 <= 0) {
+      m.t0 = m.sp;
+      var dx = P.x - m.x, dy = P.y - m.y;
+      var stepX = Math.abs(dx) > Math.abs(dy);
+      var nx = m.x + (stepX ? Math.sign(dx) : 0);
+      var ny = m.y + (stepX ? 0 : Math.sign(dy));
+      if (nx === P.x && ny === P.y) {
+        if (P.inv <= 0) {                                  // 咬到了
+          P.hp -= m.dmg;
+          P.inv = 900;
+          P.shakeT = now;
+          Sfx.die();
+          if (P.hp <= 0) {
+            P.over = true; P.running = false;
+            if (P.score > P.high) { P.high = P.score; store.set(K_RPG, P.high); }
+          }
+        }
+      } else if (nx >= 0 && nx < RC && ny >= 0 && ny < RR &&
+                 !P.mons.some(function (o) { return o !== m && o.x === nx && o.y === ny; })) {
+        m.x = nx; m.y = ny;
+      }
+    }
+  }
+}
+function drawRpg(now) {
+  var ox2 = 0, oy2 = 0;
+  if (now - P.shakeT < 300) { var mm = (300 - (now - P.shakeT)) / 300 * 10; ox2 = (Math.random() * 2 - 1) * mm; oy2 = (Math.random() * 2 - 1) * mm; }
+  ctx.save(); ctx.translate(ox2, oy2);
+  ctx.fillStyle = '#241610'; ctx.fillRect(-12, -12, W + 24, H + 24);
+  drawHudBar('得分 ' + P.score, '波次 ' + P.wave, '频道 5 · 砍怪');
+  var cw = Math.floor((W - 16) / RC), ch = Math.floor((H - 44 - 10) / RR);
+  var bx2 = (W - cw * RC) / 2, by2 = 40;
+  ctx.strokeStyle = 'rgba(255,235,200,.05)'; ctx.lineWidth = 1;
+  for (var c = 0; c <= RC; c++) { ctx.beginPath(); ctx.moveTo(bx2 + c * cw + .5, by2); ctx.lineTo(bx2 + c * cw + .5, by2 + RR * ch); ctx.stroke(); }
+  for (var r = 0; r <= RR; r++) { ctx.beginPath(); ctx.moveTo(bx2, by2 + r * ch + .5); ctx.lineTo(bx2 + RC * cw, by2 + r * ch + .5); ctx.stroke(); }
+  // 挥刀范围提示
+  if (P.running && P.atkCd > 140) {
+    ctx.fillStyle = 'rgba(255,217,138,.22)';
+    ctx.fillRect(bx2 + (P.x + P.dir.x) * cw, by2 + (P.y + P.dir.y) * ch, cw, ch);
+  }
+  // 怪物：圆身 + 白眼
+  for (var k = 0; k < P.mons.length; k++) {
+    var mo = P.mons[k];
+    var mx = bx2 + mo.x * cw + cw / 2, my = by2 + mo.y * ch + ch / 2;
+    ctx.fillStyle = mo.col;
+    ctx.beginPath(); ctx.arc(mx, my, Math.min(cw, ch) / 2 - 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(mx - 5, my - 3, 2.5, 0, Math.PI * 2); ctx.arc(mx + 5, my - 3, 2.5, 0, Math.PI * 2); ctx.fill();
+    if (mo.hp > 1) { ctx.fillStyle = '#2a1508'; ctx.beginPath(); ctx.arc(mx - 5, my - 3, 1.2, 0, Math.PI * 2); ctx.arc(mx + 5, my - 3, 1.2, 0, Math.PI * 2); ctx.fill(); }
+  }
+  // 勇士：无敌帧闪烁
+  if (!(P.inv > 0 && Math.floor(now / 90) % 2 === 0)) {
+    var px2 = bx2 + P.x * cw + cw / 2, py2 = by2 + P.y * ch + ch / 2;
+    ctx.fillStyle = '#ffd98a';
+    rr(px2 - 9, py2 - 12, 18, 20, 4); ctx.fill();
+    ctx.fillStyle = '#e8b77a';
+    ctx.beginPath(); ctx.arc(px2, py2 - 16, 7, 0, Math.PI * 2); ctx.fill();
+    // 手里的小刀指向朝向
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(px2 + P.dir.x * 6, py2 + P.dir.y * 6);
+    ctx.lineTo(px2 + P.dir.x * 16, py2 + P.dir.y * 16); ctx.stroke();
+  }
+  ctx.restore();
+  // 血量（像素爱心，一命一颗）
+  for (var h = 0; h < P.maxHp; h++)
+    drawPixelHeart(12 + h * 24, H - 22, 2.4, h < P.hp ? '#e63946' : 'rgba(230,57,70,.22)');
+  if (!P.running && !P.over) overlay('砍怪', '方向键走位转身 · 空格朝面前砍 · 怪摸到会掉血');
+  else if (P.over) overlay('勇士倒下了', '本局 ' + P.score + ' 分 · 波次 ' + P.wave + ' · 最高 ' + P.high + ' · 空格复活');
+}
+
+
+/* ---------- 7. 电视状态机 ---------- */
 var cv = document.getElementById('crt');
 var ctx = cv.getContext('2d');
 
-var state = 'boot';     // boot（开机动画）| snow（换台雪花）| snake | g2048
+var state = 'boot';     // boot（开机动画）| snow（换台雪花）| snake | g2048 | brick | mole | rpg
+var CH_STATE = { 1: 'snake', 2: 'g2048', 3: 'brick', 4: 'mole', 5: 'rpg' };
+var CH_NAME  = { 1: '贪吃蛇', 2: '2048', 3: '打砖块', 4: '打地鼠', 5: '砍怪' };
 var channel = 1;        // 当前频道号
 var bootT0 = 0;         // 开机动画开始时刻
 var snowT0 = 0;         // 雪花开始时刻
@@ -592,8 +955,14 @@ var S = {
   snake: [], dir: { x: 1, y: 0 }, queue: [],
   food: { x: 0, y: 0 }, score: 0, high: 0,
   running: false, paused: false, dead: false,
-  acc: 0, interval: 160, lastStep: 0, shakeT: 0
+  acc: 0, interval: 160, lastStep: 0, shakeT: 0,
+  level: 1, s500: false          // 难度 0慢 1中 2快；最快档 500 分达成过
 };
+var SNAKE_LVL = [
+  { name: '慢速', base: 180, gain: 2, floor: 90 },
+  { name: '中速', base: 130, gain: 3, floor: 75 },
+  { name: '快速', base: 85,  gain: 3, floor: 55 }
+];
 
 function initSnake(keepScore) {
   S.snake = [{ x: 6, y: 8 }, { x: 5, y: 8 }, { x: 4, y: 8 }]; // 开局一小条，朝右
@@ -601,7 +970,7 @@ function initSnake(keepScore) {
   S.queue = [];
   S.score = 0;
   S.running = false; S.paused = false; S.dead = false;
-  S.acc = 0; S.interval = 160;
+  S.acc = 0; S.interval = SNAKE_LVL[S.level].base;
   if (!keepScore) { /* 最高分常驻，不清 */ }
   spawnFood();
 }
@@ -642,8 +1011,14 @@ function stepSnake() {
   S.snake.unshift(head);
   if (eating) {
     S.score += 10;
-    S.interval = Math.max(70, S.interval - 3); // 每吃一颗快 3ms，最快 70ms 一步
+    var lv = SNAKE_LVL[S.level];
+    S.interval = Math.max(lv.floor, S.interval - lv.gain); // 每吃一颗快一点，各难度有自己的下限
     Sfx.eat();
+    if (S.level === 2 && S.score >= 500 && !S.s500) {  // 最快档 500 分：家里的奖杯认这一刻
+      S.s500 = true;
+      store.set(K_S500, '1');
+      Sfx.win();
+    }
     if (!spawnFood()) { // 整屏吃满：通关！
       S.dead = true;
       if (S.score > S.high) { S.high = S.score; store.set(K_SNAKE, S.high); }
@@ -794,7 +1169,7 @@ function drawSnake(now) {
   for (var c = 0; c <= COLS; c++) { ctx.beginPath(); ctx.moveTo(c * CELL + .5, TOP); ctx.lineTo(c * CELL + .5, TOP + ROWS * CELL); ctx.stroke(); }
   for (var r = 0; r <= ROWS; r++) { ctx.beginPath(); ctx.moveTo(0, TOP + r * CELL + .5); ctx.lineTo(W, TOP + r * CELL + .5); ctx.stroke(); }
 
-  drawHudBar('得分 ' + S.score, '最高 ' + S.high, '频道 1 · 贪吃蛇');
+  drawHudBar('得分 ' + S.score, '最高 ' + S.high, '频道 1 · 贪吃蛇 · ' + SNAKE_LVL[S.level].name);
   drawApple(S.food.x * CELL, TOP + S.food.y * CELL, now);
 
   // 蛇身：头最亮（橙），往尾巴越来越暗（红棕）
@@ -826,9 +1201,15 @@ function drawSnake(now) {
   ctx.restore();
 
   // 各种状态提示
-  if (!S.running && !S.dead) overlay('贪吃蛇', '按 方向键 出发 · 空格 暂停 · 撞墙撞自己会结束');
+  if (!S.running && !S.dead) {
+    overlay('贪吃蛇 · ' + SNAKE_LVL[S.level].name,
+      '←→ 挑难度 · 空格或方向键出发 · 空格暂停' +
+      (S.level === 2 ? ' · 本档 500 分有奖杯' : ''));
+  }
   else if (S.paused && !S.dead) overlay('暂停中', '空格 继续 · R 重来');
-  else if (S.dead) overlay(S.score >= S.high && S.score > 0 ? '新纪录！' : '游戏结束', '本局 ' + S.score + ' 分 · 最高 ' + S.high + ' · 空格 / R 再来一局');
+  else if (S.dead) overlay(S.score >= S.high && S.score > 0 ? '新纪录！' : '游戏结束',
+    '本局 ' + S.score + ' 分 · 最高 ' + S.high + ' · 空格 / R 再来一局' +
+    (S.s500 ? ' · 快速档 500 分达成' : ''));
 }
 
 /** 2048 数字块的配色（数字越大越红润，2048 金光闪闪） */
@@ -968,16 +1349,19 @@ function drawSnow(now) {
     ctx.fillStyle = '#fff3d6';
     ctx.fillText('— 频道 ' + channel + ' —', W / 2, H / 2);
     ctx.font = 'bold 14px ' + FONT;
-    ctx.fillText(channel === 1 ? '贪吃蛇' : '2048', W / 2, H / 2 + 34);
+    ctx.fillText(CH_NAME[channel] || '', W / 2, H / 2 + 34);
   }
   if (el >= SNOW_MS) {                // 雪花放完，正式切过去
-    state = channel === 1 ? 'snake' : 'g2048';
+    state = CH_STATE[channel] || 'snake';
     if (state === 'snake') S.lastStep = performance.now(); // 蛇的计时从现在起算，防止恢复时猛跳一步
   }
 }
 
 /* ---------- 主循环 ---------- */
+var loopLast = 0;
 function loop(t) {
+  var dt = Math.min(0.05, loopLast ? (t - loopLast) / 1000 : 0.016);
+  loopLast = t;
   if (state === 'boot') drawBoot(t);
   else if (state === 'snow') drawSnow(t);
   else if (state === 'snake') {
@@ -987,6 +1371,9 @@ function loop(t) {
     drawSnake(t);
   }
   else if (state === 'g2048') draw2048(t);
+  else if (state === 'brick') { stepBrick(dt); drawBrick(t); }
+  else if (state === 'mole') { stepMole(t); drawMole(t); }
+  else if (state === 'rpg') { stepRpg(t); drawRpg(t); }
   requestAnimationFrame(loop);
 }
 
@@ -1009,22 +1396,26 @@ function switchChannel(ch, force) {
 /** 重开当前频道的游戏（面板 R 键 / 键盘 R） */
 function resetCurrent() {
   Sfx.click();
-  if (state === 'snake' || (state === 'snow' && channel === 1)) initSnake();
-  else if (state === 'g2048' || (state === 'snow' && channel === 2)) init2048();
+  var st = state === 'snow' ? (CH_STATE[channel] || 'snake') : state;
+  if (st === 'snake') initSnake();
+  else if (st === 'g2048') init2048();
+  else if (st === 'brick') initBrick();
+  else if (st === 'mole') initMole();
+  else if (st === 'rpg') initRpg();
 }
 
 /** 电源：从开机动画重新来一遍 */
 function reboot() {
   state = 'boot';
   bootT0 = performance.now();
-  initSnake(); init2048();            // 两个游戏都回到初始状态
+  initSnake(); init2048(); initBrick(); initMole(); initRpg();   // 全部游戏回到初始状态
   Sfx.bootUp();
 }
 
 /** 更新面板上频道按钮的高亮和频道旋钮的角度 */
 function updateChannelUI() {
-  document.getElementById('ch1').classList.toggle('active', channel === 1);
-  document.getElementById('ch2').classList.toggle('active', channel === 2);
+  for (var ch = 1; ch <= 5; ch++)
+    document.getElementById('ch' + ch).classList.toggle('active', channel === ch);
 }
 
 /** 音效开关（旋钮 / M 键） */
@@ -1054,8 +1445,7 @@ window.addEventListener('keydown', function (e) {
   if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'ArrowLeft' || k === 'ArrowRight' || k === ' ') e.preventDefault();
 
   if (k === 'm' || k === 'M') { toggleSound(); return; }
-  if (k === '1') { switchChannel(1); return; }
-  if (k === '2') { switchChannel(2); return; }
+  if (k >= '1' && k <= '5') { switchChannel(+k); return; }
   if (k === 'r' || k === 'R') { resetCurrent(); return; }
 
   if (k === ' ') {  // 空格：贪吃蛇暂停/继续；死掉时直接重开
@@ -1069,30 +1459,47 @@ window.addEventListener('keydown', function (e) {
 
 /* 方向 / 空格的统一入口：键盘、屏上十字键、屏幕滑动都走这里 */
 function inputDir(d) {
-  if (state !== 'snake' && state !== 'g2048') return;
   if (state === 'snake') {
     if (S.dead) return;
+    if (!S.running && S.score === 0 && d.x !== 0) {   // 开局前：左右挑难度
+      S.level = (S.level + (d.x > 0 ? 1 : 2)) % 3;
+      S.interval = SNAKE_LVL[S.level].base;
+      Sfx.click();
+      return;
+    }
     if (!S.running) {              // 第一次按方向：出发！
       S.running = true;
       S.lastStep = performance.now();
       S.acc = 0;
     }
     if (S.queue.length < 2) S.queue.push(d);  // 队列最多存两步，转弯才跟手
-  } else {
+  } else if (state === 'g2048') {
     tryMove(DIR_INDEX[d.x + ',' + d.y]);
+  } else if (state === 'brick') {
+    brickDir(d);
+  } else if (state === 'mole') {
+    moleDir(d);
+  } else if (state === 'rpg') {
+    rpgDir(d);
   }
 }
 
 function inputSpace() {
-  if (state !== 'snake') return;
-  if (S.dead) { initSnake(); return; }
-  if (!S.running) { S.running = true; S.lastStep = performance.now(); S.acc = 0; return; }
-  S.paused = !S.paused;
+  if (state === 'snake') {
+    if (S.dead) { initSnake(); return; }
+    if (!S.running) { S.running = true; S.lastStep = performance.now(); S.acc = 0; return; }
+    S.paused = !S.paused;
+  } else if (state === 'brick') brickSpace();
+  else if (state === 'mole') moleSpace();
+  else if (state === 'rpg') rpgSpace();
 }
 
 /* ---------- 面板按钮 ---------- */
 document.getElementById('ch1').addEventListener('click', function () { switchChannel(1); });
 document.getElementById('ch2').addEventListener('click', function () { switchChannel(2); });
+document.getElementById('ch3').addEventListener('click', function () { switchChannel(3); });
+document.getElementById('ch4').addEventListener('click', function () { switchChannel(4); });
+document.getElementById('ch5').addEventListener('click', function () { switchChannel(5); });
 document.getElementById('resetBtn').addEventListener('click', resetCurrent);
 document.getElementById('powerKnob').addEventListener('click', reboot);
 document.getElementById('soundKnob').addEventListener('click', toggleSound);
@@ -1131,9 +1538,16 @@ window.addEventListener('pointerup', function (e) {
 /* ---------- 通电！ ---------- */
 S.high = parseInt(store.get(K_SNAKE, '0'), 10) || 0;
 G.high = parseInt(store.get(K_2048, '0'), 10) || 0;
+B.high = parseInt(store.get(K_BRICK, '0'), 10) || 0;
+M.high = parseInt(store.get(K_MOLE, '0'), 10) || 0;
+P.high = parseInt(store.get(K_RPG, '0'), 10) || 0;
+S.s500 = store.get(K_S500, '0') === '1';
 Sfx.on = store.get(K_SOUND, '0') === '1';
 initSnake();
 init2048();
+initBrick();
+initMole();
+initRpg();
 updateChannelUI();
 updateSoundUI();
 bootT0 = performance.now();

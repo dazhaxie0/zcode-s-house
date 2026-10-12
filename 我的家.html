@@ -1003,6 +1003,7 @@ const ACHV = [
 { id:"a-pets",  t:"bronze", name:"猫奴",     desc:"撸猫 10 下" },
 { id:"a-feed",  t:"bronze", name:"开饭了",   desc:"喂猫 3 回" },
 { id:"a-coaster",t:"bronze",name:"过山车",   desc:"把屋顶小屋甩出速度" },
+{ id:"a-snake500",t:"gold", name:"快手蛇王", desc:"贪吃蛇最快档拿到 500 分" },
 { id:"a-week",  t:"silver", name:"常客",     desc:"连续入住 3 天" },
 { id:"a-plat",  t:"plat",   name:"这个家",   desc:"集齐其余全部奖杯" },
 ];
@@ -1019,6 +1020,7 @@ const achvCond = {
 "a-pets":  () => (S.stats.pets || 0) >= 10,
 "a-feed":  () => (S.stats.feeds || 0) >= 3,
 "a-coaster":() => (S.stats.coaster || 0) >= 1,
+"a-snake500":() => { try { return localStorage.getItem("mengtv_snake_hard500") === "1"; } catch (e) { return false; } },
 "a-week":  () => (S.stats.streak || 0) >= 3,
 };
 const SHOP = [
@@ -1895,6 +1897,7 @@ irisOpen2(cx, cy, () => { roomFrame.src = link; frameWrap.classList.add("on"); }
 function closeRoomPage() {
 AU.sfx("door");
 irisOpen2(innerWidth / 2, innerHeight / 2, () => { frameWrap.classList.remove("on"); roomFrame.src = "about:blank"; });
+checkQuests();   // 从子页回家：电视里的战果（奖杯等）当场验一验
 }
 document.getElementById("frame-back").addEventListener("click", closeRoomPage);
 window.addEventListener("message", e => { if (e.data === "zhouse-back") closeRoomPage(); });
