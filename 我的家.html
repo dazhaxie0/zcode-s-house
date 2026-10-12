@@ -1859,15 +1859,10 @@ AU.sfx("click");
 FXC.burst(ev.clientX, ev.clientY);
 track("item", name + "/" + it.name);
 if (it.ledger) { showLedger(); return; }
-const linkBtn = it.link
-? '<div style="text-align:center;margin:8px 0 2px"><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:11px 34px;font-size:14px;letter-spacing:4px" href="' + it.link + '">进入 ' + ic("chevron-right") + "</a></div>"
-: "";
-openModal(ic(it.icon) + it.name, RARE_NAME[it.rare], linkBtn);
-const ent = document.querySelector("#m-body a.btn");
-if (ent && it.link) ent.addEventListener("click", ev => {
-if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;
-ev.preventDefault(); closeModal(); openRoomPage(it.link, ev.clientX, ev.clientY);
-});
+if (it.link) {
+if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) { window.open(it.link, "_blank", "noopener"); return; }
+openRoomPage(it.link, ev.clientX, ev.clientY);
+}
 });
 slot.addEventListener("mouseenter", () => AU.sfx("tick"));
 });
