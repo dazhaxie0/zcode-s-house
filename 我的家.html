@@ -1409,7 +1409,7 @@ const box = document.getElementById("toasts");
 const icons = { quest: "list-todo", cg: "image", coin: "sparkles", info: "house", meow: "cat" };
 const el = document.createElement("div");
 el.className = "toast";
-el.innerHTML = ic(icons[kind] || "house") + "<div><div class=\"tt\">" + title + "</div><div class=\"tm\">" + msg + "</div></div>";
+el.innerHTML = ic(icons[kind] || kind) + "<div><div class=\"tt\">" + title + "</div><div class=\"tm\">" + msg + "</div></div>";
 box.appendChild(el);
 setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 320); }, 3400);
 }
@@ -1862,7 +1862,10 @@ if (it.ledger) { showLedger(); return; }
 if (it.link) {
 if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) { window.open(it.link, "_blank", "noopener"); return; }
 openRoomPage(it.link, ev.clientX, ev.clientY);
+return;
 }
+const note = (it.note || "").replace(/\s*·\s*[^·]*[\/\\][^·]*\.(md|py|html|json|svg)\s*$/, "");
+if (note) toast(it.icon, it.name, note);
 });
 slot.addEventListener("mouseenter", () => AU.sfx("tick"));
 });
