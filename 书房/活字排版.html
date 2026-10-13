@@ -32,6 +32,8 @@ header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
 }
 .slot.filled{background:rgba(217,164,65,.13);box-shadow:inset 0 0 0 1.5px rgba(217,164,65,.5)}
 .slot .ch{font-size:30px;color:#f5ead2;text-shadow:0 2px 3px rgba(0,0,0,.6);animation:settle .3s cubic-bezier(.2,1.6,.4,1)}
+.slot .ghost{font-size:30px;color:rgba(245,234,210,.28);text-shadow:none}
+.slot.next .ghost{color:rgba(217,164,65,.62)}
 .slot.next{box-shadow:inset 0 0 0 1.5px rgba(217,164,65,.75),0 0 14px rgba(217,164,65,.25)}
 @keyframes settle{0%{transform:scale(1.7);opacity:0}100%{transform:scale(1);opacity:1}}
 #print{
@@ -188,19 +190,19 @@ function sEnd(){ var c = AC(); if (!c) return; var t = c.currentTime;
 
 function shuffle(a){ for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 function pad(chars){
-	var want = Math.min(2 + (verseNo >> 1), 4), pool = [];
+	var want = 10 - chars.length, pool = [];
 	var used = {}; chars.forEach(function(ch){ used[ch] = 1; });
 	var base = shuffle(POOL.split("").filter(function(ch){ return !used[ch]; }));
 	for (var i = 0; i < want; i++) pool.push(base[i]);
 	return shuffle(chars.concat(pool));
 }
-function verseHTML(v){ return v.split("").join("<i></i>"); }
+function verseHTML(v){ return v.split("").join(" "); }
 
 function newVerse(){
 	curVerse = VERSES[verseNo % VERSES.length];
 	need = curVerse.length; si = 0;
 	var slots = "";
-	for (var i = 0; i < need; i++) slots += '<div class="slot" data-i="' + i + '"></div>';
+	for (var i = 0; i < need; i++) slots += '<div class="slot" data-i="' + i + '"><span class="ghost">' + curVerse[i] + "</span></div>";
 	$("slots").innerHTML = slots;
 	markNext();
 	var chars = pad(curVerse.split(""));
@@ -296,10 +298,10 @@ function start(){
 	tick();
 }
 function gradeOf(s){
-	if (s >= 3400) return ["甲上", "手快过眼，版版见方。"];
-	if (s >= 2400) return ["甲", "行云流水，墨都来不及干。"];
-	if (s >= 1500) return ["乙", "稳稳当当，字字有着落。"];
-	if (s >= 700) return ["丙", "字盘认了大半，版槽还饿着。"];
+	if (s >= 5200) return ["甲上", "手快过眼，版版见方。"];
+	if (s >= 3600) return ["甲", "行云流水，墨都来不及干。"];
+	if (s >= 2100) return ["乙", "稳稳当当，字字有着落。"];
+	if (s >= 900) return ["丙", "字盘认了大半，版槽还饿着。"];
 	return ["丁", "字模烫手，先认认门。"];
 }
 function finish(){
@@ -321,6 +323,11 @@ function finish(){
 	sEnd();
 	$("btn-re").onclick = start;
 }
+$("overlay").addEventListener("click", function(e){
+	var a = e.target.closest ? e.target.closest(".back") : null;
+	if (!a) return;
+	try { if (window.parent && window.parent !== window){ e.preventDefault(); parent.postMessage("zhouse-back", "*"); } } catch (err) {}
+});
 $("tray").addEventListener("pointerdown", function(e){
 	var t = e.target.closest ? e.target.closest(".tile") : null;
 	if (t){ e.preventDefault(); pick(t); }
@@ -341,12 +348,9 @@ document.addEventListener("keydown", function(e){
 		'<div class="sub">书 房 · 拾 字 印 句</div>' +
 		"<p>字盘里的字模乱了序。看清版槽上要排的那句，<b>按句序</b>把字一个个取回来——取对落槽，取错要烧掉三秒。排满一句，滚墨印出一版。<br>键盘按 <b>数字键</b> 对应字位，手机直接点字模。六十秒，看能印几版。</p>" +
 		(best ? '<div class="stat"><span>此间最好</span><b>' + best + "</b></div>" : "") +
-		'<button class="go" id="btn-go">开 印</button>' +
-		'<div><a class="back" href="../我的家.html" id="bk">回小家</a></div>';
+	'<button class="go" id="btn-go">开 印</button>' +
+	'<div><a class="back" href="../我的家.html">回小家</a></div>';
 	$("btn-go").onclick = start;
-	[$("bk")].forEach(function(a){ a.addEventListener("click", function(e){
-		try { if (window.parent && window.parent !== window){ e.preventDefault(); parent.postMessage("zhouse-back", "*"); } } catch (err) {}
-	}); });
 })();
 window.addEventListener("message", function(e){
 	if (e.data === "zhouse-replay") start();
