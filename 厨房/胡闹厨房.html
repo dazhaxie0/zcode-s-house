@@ -49,6 +49,14 @@ h1 small{ font-size:12px; letter-spacing:.06em; color:#a8895c; font-weight:norma
 .stat b{ display:block; font-size:16px; color:var(--wood-3); }
 canvas#game{ width:100%; border-radius:14px; border:3px solid var(--wood-3);
   box-shadow:0 14px 34px rgba(95,58,28,.28); background:#efe0c2; touch-action:none; }
+.crtwrap{ position:relative; isolation:isolate; }
+.crtwrap canvas#game{ display:block; }
+.crt{ position:absolute; inset:3px; border-radius:11px; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(20,10,0,.15) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 56%, rgba(30,14,0,.24) 100%);
+  animation: crtf 5s steps(50) infinite; }
+@keyframes crtf { 50% { opacity: .86; } }
 .foot{ font-size:12px; color:#8a6d43; text-align:center; line-height:1.8; }
 /* 菜谱小抄 */
 .recipes{ width:100%; border-radius:12px; border:2px dashed #b8975f; background:rgba(255,248,236,.8);
@@ -102,7 +110,7 @@ body.touch .pad{ display:flex; }
     <div class="stat">出餐<b id="served">0</b></div>
     <div class="stat">得分<b id="score">0</b></div>
   </div>
-  <canvas id="game"></canvas>
+  <div class="crtwrap"><canvas id="game"></canvas><div class="crt"></div></div>
   <div class="recipes" id="recipes"><h3>灶边小抄（菜谱架上七道，画「切」的要先上砧板）</h3><ul id="rlist"></ul></div>
   <div class="pad" id="pad">
     <div class="dpad">
