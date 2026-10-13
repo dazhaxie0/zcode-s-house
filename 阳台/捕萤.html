@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>阳台 · 捕萤</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+font-family: "Kaiti SC", KaiTi, STKaiti, Georgia, serif;
+background: linear-gradient(180deg, #0a1026 0%, #101a36 46%, #1c2a48 78%, #243a54 100%);
+color: #f2ecd9; user-select: none;
+}
+#sky { position: absolute; inset: 0; overflow: hidden; }
+.star { position: absolute; background: #fdf6e3; border-radius: 50%; animation: twk var(--ts) ease-in-out infinite alternate; }
+@keyframes twk { from { opacity: .15; } to { opacity: .9; } }
+#moon { position: absolute; right: 12%; top: 9%; width: 58px; height: 58px; border-radius: 50%;
+background: radial-gradient(circle at 38% 34%, #fdf3d7, #e8d8a8 68%, #c9b478);
+box-shadow: 0 0 34px rgba(248,236,200,.4); }
+#hills { position: absolute; left: 0; right: 0; bottom: 24%; height: 26%; }
+#yard { position: absolute; left: 0; right: 0; bottom: 0; height: 26%; }
+#lant { position: absolute; left: 6%; top: 0; }
+#lant .beam { filter: drop-shadow(0 0 9px rgba(255,178,80,.75)); animation: lbreathe 2.8s ease-in-out infinite; }
+@keyframes lbreathe { 50% { opacity: .6; } }
+#field { position: absolute; inset: 0; z-index: 5; }
+.ff { position: absolute; width: 48px; height: 48px; margin: -24px 0 0 -24px; cursor: pointer; z-index: 6;
+animation: fdrift var(--dur) ease-in-out infinite alternate; transition: opacity .5s; }
+.ff .dot { position: absolute; left: 50%; top: 50%; width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2);
+border-radius: 50%; background: var(--cc); box-shadow: 0 0 10px var(--cc), 0 0 26px var(--cg);
+animation: breathe 1.15s ease-in-out infinite alternate; }
+@keyframes breathe { from { transform: scale(.55); opacity: .6; } to { transform: scale(1.15); opacity: 1; } }
+@keyframes fdrift {
+0% { transform: translate(0, 0); }
+22% { transform: translate(var(--dx1), var(--dy1)); }
+48% { transform: translate(var(--dx2), var(--dy2)); }
+74% { transform: translate(var(--dx3), var(--dy3)); }
+100% { transform: translate(var(--dx4), var(--dy4)); }
+}
+.ff.away { opacity: 0; }
+.spark { position: fixed; width: 12px; height: 12px; margin: -6px; border-radius: 50%; z-index: 40;
+background: var(--cc); box-shadow: 0 0 12px var(--cc); transition: left .55s cubic-bezier(.4,.1,.4,1), top .55s cubic-bezier(.5,.05,.7,1), opacity .55s; }
+.pop { position: absolute; z-index: 30; font-size: 17px; font-weight: 700; pointer-events: none;
+animation: popup .8s ease-out forwards; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.pop.cm { color: #ffd68c; font-size: 20px; }
+@keyframes popup { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-46px); opacity: 0; } }
+#hud { position: absolute; top: 0; left: 0; right: 0; z-index: 20; display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
+#jar { position: relative; width: 44px; height: 56px; flex: none; }
+#jar .inglow { position: absolute; left: 50%; bottom: 7px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%;
+background: radial-gradient(circle, rgba(255,233,168,.85), rgba(255,233,168,0) 70%); transition: .3s; }
+#score { font-size: 26px; font-weight: 900; letter-spacing: 2px; color: #ffe9a8; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
+#combo { font-size: 14px; color: #ffd68c; letter-spacing: 2px; min-height: 20px; transition: .2s; }
+#timer { margin-left: auto; font-size: 24px; font-family: Georgia, serif; letter-spacing: 1px; color: #f2ecd9; }
+#timer.hurry { color: #ff9a7a; animation: tpulse .5s ease-in-out infinite alternate; }
+@keyframes tpulse { to { transform: scale(1.12); } }
+#home { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 22;
+border: 1px solid rgba(240,196,106,.5); background: rgba(16,24,44,.72); color: #f0c46a;
+border-radius: 999px; padding: 6px 18px; font-size: 13px; font-family: inherit; letter-spacing: 2px; cursor: pointer; }
+#board { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+background: rgba(6,10,22,.66); backdrop-filter: blur(3px); }
+#board .panel { text-align: center; padding: 34px 44px; border-radius: 18px;
+background: linear-gradient(165deg, #16203c, #0d1428); border: 1px solid rgba(240,196,106,.42);
+box-shadow: 0 24px 60px rgba(0,0,0,.55); animation: panelin .4s cubic-bezier(.2,.9,.3,1.2); max-width: 86vw; }
+@keyframes panelin { from { transform: translateY(26px) scale(.92); opacity: 0; } }
+#board h1 { font-size: 30px; letter-spacing: 10px; margin-bottom: 6px; color: #ffe9a8; }
+#board .sub { font-size: 13px; letter-spacing: 3px; color: #9aa8c8; margin-bottom: 18px; }
+#board .rows { font-size: 15px; line-height: 2.2; letter-spacing: 1px; margin-bottom: 18px; }
+#board .big { font-size: 40px; font-weight: 900; color: #ffe9a8; font-family: Georgia, serif; }
+#board .grade { font-size: 16px; letter-spacing: 4px; color: #ffd68c; }
+#board button { border: 1px solid rgba(240,196,106,.6); background: rgba(240,196,106,.12); color: #ffe9a8;
+border-radius: 999px; padding: 10px 30px; font-size: 15px; font-family: inherit; letter-spacing: 3px; cursor: pointer; margin: 0 6px; transition: .15s; }
+#board button:hover { background: rgba(240,196,106,.28); transform: translateY(-2px); }
+.hint { font-size: 12px; color: #7a8aa8; letter-spacing: 1px; margin-top: 12px; }
+@media (max-width: 640px) {
+#score { font-size: 22px; }
+#timer { font-size: 20px; }
+#home { top: auto; bottom: 14px; }
+#board .panel { padding: 26px 22px; }
+}
+</style>
+</head>
+<body>
+<div id="sky"><div id="moon"></div><div id="hills"></div></div>
+<div id="yard"></div>
+<div id="lant"></div>
+<div id="field"></div>
+<div id="hud">
+<svg id="jar" viewBox="0 0 44 56"><path d="M15 6h14" stroke="#c9d6e8" stroke-width="2.4" stroke-linecap="round"/><path d="M13 10c-2 3-2 5-2 8v28a4 4 0 0 0 4 4h14a4 4 0 0 0 4-4V18c0-3 0-5-2-8" fill="rgba(160,200,230,.14)" stroke="#9ecbff" stroke-width="2.4"/><path d="M22 15q6 4 0 9" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/><circle class="inglow-h" cx="22" cy="40" r="0" fill="none"/></svg>
+<div><div id="score">0</div><div id="combo"></div></div>
+<div id="timer">60.0</div>
+</div>
+<button id="home">← 小家</button>
+<div id="board"><div class="panel" id="panel"></div></div>
+<script>
+"use strict";
+/* ═══ 阳台 · 捕萤：夏夜六十秒，灯下收萤 ═══
+   全 DOM + CSS 动画驱动，计时认 Date.now 差值——
+   后台标签页慢下来也不丢账，点击即得分。 */
+var $ = function (s) { return document.querySelector(s); };
+var field = $("#field"), board = $("#board"), panel = $("#panel");
+var DUR = 60000, playing = false, score = 0, caught = 0, combo = 0, comboAt = 0;
+var t0 = 0, spawnT = null, tickT = null, chirpT = null, flies = [];
+var KIND = {
+gold: { s: 5, sz: 13, cc: "#ffd68c", cg: "rgba(255,214,140,.55)", w: .08, dur: 4.2 },
+blue: { s: 3, sz: 10, cc: "#9ecbff", cg: "rgba(158,203,255,.5)", w: .30, dur: 6.5 },
+yell: { s: 1, sz: 9, cc: "#ffe9a8", cg: "rgba(255,233,168,.45)", w: 1, dur: 7.5 }
+};
+/* ── 夜空布景 ── */
+(function night() {
+var sky = $("#sky"), h = "";
+for (var i = 0; i < 46; i++) {
+var sz = (1 + Math.random() * 1.6).toFixed(1);
+h += '<i class="star" style="left:' + (Math.random() * 100).toFixed(1) + "%;top:" + (Math.random() * 55).toFixed(1) +
+"%;width:" + sz + "px;height:" + sz + "px;--ts:" + (1.2 + Math.random() * 2.4).toFixed(2) + 's"></i>';
+}
+sky.insertAdjacentHTML("beforeend", h);
+$("#hills").innerHTML =
+'<svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 320 90">' +
+'<path d="M0 90V64q52-34 104-8t92-20 124 12V90z" fill="#0c1428"/>' +
+'<path d="M0 90V74q68-24 130-4t98-12 92 10V90z" fill="#0a0f20"/></svg>';
+$("#yard").innerHTML =
+'<svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 320 84">' +
+'<line x1="0" y1="22" x2="320" y2="22" stroke="#2c3648" stroke-width="5"/>' +
+'<g stroke="#232c3c" stroke-width="4">' +
+'<line x1="20" y1="22" x2="20" y2="84"/><line x1="86" y1="22" x2="86" y2="84"/><line x1="152" y1="22" x2="152" y2="84"/>' +
+'<line x1="218" y1="22" x2="218" y2="84"/><line x1="284" y1="22" x2="284" y2="84"/></g>' +
+'<path d="M254 22V10" stroke="#1f4a34" stroke-width="3"/>' +
+'<path d="M254 14c-8-2-12-8-12-13 8 0 12 6 12 13z" fill="#22543a"/>' +
+'<path d="M254 12c8-2 12-8 12-13-8 0-12 6-12 13z" fill="#2a6446"/></svg>';
+$("#lant").innerHTML =
+'<svg width="64" height="86" viewBox="0 0 64 86" class="beam">' +
+'<line x1="32" y1="0" x2="32" y2="12" stroke="#8a7458" stroke-width="3"/>' +
+'<line x1="20" y1="12" x2="44" y2="12" stroke="#8a7458" stroke-width="3"/>' +
+'<ellipse cx="32" cy="31" rx="14" ry="18" fill="#c93b2e" stroke="#8a2418" stroke-width="2.5"/>' +
+'<path d="M25 16q7 32 14 32t14-32" fill="none" stroke="rgba(255,220,150,.5)" stroke-width="2"/>' +
+'<circle cx="32" cy="31" r="6" fill="#ffd68c"/></svg>';
+})();
+/* ── 合成音 ── */
+var AC = null;
+function audio() {
+if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (C) AC = new C(); }
+if (AC && AC.state === "suspended") AC.resume();
+return AC;
+}
+function tone(f, d, v, type, slide) {
+var c = audio(); if (!c) return;
+var t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+o.type = type || "sine"; o.frequency.setValueAtTime(f, t);
+if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
+g.gain.setValueAtTime(0, t);
+g.gain.linearRampToValueAtTime(v, t + 0.006);
+g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+o.connect(g); g.connect(c.destination);
+o.start(t); o.stop(t + d + 0.05);
+}
+function sCatch(kind) {
+if (kind === "gold") { [79, 84, 88].forEach(function (n, i) { tone(440 * Math.pow(2, (n - 69) / 12), 0.5, 0.07, "triangle"); }); }
+else tone(kind === "blue" ? 1180 : 880, 0.18, 0.1, "triangle", kind === "blue" ? 1560 : 1240);
+}
+function sEnd() { tone(392, 0.7, 0.12, "triangle", 196); setTimeout(function () { tone(523, 0.9, 0.1, "triangle"); }, 240); }
+function chirp() { tone(4300, 0.05, 0.014); setTimeout(function () { tone(4100, 0.05, 0.012); }, 90); }
+/* ── 萤火虫 ── */
+function pickKind() {
+var r = Math.random();
+if (r < KIND.gold.w) return "gold";
+if (r < KIND.gold.w + KIND.blue.w) return "blue";
+return "yell";
+}
+function spawn() {
+if (!playing) return;
+var el = Math.random();
+var rush = Date.now() - t0 > DUR * 0.45; // 后半夜，萤更急
+var maxN = rush ? 8 : 6;
+if (flies.length >= maxN) return;
+var kind = pickKind(), k = KIND[kind];
+var f = document.createElement("div");
+f.className = "ff";
+var W = innerWidth, H = innerHeight;
+f.style.left = (60 + Math.random() * (W - 120)) + "px";
+f.style.top = (H * 0.14 + Math.random() * (H * 0.66)) + "px";
+f.style.setProperty("--dur", (k.dur * (rush ? 0.62 : 1) * (kind === "gold" ? 1 : 0.8 + Math.random() * 0.5)).toFixed(2) + "s");
+f.style.setProperty("--sz", k.sz + "px");
+f.style.setProperty("--cc", k.cc);
+f.style.setProperty("--cg", k.cg);
+var span = rush ? 150 : 96;
+for (var i = 1; i <= 4; i++)
+f.style.setProperty("--dx" + i, ((Math.random() - 0.5) * span * 2).toFixed(0) + "px"),
+f.style.setProperty("--dy" + i, ((Math.random() - 0.5) * span).toFixed(0) + "px");
+f.innerHTML = '<i class="dot"></i>';
+var life = rush ? 3600 + Math.random() * 2400 : 5200 + Math.random() * 3000;
+var gone = setTimeout(function () { away(f); }, life);
+f.addEventListener("pointerdown", function (ev) {
+ev.stopPropagation();
+if (!playing || f.dataset.x) return;
+f.dataset.x = "1";
+clearTimeout(gone);
+grab(f, kind, ev.clientX, ev.clientY);
+});
+flies.push(f);
+field.appendChild(f);
+}
+function away(f) {
+if (!f.parentNode) return;
+f.classList.add("away");
+flies = flies.filter(function (x) { return x !== f; });
+setTimeout(function () { f.remove(); }, 560);
+}
+function grab(f, kind, x, y) {
+var k = KIND[kind], now = Date.now();
+combo = now - comboAt < 3500 ? Math.min(combo + 1, 10) : 1;
+comboAt = now;
+var mult = 1 + (combo - 1) * 0.1;
+var pts = Math.max(1, Math.round(k.s * mult));
+score += pts; caught++;
+sCatch(kind);
+$("#score").textContent = score;
+var cb = $("#combo");
+cb.textContent = combo >= 2 ? "连击 ×" + combo : "";
+/* 光点飞进罐子 */
+var sp = document.createElement("i");
+sp.className = "spark";
+sp.style.setProperty("--cc", k.cc);
+sp.style.left = x + "px"; sp.style.top = y + "px";
+document.body.appendChild(sp);
+var jr = $("#jar").getBoundingClientRect();
+requestAnimationFrame(function () {
+sp.style.left = (jr.left + jr.width / 2) + "px";
+sp.style.top = (jr.top + jr.height * 0.72) + "px";
+sp.style.opacity = "0.25";
+});
+setTimeout(function () { sp.remove(); glowJar(); }, 580);
+/* 得分飘字 */
+var p = document.createElement("b");
+p.className = "pop" + (combo >= 3 ? " cm" : "");
+p.textContent = "+" + pts + (combo >= 2 ? " ×" + combo : "");
+p.style.left = x + "px"; p.style.top = (y - 34) + "px";
+field.appendChild(p);
+setTimeout(function () { p.remove(); }, 820);
+FXb(x, y, k.cc);
+away(f);
+}
+function glowJar() {
+var jar = $("#jar"), r = 40 + Math.min(20, caught * 0.7);
+jar.style.filter = "drop-shadow(0 0 " + r * 0.4 + "px rgba(255,233,168,.8))";
+}
+/* ── 小礼花（捕获点） ── */
+function FXb(x, y, c) {
+for (var i = 0; i < 6; i++) {
+var s = document.createElement("i");
+s.className = "spark"; s.style.setProperty("--cc", c);
+s.style.transition = "none";
+s.style.left = x + "px"; s.style.top = y + "px";
+document.body.appendChild(s);
+(function (s, a) {
+requestAnimationFrame(function () {
+s.style.transition = "left .5s ease-out, top .5s ease-out, opacity .5s";
+s.style.left = (x + Math.cos(a) * 42) + "px";
+s.style.top = (y + Math.sin(a) * 42 - 14) + "px";
+s.style.opacity = "0";
+setTimeout(function () { s.remove(); }, 540);
+});
+})(s, (i / 6) * Math.PI * 2);
+}
+}
+/* ── 流程 ── */
+function tick() {
+var left = Math.max(0, DUR - (Date.now() - t0));
+var t = $("#timer");
+t.textContent = (left / 1000).toFixed(1);
+t.classList.toggle("hurry", left < 10000);
+if (left <= 0) end();
+}
+function start() {
+audio();
+board.style.display = "none";
+playing = true; score = 0; caught = 0; combo = 0;
+$("#score").textContent = "0"; $("#combo").textContent = "";
+$("#jar").style.filter = "";
+flies.forEach(function (f) { f.remove(); }); flies = [];
+t0 = Date.now();
+spawnT = setInterval(spawn, 760);
+tickT = setInterval(tick, 120);
+chirpT = setInterval(function () { if (Math.random() < 0.7) chirp(); }, 3400);
+spawn(); spawn();
+}
+function end() {
+playing = false;
+clearInterval(spawnT); clearInterval(tickT); clearInterval(chirpT);
+flies.forEach(function (f) { f.classList.add("away"); });
+setTimeout(function () { flies.forEach(function (f) { f.remove(); }); flies = []; }, 600);
+sEnd();
+var best = 0;
+try { best = parseInt(localStorage.getItem("fy_best") || "0", 10) || 0; } catch (e) {}
+var isNew = score > best;
+if (isNew) { try { localStorage.setItem("fy_best", String(score)); } catch (e) {} }
+var g = score >= 40 ? "S · 满罐而归" : score >= 28 ? "A · 夜色管够" : score >= 18 ? "B · 掌心微光" : "C · 萤火点点";
+panel.innerHTML = "<h1>夜 收 了</h1><div class='sub'>阳台 · 捕萤</div>" +
+"<div class='rows'><span class='big'>" + score + "</span> 光<br>" +
+"收下 " + caught + " 只萤火虫<br><span class='grade'>" + g + "</span><br>" +
+"本罐最佳 " + Math.max(best, score) + (isNew ? " · 新纪录" : "") + "</div>" +
+"<button id='again'>再来一夜</button><button id='back'>回小家</button>" +
+"<div class='hint'>连击 3.5 秒内不断档，每层加一成；金萤值五光。</div>";
+board.style.display = "flex";
+$("#again").onclick = start;
+$("#back").onclick = goHome;
+}
+function goHome() {
+try {
+if (window.parent && window.parent !== window) { window.parent.postMessage("zhouse-back", "*"); return; }
+} catch (e) {}
+location.href = "../我的家.html";
+}
+$("#home").onclick = goHome;
+/* ── 开场 ── */
+(function intro() {
+var best = 0;
+try { best = parseInt(localStorage.getItem("fy_best") || "0", 10) || 0; } catch (e) {}
+panel.innerHTML = "<h1>捕 萤</h1><div class='sub'>阳台 · 夏夜六十秒</div>" +
+"<div class='rows'>灯笼引路，指尖收光。<br>黄萤一光 · 蓝萤三光 · 金萤五光。<br>" +
+(best ? "本罐最佳 " + best + " 光" : "今夜第一罐") + "</div>" +
+"<button id='go'>点 灯 开 夜</button>" +
+"<div class='hint'>连击不断档，每层加一成；后半夜萤急，手要快。</div>";
+$("#go").onclick = start;
+})();
+/* 嵌在画中门里时，母页听 zhouse-back 关门 */
+</script>
+</body>
+</html>
