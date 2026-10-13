@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>活字排版 · 书房</title>
+<style>
+:root{
+	--paper:#efe6d4; --ink:#2c2318; --wood:#b57a42; --wood2:#8a5a2e; --gold:#d9a441; --red:#c93b2e;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+	background:radial-gradient(120% 90% at 50% 0%,#3a2f22 0%,#241c12 55%,#191309 100%);
+	color:var(--paper);font-family:"Kaiti SC",KaiTi,STKaiti,"Noto Serif SC",serif;
+	overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;max-width:760px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) 14px 12px}
+header{display:flex;align-items:baseline;gap:18px;padding:2px 4px 10px;flex:none}
+header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
+#hud{display:flex;gap:16px;margin-left:auto;font-size:15px;color:#d8c9a8}
+#hud b{color:#fff;font-size:18px;font-weight:600}
+#t-time.low{color:#e88;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.4}}
+#press{flex:none;padding:12px 10px 14px}
+#slot-label{font-size:12px;letter-spacing:.3em;color:#9c8a68;text-align:center;margin-bottom:9px}
+#slots{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.slot{
+	width:52px;height:52px;border-radius:7px;background:rgba(0,0,0,.32);
+	box-shadow:inset 0 2px 6px rgba(0,0,0,.5),inset 0 -1px 0 rgba(255,255,255,.06);
+	display:grid;place-items:center;position:relative;
+}
+.slot.filled{background:rgba(217,164,65,.13);box-shadow:inset 0 0 0 1.5px rgba(217,164,65,.5)}
+.slot .ch{font-size:30px;color:#f5ead2;text-shadow:0 2px 3px rgba(0,0,0,.6);animation:settle .3s cubic-bezier(.2,1.6,.4,1)}
+.slot.next{box-shadow:inset 0 0 0 1.5px rgba(217,164,65,.75),0 0 14px rgba(217,164,65,.25)}
+@keyframes settle{0%{transform:scale(1.7);opacity:0}100%{transform:scale(1);opacity:1}}
+#print{
+	flex:1;min-height:110px;margin:2px 6px 10px;position:relative;border-radius:6px;
+	background:linear-gradient(175deg,#f3ecdc 0%,#eee2c8 100%);
+	box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 0 60px rgba(160,130,80,.14);
+	display:grid;place-items:center;overflow:hidden;
+}
+#print::before{content:"";position:absolute;inset:0;pointer-events:none;
+	background:repeating-linear-gradient(0deg,transparent 0 22px,rgba(120,90,50,.05) 22px 23px)}
+#print .verso{font-size:clamp(24px,6vw,40px);letter-spacing:.22em;color:#3a2d1c;line-height:1.9;text-align:center;padding:0 12px}
+#print .verso em{display:block;font-style:normal;font-size:12px;letter-spacing:.4em;color:#a08a5e;margin-top:12px}
+#print.rolling .roller{transform:translateX(130vw)}
+.roller{
+	position:absolute;top:-6%;bottom:-6%;left:0;width:64px;pointer-events:none;
+	background:linear-gradient(90deg,transparent,rgba(44,35,24,.34) 34%,rgba(44,35,24,.5) 50%,rgba(44,35,24,.34) 66%,transparent);
+	border-radius:50%/8%;transform:translateX(-120px);transition:transform .9s cubic-bezier(.5,0,.4,1);
+}
+#tray{flex:none;display:grid;grid-template-columns:repeat(5,1fr);gap:9px;padding:10px 8px 4px;max-width:520px;width:100%;margin:0 auto}
+.tile{
+	position:relative;aspect-ratio:1/1;border:none;border-radius:9px;cursor:pointer;
+	background:linear-gradient(160deg,var(--wood) 0%,var(--wood2) 100%);
+	box-shadow:0 4px 0 #5f3c1c,0 7px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);
+	color:#f8efdb;font-family:inherit;font-size:clamp(26px,6.4vw,38px);line-height:1;
+	display:grid;place-items:center;transition:transform .12s,box-shadow .12s,opacity .3s;
+}
+.tile::after{content:"";position:absolute;inset:5px;border-radius:5px;border:1.5px solid rgba(0,0,0,.22);pointer-events:none}
+@media(hover:hover){.tile:hover{transform:translateY(-4px)}}
+.tile:active{transform:translateY(2px);box-shadow:0 2px 0 #5f3c1c,0 4px 8px rgba(0,0,0,.4)}
+.tile .kn{position:absolute;top:3px;left:6px;font-size:10px;color:rgba(255,240,210,.5);font-family:ui-monospace,monospace}
+.tile.good{animation:fly .34s ease-in forwards}
+@keyframes fly{40%{transform:translateY(-14px) scale(1.08)}100%{transform:translateY(26px) scale(.4);opacity:0}}
+.tile.bad{animation:shake .34s}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
+.tile.gone{pointer-events:none;opacity:0}
+#combo{position:fixed;left:50%;top:16%;transform:translateX(-50%);pointer-events:none;
+	font-size:20px;letter-spacing:.2em;color:var(--gold);opacity:0;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+#combo.pop{animation:cpop .6s ease-out}
+@keyframes cpop{0%{opacity:0;transform:translateX(-50%) scale(.6)}25%{opacity:1;transform:translateX(-50%) scale(1.15)}100%{opacity:0;transform:translateX(-50%) translateY(-16px)}}
+#float{position:fixed;inset:0;pointer-events:none;z-index:5}
+.pt{position:absolute;font-size:17px;color:var(--gold);text-shadow:0 1px 4px rgba(0,0,0,.8);animation:rise .8s ease-out forwards}
+@keyframes rise{to{transform:translateY(-46px);opacity:0}}
+#overlay{position:fixed;inset:0;background:rgba(20,15,8,.82);backdrop-filter:blur(3px);
+	display:grid;place-items:center;z-index:10;transition:opacity .3s}
+#overlay.hide{opacity:0;pointer-events:none}
+.panel{width:min(88vw,420px);background:linear-gradient(170deg,#f2ead8,#e7d9bd);border-radius:14px;
+	padding:26px 26px 22px;text-align:center;color:#3a2d1c;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.panel h2{font-size:26px;letter-spacing:.3em;margin-bottom:6px}
+.panel .sub{font-size:13px;letter-spacing:.22em;color:#a08a5e;margin-bottom:16px}
+.panel p{font-size:14.5px;line-height:1.9;color:#5a4a32;text-align:left;margin:0 6px 18px}
+.panel p b{color:var(--red);font-weight:600}
+.grade{font-size:64px;line-height:1.2;color:var(--red);text-shadow:0 2px 0 rgba(0,0,0,.12)}
+.stat{display:flex;justify-content:space-between;font-size:15px;margin:3px 4px;color:#5a4a32}
+.stat b{color:#3a2d1c}
+.go{
+	border:none;cursor:pointer;font-family:inherit;font-size:18px;letter-spacing:.3em;
+	padding:13px 40px 13px 44px;border-radius:10px;color:#f8efdb;
+	background:linear-gradient(160deg,var(--wood),var(--wood2));box-shadow:0 5px 0 #5f3c1c,0 10px 20px rgba(0,0,0,.3);
+	transition:transform .1s,box-shadow .1s;
+}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #5f3c1c}
+.back{display:inline-block;margin-top:14px;font-size:13px;letter-spacing:.2em;color:#a08a5e;text-decoration:none;border-bottom:1px solid rgba(160,138,94,.5);padding-bottom:2px}
+@media(max-width:640px){
+	#stage{padding:max(8px,env(safe-area-inset-top)) 10px 10px}
+	header h1{font-size:14px;letter-spacing:.2em}
+	#hud{gap:12px;font-size:13px}#hud b{font-size:16px}
+	.slot{width:44px;height:44px}.slot .ch{font-size:25px}
+	#tray{gap:7px}
+	.tile{font-size:clamp(23px,7vw,30px)}
+	.tile .kn{display:none}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+	<header>
+		<h1>活字排版</h1>
+		<div id="hud">
+			<span>分 <b id="t-score">0</b></span>
+			<span id="t-time">60.0</span>
+			<span>连 <b id="t-combo">0</b></span>
+		</div>
+	</header>
+	<div id="press">
+		<div id="slot-label">按 句 序 取 字 入 版</div>
+		<div id="slots"></div>
+	</div>
+	<div id="print"><div class="roller"></div><div class="verso" id="verso"></div></div>
+	<div id="tray"></div>
+</div>
+<div id="combo"></div>
+<div id="float"></div>
+<div id="overlay"><div class="panel" id="panel"></div></div>
+<script>
+"use strict";
+/* 活字排版：把打乱的字模按句序排回版槽，排满一句滚墨印一页。
+   计时全用 Date.now 差值，后台节流不丢账；动画走 CSS。 */
+var VERSES = [
+"灯下摊书卷","茶烟一缕斜","键声敲夜雨","星子落满窗","猫眠毛线球","灶上炖晚汤",
+"小家即吾乡","墨香浸指尖","楼高不掩月","书脊立成林","借风翻半页","与猫共晚凉",
+"檐雨织细帘","灯暖一屋书","心安是归处","键落字生光","字模排成句","满架皆旧识",
+"雪来读禁书","日出晒毡毯","鸽哨掠过云","邮筒候短笺","炉火煨长夜","春联墨未干"
+];
+var POOL = "风花雪云山春秋冬雨露霜灯茶卷帘窗檐雀燕松竹梅亭台楼阁街巷门桥井钟鼓河湖海原野星辰天地人间岁月光朝暮晨昏晴阴凉暖寒冰雪雷虹霞峰峦溪涧岸林丛枝叶花苗芽藤兰菊竹篱笆阶庭径窗棂";
+var LIMIT = 60000, KEY = "hz_best";
+var score = 0, combo = 0, maxCombo = 0, verseNo = 0, printed = 0, misses = 0;
+var playing = false, need = 0, si = 0, curVerse = "", busy = false;
+var deadline = 0, lastBeep = 99, tickT = null, au = null;
+var $ = function(id){ return document.getElementById(id); };
+
+function AC(){
+	if (au) return au;
+	try { au = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { au = null; }
+	return au;
+}
+function tone(f, t0, dur, o){
+	o = o || {};
+	var c = AC(); if (!c) return;
+	if (t0 < c.currentTime) t0 = c.currentTime + 0.005;
+	var osc = c.createOscillator(), g = c.createGain();
+	osc.type = o.type || "sine"; osc.frequency.setValueAtTime(f, t0);
+	g.gain.setValueAtTime(0, t0);
+	g.gain.linearRampToValueAtTime(o.vol || 0.15, t0 + (o.attack || 0.004));
+	g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+	osc.connect(g); g.connect(c.destination);
+	osc.start(t0); osc.stop(t0 + dur + 0.05);
+}
+function noise(t0, dur, o){
+	o = o || {};
+	var c = AC(); if (!c) return;
+	if (!isFinite(t0) || t0 < c.currentTime) t0 = c.currentTime + 0.005;
+	var n = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+	for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+	var src = c.createBufferSource(); src.buffer = buf;
+	var f = c.createBiquadFilter(); f.type = "bandpass";
+	f.frequency.setValueAtTime(o.from || 800, t0);
+	f.frequency.linearRampToValueAtTime(o.to || o.from || 800, t0 + dur);
+	f.Q.value = o.q || 0.8;
+	var g = c.createGain(); g.gain.value = o.vol || 0.08;
+	src.connect(f); f.connect(g); g.connect(c.destination);
+	src.start(t0);
+}
+var PENTA = [523.3, 587.3, 659.3, 784, 880, 1046.6];
+function sPick(step){ var c = AC(); tone(PENTA[Math.min(step, 5)], c ? c.currentTime : 0, 0.14, { type: "triangle", vol: 0.12 }); }
+function sBad(){ var c = AC(); tone(160, c ? c.currentTime : 0, 0.2, { type: "sawtooth", vol: 0.07, attack: 0.01 }); }
+function sPrint(){
+	var c = AC(); if (!c) return; var t = c.currentTime;
+	noise(t, 0.5, { from: 300, to: 2200, vol: 0.1, q: 1.2 });
+	[523.3, 659.3, 784, 1046.6].forEach(function(f, i){ tone(f, t + 0.5 + i * 0.09, 0.5, { vol: 0.09, attack: 0.02 }); });
+}
+function sTick(){ var c = AC(); tone(1180, c ? c.currentTime : 0, 0.05, { type: "square", vol: 0.03 }); }
+function sEnd(){ var c = AC(); if (!c) return; var t = c.currentTime;
+	[784, 659.3, 523.3, 392].forEach(function(f, i){ tone(f, t + i * 0.16, 0.4, { vol: 0.1 }); }); }
+
+function shuffle(a){ for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function pad(chars){
+	var want = Math.min(2 + (verseNo >> 1), 4), pool = [];
+	var used = {}; chars.forEach(function(ch){ used[ch] = 1; });
+	var base = shuffle(POOL.split("").filter(function(ch){ return !used[ch]; }));
+	for (var i = 0; i < want; i++) pool.push(base[i]);
+	return shuffle(chars.concat(pool));
+}
+function verseHTML(v){ return v.split("").join("<i></i>"); }
+
+function newVerse(){
+	curVerse = VERSES[verseNo % VERSES.length];
+	need = curVerse.length; si = 0;
+	var slots = "";
+	for (var i = 0; i < need; i++) slots += '<div class="slot" data-i="' + i + '"></div>';
+	$("slots").innerHTML = slots;
+	markNext();
+	var chars = pad(curVerse.split(""));
+	var html = "";
+	chars.forEach(function(ch, i){ html += '<button class="tile" data-ch="' + ch + '"><span class="kn">' + (i + 1) + "</span>" + ch + "</button>"; });
+	$("tray").innerHTML = html;
+	if (verseNo > 0) $("verso").innerHTML = "";
+}
+function markNext(){
+	var nx = document.querySelector(".slot.next");
+	if (nx) nx.classList.remove("next");
+	var s = document.querySelector('.slot[data-i="' + si + '"]');
+	if (s && si < need) s.classList.add("next");
+}
+function floatPt(x, y, txt, bad){
+	var el = document.createElement("div");
+	el.className = "pt"; el.textContent = txt;
+	if (bad) el.style.color = "#e88";
+	el.style.left = (x - 14) + "px"; el.style.top = (y - 30) + "px";
+	$("float").appendChild(el);
+	setTimeout(function(){ el.remove(); }, 850);
+}
+function comboPop(){
+	var c = $("combo");
+	if (combo < 3) return;
+	c.textContent = "连排 " + combo + " 字";
+	c.classList.remove("pop"); void c.offsetWidth; c.classList.add("pop");
+}
+function pick(el){
+	if (!playing || busy || el.classList.contains("gone")) return;
+	var r = el.getBoundingClientRect();
+	var ch = el.dataset.ch;
+	if (si < need && ch === curVerse[si]){
+		el.classList.add("good");
+		setTimeout(function(){ el.classList.add("gone"); }, 330);
+		var slot = document.querySelector('.slot[data-i="' + si + '"]');
+		slot.classList.add("filled");
+		slot.innerHTML = '<span class="ch">' + ch + "</span>";
+		combo++; maxCombo = Math.max(maxCombo, combo);
+		var gain = 10 + Math.min(combo, 12) * 2;
+		score += gain;
+		$("t-score").textContent = score;
+		$("t-combo").textContent = combo;
+		sPick(si);
+		floatPt(r.left + r.width / 2, r.top, "+" + gain);
+		comboPop();
+		si++;
+		markNext();
+		if (si >= need) finishVerse();
+	} else {
+		misses++;
+		combo = 0; $("t-combo").textContent = 0;
+		el.classList.remove("bad"); void el.offsetWidth; el.classList.add("bad");
+		deadline -= 3000;
+		sBad();
+		floatPt(r.left + r.width / 2, r.top, "误 -3s", true);
+	}
+}
+function finishVerse(){
+	busy = true;
+	var bonus = 80 + Math.min(verseNo, 10) * 5;
+	score += bonus; printed++; verseNo++;
+	$("t-score").textContent = score;
+	var p = $("print"), v = $("verso");
+	v.innerHTML = verseHTML(curVerse) + "<em>第 " + printed + " 版 · 墨迹未干</em>";
+	p.classList.remove("rolling"); void p.offsetWidth; p.classList.add("rolling");
+	sPrint();
+	floatPt(innerWidth / 2, p.getBoundingClientRect().top + 20, "+" + bonus + " 印成一版");
+	setTimeout(function(){
+		p.classList.remove("rolling");
+		busy = false;
+		if (playing) newVerse();
+	}, 1350);
+}
+function tick(){
+	var left = Math.max(0, deadline - Date.now());
+	var s = left / 1000;
+	$("t-time").textContent = s.toFixed(1);
+	$("t-time").classList.toggle("low", s <= 10);
+	if (s <= 10 && Math.floor(s) !== lastBeep && s > 0){ lastBeep = Math.floor(s); sTick(); }
+	if (left <= 0){ finish(); return; }
+	clearTimeout(tickT); tickT = setTimeout(tick, 100);
+}
+function start(){
+	AC();
+	score = 0; combo = 0; maxCombo = 0; verseNo = 0; printed = 0; misses = 0; busy = false;
+	playing = true; lastBeep = 99;
+	$("t-score").textContent = 0; $("t-combo").textContent = 0;
+	$("verso").innerHTML = "";
+	$("overlay").classList.add("hide");
+	deadline = Date.now() + LIMIT;
+	newVerse();
+	tick();
+}
+function gradeOf(s){
+	if (s >= 3400) return ["甲上", "手快过眼，版版见方。"];
+	if (s >= 2400) return ["甲", "行云流水，墨都来不及干。"];
+	if (s >= 1500) return ["乙", "稳稳当当，字字有着落。"];
+	if (s >= 700) return ["丙", "字盘认了大半，版槽还饿着。"];
+	return ["丁", "字模烫手，先认认门。"];
+}
+function finish(){
+	playing = false; clearTimeout(tickT);
+	var best = 0;
+	try { best = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+	var isNew = score > best;
+	if (isNew && score > 0){ try { localStorage.setItem(KEY, String(score)); } catch (e) {} }
+	var g = gradeOf(score);
+	var rows = [
+		["本版得分", score], ["印成", printed + " 版"], ["最长连排", maxCombo + " 字"],
+		["误取", misses + " 次"], ["此间最好", Math.max(best, score)]
+	].map(function(r){ return '<div class="stat"><span>' + r[0] + '</span><b>' + r[1] + "</b></div>"; }).join("");
+	$("panel").innerHTML = '<div class="grade">' + g[0] + "</div>" +
+		'<div class="sub">' + g[1] + (isNew && score > 0 ? " · 新纪录" : "") + "</div>" + rows +
+		'<button class="go" id="btn-re">再 印 一 匠</button>' +
+		'<div><a class="back" href="../我的家.html" id="bk">回小家</a></div>';
+	$("overlay").classList.remove("hide");
+	sEnd();
+	$("btn-re").onclick = start;
+}
+$("tray").addEventListener("pointerdown", function(e){
+	var t = e.target.closest ? e.target.closest(".tile") : null;
+	if (t){ e.preventDefault(); pick(t); }
+});
+document.addEventListener("keydown", function(e){
+	if (e.key === "Escape"){ try { parent.postMessage("zhouse-back", "*"); } catch (err) {} return; }
+	if (!playing) return;
+	var n = parseInt(e.key, 10);
+	if (n >= 1 && n <= 9){
+		var tiles = document.querySelectorAll(".tile:not(.gone)");
+		if (tiles[n - 1]){ e.preventDefault(); pick(tiles[n - 1]); }
+	}
+});
+(function(){
+	var best = 0;
+	try { best = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+	$("panel").innerHTML = "<h2>活字排版</h2>" +
+		'<div class="sub">书 房 · 拾 字 印 句</div>' +
+		"<p>字盘里的字模乱了序。看清版槽上要排的那句，<b>按句序</b>把字一个个取回来——取对落槽，取错要烧掉三秒。排满一句，滚墨印出一版。<br>键盘按 <b>数字键</b> 对应字位，手机直接点字模。六十秒，看能印几版。</p>" +
+		(best ? '<div class="stat"><span>此间最好</span><b>' + best + "</b></div>" : "") +
+		'<button class="go" id="btn-go">开 印</button>' +
+		'<div><a class="back" href="../我的家.html" id="bk">回小家</a></div>';
+	$("btn-go").onclick = start;
+	[$("bk")].forEach(function(a){ a.addEventListener("click", function(e){
+		try { if (window.parent && window.parent !== window){ e.preventDefault(); parent.postMessage("zhouse-back", "*"); } } catch (err) {}
+	}); });
+})();
+window.addEventListener("message", function(e){
+	if (e.data === "zhouse-replay") start();
+});
+</script>
+</body>
+</html>
