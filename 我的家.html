@@ -232,57 +232,70 @@ filter: blur(2px); opacity: 0; animation: puff 4s ease-out infinite;
 20% { opacity: .8; }
 100% { opacity: 0; transform: translate(-40%, -52px) scale(2); }
 }
-.win-row { display: flex; justify-content: center; gap: 26px; margin: -42px 0 12px; position: relative; z-index: 2; }
-.win { cursor: pointer;
-width: 32px; height: 38px; border-radius: 6px 6px 10px 10px;
-background: linear-gradient(180deg, #7fb2d9, #a8cbe4);
-border: 3px solid var(--wood-2); position: relative; overflow: hidden;
-}
-.win::before {
-content: ""; position: absolute; inset: 0;
-background: linear-gradient(135deg, transparent 42%, rgba(255,255,255,.5) 46%, transparent 52%);
-}
-body[data-phase="night"] .win {
-background: radial-gradient(circle at 50% 60%, #ffd98a, #d9962e);
-box-shadow: 0 0 18px rgba(255,200,100,.55);
-}
-body[data-phase="night"] .win.flicker { animation: winflick 7s steps(1) infinite; }
-body[data-phase="night"] .win.off { background: #2c3550; box-shadow: none; }
-.win.off { filter: brightness(.55) saturate(.4); }
+/* ── 3D 剖面小家：拖动转视角，点房间进门 ── */
+.doll { position: relative; margin-top: 2px; user-select: none; }
+.dinfo { text-align: center; font-size: 12px; color: var(--ink-3); letter-spacing: .12em; padding: 2px 0 0; min-height: 24px; }
+.dstage { height: 478px; perspective: 1150px; perspective-origin: 50% 26%; touch-action: none; cursor: grab; overflow: hidden; }
+.dstage:active { cursor: grabbing; }
+.dhouse { position: absolute; left: 50%; top: 254px; width: 0; height: 0; transform-style: preserve-3d;
+transform: translateZ(-30px) rotateX(var(--drx,-24deg)) rotateY(var(--dry,-30deg));
+transition: transform .5s cubic-bezier(.2,.8,.3,1); }
+.dhouse.drag { transition: none; }
+/* 整楼放大：点选投影走 getBoundingClientRect，缩放自动入账 */
+.doll .dscale { position: absolute; inset: 0; transform: scale(1.28); transform-origin: 50% 68%; }
+.dground { position: absolute; left: -212px; top: -124px; width: 424px; height: 248px;
+background: linear-gradient(180deg, rgba(158,146,112,.13), rgba(120,110,88,.06));
+border: 2px solid rgba(58,44,28,.2); border-radius: 12px; transform: rotateX(90deg); }
+.dground, .dl, .drt, .dc, .dtag, .furn { pointer-events: none; } /* 侧墙俯视会盖下层，点击只认后墙/地板，定位另走 3D 投影算法 */
+.droom, .dloft { pointer-events: none; }
+.droom .dbk, .droom .df, .dloft .dbk, .drf, .dchm { pointer-events: auto; }
+.droom, .droom > div, .drf, .dchm { position: absolute; transform-style: preserve-3d; }
+.droom { cursor: pointer; outline: none; }
+.dbk { width: var(--w); height: var(--h); transform: translateZ(-150px);
+background: rgba(58,44,28,.075); border: 1.5px solid rgba(58,44,28,.38); }
+.dl { width: 150px; height: var(--h); transform-origin: 0 0; transform: rotateY(90deg);
+background: rgba(58,44,28,.05); border: 1.5px solid rgba(58,44,28,.3); }
+.drt { width: 150px; height: var(--h); transform: translate3d(var(--w),0,0) rotateY(90deg);
+background: rgba(58,44,28,.05); border: 1.5px solid rgba(58,44,28,.3); }
+.df { width: var(--w); height: 150px; transform-origin: 0 0; transform: rotateX(-90deg);
+background: rgba(217,164,65,.24); border: 1.5px solid rgba(58,44,28,.2); }
+.dc { width: var(--w); height: 150px; transform: translate3d(0,var(--h),0) rotateX(-90deg);
+background: rgba(217,164,65,.1); border: 1.5px solid rgba(58,44,28,.26); }
+.droom:hover .dbk, .droom:hover .dl, .droom:hover .drt,
+.droom:focus-visible .dbk { background: rgba(217,164,65,.24); border-color: var(--gold-2); }
+.dtag { left: 50%; top: 4px; width: auto; height: auto; transform: translateX(-50%); border: none; background: none;
+font-size: 10px; letter-spacing: .1em; color: var(--ink-2); text-shadow: 0 1px 2px rgba(250,243,230,.9), 0 0 6px rgba(250,243,230,.7); white-space: nowrap; }
+.droom:not(.seen) .dtag::after { content: "·新"; color: var(--gold-2); }
+.droom.deep .dbk { background: rgba(20,14,10,.28); }
+.droom.deep .df { background: rgba(36,26,18,.3); }
+.furn { position: absolute; border-radius: 4px; border: 1.5px solid rgba(58,44,28,.5);
+box-shadow: 0 2px 0 rgba(58,44,28,.18); }
+.dwin { position: absolute; width: 12px; height: 14px; border-radius: 2px;
+background: linear-gradient(180deg, #7fb2d9, #a8cbe4); border: 2px solid var(--wood-2); cursor: pointer; }
+body[data-phase="night"] .dwin:not(.off) { background: radial-gradient(circle at 50% 60%, #ffd98a, #d9962e);
+box-shadow: 0 0 8px rgba(255,200,100,.6); }
+body[data-phase="night"] .dwin:not(.off).dflick { animation: winflick 7s steps(1) infinite; }
+.dwin.off { filter: brightness(.55) saturate(.4); }
 @keyframes winflick { 88%, 92% { box-shadow: 0 0 4px rgba(255,200,100,.2); } }
-.rooms { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-top: 6px; }
-.room {
-position: relative; background: var(--paper-3); border-radius: var(--r-md);
-border: 2px solid var(--line); padding: 16px 16px 13px; cursor: pointer;
-transition: transform .18s, box-shadow .18s, border-color .18s;
-display: flex; align-items: center; gap: 14px; overflow: hidden;
+/* 屋顶：脊沿左右，前坡可向后翻起（默认掀起看内景） */
+.drf { width: 300px; height: 88px; transform-origin: 50% 0;
+background: repeating-linear-gradient(100deg, #9a5a40 0 12px, #8a4e36 12px 14px);
+border: 2px solid #5f3423; box-shadow: inset 0 -14px 18px rgba(0,0,0,.22);
+transition: transform .8s cubic-bezier(.3,.9,.3,1); }
+.drfF { transform: translate3d(-150px,-214px,0) rotateX(61deg); }
+.drfB { transform: translate3d(-150px,-214px,0) rotateX(-61deg); }
+.dhouse.lfd .drfF { transform: translate3d(-150px,-214px,0) rotateX(-103deg); }
+.dchm { width: 13px; height: 26px; background: #6a4a2e; border: 2px solid #4a3218; border-radius: 2px;
+transform: translate3d(88px,-244px,-14px) rotateY(45deg); }
+.dloft { position: absolute; cursor: pointer; }
+.dloft .dbk { background: rgba(26,22,38,.2); }
+.dloft .lock { transform: translate3d(120px,2px,-40px); width: 40px; height: 40px; color: var(--ink-3);
+display: flex; align-items: center; justify-content: center; font-size: 20px; background: none; border: none; }
+.dloft.un .lock { color: var(--gold-2); }
+@media (max-width: 640px) {
+.dstage { height: 396px; }
+.doll .dscale { position: absolute; inset: 0; transform: scale(.84); transform-origin: 50% 68%; }
 }
-.room::before {
-content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-background: linear-gradient(90deg, var(--gold-2), var(--gold)); opacity: 0; transition: opacity .18s;
-}
-.room:hover, .room:focus-visible { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--gold-2); outline: none; }
-.room:hover::before, .room:focus-visible::before { opacity: 1; }
-.room .r-ic {
-width: 52px; height: 52px; border-radius: 14px; flex: none;
-background: color-mix(in srgb, var(--gold) 10%, var(--paper-2));
-border: 2px solid color-mix(in srgb, var(--gold) 28%, transparent);
-color: var(--wood); display: flex; align-items: center; justify-content: center;
-font-size: 27px; transition: transform .2s;
-}
-body[data-theme="theme-night"] .room .r-ic { color: var(--gold-2); }
-.room:hover .r-ic { transform: scale(1.08) rotate(-4deg); }
-.room .r-tx { min-width: 0; }
-.room h2 { font-size: 16px; color: var(--wood); letter-spacing: .2em; display: flex; align-items: baseline; gap: 8px; }
-body[data-theme="theme-night"] .room h2 { color: var(--gold-2); }
-.room .cnt { font-size: 11px; color: var(--ink-3); letter-spacing: .08em; }
-.room .chev { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-3); font-size: 17px; transition: transform .18s, color .18s; }
-.room:hover .chev { color: var(--gold); transform: translateY(-50%) translateX(3px); }
-.room .plate {
-position: absolute; top: 9px; right: 30px; font-size: 9.5px; letter-spacing: .15em;
-color: var(--ink-3); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px;
-}
-.cellar { margin-top: 13px; }
 footer.house-foot { text-align: center; color: rgba(255,255,255,.5); font-size: 11.5px; margin-top: 26px; letter-spacing: .35em; }
 #cat {
 position: absolute; bottom: 6px; z-index: 25; cursor: pointer;
@@ -576,17 +589,18 @@ body[data-wx="rain"] #cat .catsvg { transform: scaleY(.92); }
 @keyframes met { 0%, 86% { opacity: 0; } 88% { opacity: 1; } 94% { opacity: 0; transform: translate(-44px, 26px); } 100% { opacity: 0; } }
 .shelf-bk { padding: 14px 12px 0; background: linear-gradient(180deg,#3d2c1a,#2c1e12 26%,#251a0f); border-radius: 12px; border: 3px solid #52412a; box-shadow: inset 0 10px 20px rgba(0,0,0,.5), inset 0 -6px 14px rgba(0,0,0,.4); }
 .shelf-bk::before { content: ""; display: block; height: 6px; margin: 0 -2px; border-radius: 3px; background: linear-gradient(180deg,#6a5436,#4a3a24); box-shadow: 0 2px 3px rgba(0,0,0,.4); }
-.shelf-bk .rail { display: flex; align-items: flex-end; justify-content: center; gap: 6px; padding: 20px 6px 0; border-bottom: 6px solid #52412a; box-shadow: 0 7px 9px -5px rgba(0,0,0,.6); }
+.shelf-bk .rail { display: flex; align-items: flex-end; justify-content: center; gap: 6px; padding: 16px 6px 0; border-bottom: 6px solid #52412a; box-shadow: 0 7px 9px -5px rgba(0,0,0,.6); }
 .shelf-bk .spine {
 writing-mode: vertical-rl; letter-spacing: .18em; font-size: 13px; font-weight: 700;
 color: #f6ecd9; border: none; border-radius: 4px 4px 2px 2px; cursor: pointer;
-padding: 12px 7px; min-height: 152px; width: 34px; font-family: inherit;
+padding: 12px 7px; min-height: 128px; width: 34px; font-family: inherit;
 box-shadow: inset -3px 0 5px rgba(0,0,0,.3), 0 3px 0 rgba(0,0,0,.35);
 transition: transform .18s;
 }
 .shelf-bk .spine:hover { transform: translateY(-12px) rotate(-2deg); }
 .shelf-bk .spine:active { transform: translateY(-3px) scale(.97); }
 .shelf-bk .spine.pull { transform: translateY(-24px) rotate(-7deg); transition: transform .36s cubic-bezier(.3,.1,.3,1.25); }
+.shelf-bk .spine.long { font-size: 10px; letter-spacing: .05em; }
 /* 翻书阅读器：跨页 + 双面翻页片 */
 .rbook { position: relative; display: flex; justify-content: center; perspective: 1500px; margin: 8px 0 2px; }
 .rbook::before { content: ""; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 4px; transform: translateX(-50%); background: linear-gradient(90deg,rgba(60,40,18,.22),rgba(60,40,18,.05),rgba(60,40,18,.22)); z-index: 6; pointer-events: none; }
@@ -640,6 +654,16 @@ transition: transform .18s;
 @keyframes ocblink { 50% { opacity: .4; } }
 .scene .tank, .scene .chime { opacity: 0; pointer-events: none; transition: opacity .5s; }
 .scene .tank.on, .scene .chime.on { opacity: 1; pointer-events: auto; }
+.scene .scope, .scene .feed { opacity: 0; pointer-events: none; transition: opacity .5s; }
+.scene .scope.on, .scene .feed.on { opacity: 1; pointer-events: auto; }
+.scene .feed.on .birdy { animation: birdbob 2.6s ease-in-out infinite; }
+.scene .feed.peck .birdy { animation: peckhop 1s ease-in-out; }
+@keyframes birdbob { 50% { transform: translateY(-1.5px); } }
+@keyframes peckhop {
+25% { transform: translate(-7px, 9px) rotate(-16deg); }
+45% { transform: translate(-8px, 11px) rotate(-26deg); }
+65% { transform: translate(-8px, 10px) rotate(-12deg); }
+}
 .scene .tank .fsh { animation: fswim 5s ease-in-out infinite; }
 .scene .tank .fsh.fb { animation-duration: 6.5s; animation-delay: -2.1s; }
 .scene .tank .fsh.fc { animation-duration: 4.2s; animation-delay: -1.2s; }
@@ -658,6 +682,26 @@ transition: transform .18s;
 .scene .fly.on { filter: drop-shadow(0 0 7px rgba(255,180,80,.65)); }
 .scene .fly.on .flg { opacity: 1; animation: lantbreath 2.6s ease-in-out infinite; }
 @keyframes lantbreath { 50% { opacity: .55; } }
+/* 新家当：暖炉 / 唱机 / 摇椅 / 地毯 / 挂毯 / 邮筒 */
+.scene .fire, .scene .gramo, .scene .rocker, .scene .rug, .scene .rgpad { opacity: 0; pointer-events: none; transition: opacity .5s; }
+.scene .fire.on, .scene .gramo.on, .scene .rocker.on, .scene .rug.on, .scene .rgpad.on { opacity: 1; pointer-events: auto; }
+.scene .fire .fl1, .scene .fire .fl2, .scene .fire .fl3 { transform-box: fill-box; transform-origin: 50% 100%; animation: flamewav 1.1s ease-in-out infinite; }
+.scene .fire .fl2 { animation-duration: .8s; }
+.scene .fire .fl3 { animation-duration: 1.5s; }
+@keyframes flamewav { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.24) scaleX(.88); } }
+.scene .fire.flare .fl1 { animation: flameup .9s ease-out; }
+@keyframes flameup { 30% { transform: scale(1.45, 1.7); } }
+.scene .gramo .gdisc { transform-box: fill-box; transform-origin: center; }
+.scene .gramo.spin .gdisc { animation: spin 2.4s linear infinite; }
+.scene .rocker .rseat { transform-box: fill-box; transform-origin: 50% 100%; }
+.scene .rocker.rock .rseat { animation: rockaway 3s ease-in-out; }
+@keyframes rockaway { 22% { transform: rotate(-9deg); } 48% { transform: rotate(8deg); } 74% { transform: rotate(-5deg); } }
+#mailbox { position: absolute; left: 10px; bottom: 8px; width: 46px; z-index: 8; cursor: pointer; display: none; filter: drop-shadow(0 3px 5px rgba(0,0,0,.3)); }
+#mailbox.on { display: block; }
+#mailbox svg { width: 46px; height: 64px; display: block; }
+#mailbox .mpigeon { transform-box: fill-box; transform-origin: 50% 100%; }
+#mailbox.takemail .mpigeon { animation: mpjump 1s ease-in-out; }
+@keyframes mpjump { 30% { transform: translateY(-6px) rotate(-10deg); } 60% { transform: translateY(0) rotate(6deg); } }
 @keyframes bodyshake { 20% { transform: translate(3px, -2px); } 40% { transform: translate(-3px, 2px); } 60% { transform: translate(2px, 1px); } 80% { transform: translate(-1px, -1px); } }
 #pack-wrap { position: fixed; inset: 0; z-index: 150; display: none; align-items: center; justify-content: center;
 background: radial-gradient(ellipse at center, rgba(8,10,18,.5), rgba(8,10,18,.84)); }
@@ -709,9 +753,37 @@ transition: .15s;
 #frame-back:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
 #frame-back .ic { font-size: 20px; }
 @media (max-width: 640px) {
-.rooms { grid-template-columns: 1fr; }
-.win-row { gap: 16px; }
 .scene { height: 190px; }
+.hud { padding: 8px 10px; gap: 6px; }
+.hud .pill { padding: 6px 12px; font-size: 12.5px; }
+.hud .pill .ic { font-size: 14px; }
+.hud .ico-btn { width: 36px; height: 36px; }
+.modal { padding: 16px 14px 14px; }
+.shop-grid { grid-template-columns: repeat(2, 1fr); }
+.inv-grid { grid-template-columns: repeat(2, 1fr); }
+.shelf-bk .spine { min-height: 104px; font-size: 12px; padding: 10px 6px; }
+.shelf-bk .spine.long { font-size: 9px; }
+.room-head { gap: 10px; }
+.room-head .r-ic { width: 42px; height: 42px; font-size: 22px; border-radius: 11px; }
+.room-head h2 { font-size: 18px; }
+.title-menu { width: min(88vw, 300px); }
+.rnav .btn { padding: 8px 16px; }
+}
+/* 触屏：hover 粘滞退场，点按反馈交给 :active */
+@media (hover: none) {
+body { touch-action: manipulation; }
+.hud .pill:hover, .hud .ico-btn:hover { transform: none; }
+.scene .hot:hover { filter: none; }
+.shelf-bk .spine:hover { transform: none; }
+.s-card:hover { transform: none; }
+.inv-slot:hover { transform: none; border-color: rgba(255,255,255,.1); background: rgba(255,255,255,.05); }
+.cg-card:hover { border-color: var(--line); }
+.stab:hover { transform: none; }
+.tmenu-item:hover { transform: none; }
+.cup-card:hover { transform: none; }
+.btn:hover { transform: none; }
+.s-card .sb:hover { filter: none; }
+.pack-card:hover { animation: packfloat 2.6s ease-in-out .55s infinite; }
 }
 body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after {
 animation-duration: .01s !important; animation-iteration-count: 1 !important;
@@ -809,6 +881,8 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <symbol id="i-fish" viewBox="0 0 24 24"><path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"/><path d="M18 12v.5"/><path d="M16 17.93a9.77 9.77 0 0 1 0-11.86"/><path d="M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"/></symbol>
 <symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
 <symbol id="i-fly" viewBox="0 0 24 24"><ellipse cx="12" cy="13.5" rx="4.2" ry="6.5"/><circle cx="12" cy="17.5" r="2" style="fill:currentColor;stroke:none"/><path d="M8.5 8C6.5 5.5 4 5 3 6.5S4.5 10 7.5 11M15.5 8c2-2.5 4.5-3 5.5-1.5S19.5 10 16.5 11"/></symbol>
+<symbol id="i-telescope" viewBox="0 0 24 24"><path d="M3.8 9.6 17.6 5l1.5 4.5L5.3 14.1z"/><circle cx="3" cy="9.2" r="1"/><path d="M12.3 11.6l3.2 9.4M12.3 11.6 8.7 21M12.3 11.6l-.2 9.4"/><path d="m19.1 9.5 2.2-.9"/></symbol>
+<symbol id="i-bird" viewBox="0 0 24 24"><circle cx="10.5" cy="14" r="5.5"/><circle cx="15.5" cy="8.5" r="3.2"/><path d="M18.7 7.6l3.2 1-3.2 1.9z"/><path d="m5.5 12.8-3.6-1.9.7 3.9z"/><path d="M8.5 19.5 7.5 22M13 19.5l1 2.5"/><circle cx="16.6" cy="8" r=".4"/></symbol>
 <symbol id="i-chart-column" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
 <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
 <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
@@ -843,6 +917,10 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
 <symbol id="i-cloud-rain" viewBox="0 0 24 24"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></symbol>
 <symbol id="i-watch" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M12 10v2l1 1"/><path d="m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05"/><path d="m16.13 16.34-.81 4.05a2 2 0 0 1-2 1.61h-2.68a2 2 0 0 1-2-1.61l-.78-4.05"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+<symbol id="i-armchair" viewBox="0 0 24 24"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11a2 2 0 0 1 4 0v3h10v-3a2 2 0 0 1 4 0v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M5 18v2"/><path d="M19 18v2"/></symbol>
+<symbol id="i-circle-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1.6" style="fill:currentColor;stroke:none"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
 <!-- 手绘：小家徽标（屋顶 + 灯窗） -->
 <symbol id="i-mark" viewBox="0 0 48 44">
 <path d="M6 20 24 5l18 15" />
@@ -875,7 +953,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <button class="tmenu-item" id="t-settings"><svg class="ic"><use href="#i-settings"/></svg>设置</button>
 </div>
 <div class="title-save" id="title-save"></div>
-<div class="title-foot"><span>v3.19 · DELUXE</span><span>© 2026 小Z 的小家</span></div>
+<div class="title-foot"><span>v3.24 · DELUXE</span><span>© 2026 小Z 的小家</span></div>
 </div>
 <!-- ③ 小家主画面 -->
 <div class="screen" id="screen-house">
@@ -901,15 +979,10 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <div class="facade" id="facade">
 <svg class="roofline" viewBox="0 0 48 44"><use href="#i-mark"/></svg>
 <div class="chimney-smoke" id="smoke"><i class="puff"></i><i class="puff"></i><i class="puff"></i></div>
-<div class="win-row">
-<div class="win"></div><div class="win flicker"></div><div class="win"></div>
-</div>
-<div class="rooms" id="rooms"></div>
-<div class="cellar room" data-room="储藏室">
-<span class="plate">B1</span>
-<div class="r-ic"><svg class="ic"><use href="#i-package"/></svg></div>
-<div class="r-tx"><h2>储藏室</h2><div class="cnt">藏品 ×<span id="cellar-cnt">4</span></div></div>
-<svg class="ic chev"><use href="#i-chevron-right"/></svg>
+<div id="mailbox" title="信鸽邮筒"><svg viewBox="0 0 46 64"><rect x="8" y="14" width="30" height="44" rx="4" fill="#8a4a3c" stroke="#5a2c22" stroke-width="2"/><rect x="13" y="22" width="20" height="9" rx="2" fill="#241a10" stroke="#d9a441" stroke-width="1.5"/><path d="M14 44h18M14 50h12" stroke="#d9a441" stroke-width="1.6" opacity=".6"/><rect x="20" y="4" width="6" height="10" fill="#6a4a2e"/><g class="mpigeon"><ellipse cx="31" cy="10" rx="5.5" ry="4" fill="#c9bfa8"/><circle cx="35" cy="7" r="2.6" fill="#c9bfa8"/><path d="M37.4 6.6l2.6.8-2.6 1.2z" fill="#e8a04b"/><circle cx="35.8" cy="6.6" r=".5" fill="#241a10"/><path d="M27 12.5l-2.6 1.2 1.5 1.6z" fill="#a89878"/></g></svg></div>
+<div class="doll" id="rooms">
+<div class="dinfo" id="dinfo">拖动转一转 · 点屋顶开合 · 点房间进门</div>
+<div class="dstage" id="dstage"><div class="dscale"><div class="dhouse lfd" id="dhouse"></div></div></div>
 </div>
 </div>
 <footer class="house-foot">慢慢变得温馨</footer>
@@ -987,6 +1060,8 @@ const ROOMS = {"客厅": { icon:"sofa", no:"101", cls:"living", sub:"待客 · �
 note:"复古 CRT 木壳电视：贪吃蛇 + 2048 双卡带" },
 { icon:"disc-3", name:"留声机", link:"客厅/留声机.html", rare:"web",
 note:"桂花牌八音留声机：WebAudio 合成八音盒，五首公版曲子" },
+{ icon:"disc-3", name:"节奏地毯", rare:"web", link:"客厅/节奏地毯.html", gate:"rg",
+note:"四键落毯，跟上节拍 · 客厅/节奏地毯.html" },
 ]},
 "卧室": { icon:"bed-double", no:"102", cls:"bedroom", sub:"地铺 · 安眠", items:[
 { icon:"bed-double", name:"二手地铺床垫", rare:"furn",
@@ -1038,6 +1113,8 @@ note:"接单 · 备菜 · 出餐，烧糊算我的 · 厨房/胡闹厨房.html" 
 note:"每日花签 + 按档案算浇水日 · 阳台/今日花开.py" },
 { icon:"fly", name:"捕萤夜灯", rare:"web", link:"阳台/捕萤.html", gate:"fy",
 note:"夏夜六十秒收萤，连击加倍 · 阳台/捕萤.html" },
+{ icon:"telescope", name:"星图望远镜", rare:"web", link:"阳台/星图.html", gate:"sg",
+note:"星序三秒记心间，连成四座 · 阳台/星图.html" },
 { icon:"sprout", name:"绿萝", rare:"plant", link:"阳台/温室.html", note:"住家 AI 第一盆绿植，主打死不了 · 阳台/绿植档案/绿萝.md" },
 { icon:"sprout", name:"薄荷", rare:"plant", link:"阳台/温室.html", note:"越掐越旺，单盆警告（会占领全阳台）· 阳台/绿植档案/薄荷.md" },
 { icon:"sprout", name:"多肉", rare:"plant", link:"阳台/温室.html", note:"宁干勿湿，懒人友好型室友 · 阳台/绿植档案/多肉.md" },
@@ -1069,14 +1146,14 @@ const TOOL_CAP = {
 };
 /* 手绘布景 */
 const SC = {
-living:'<svg class="art" viewBox="0 0 320 130"><ellipse cx="160" cy="118" rx="118" ry="9" fill="rgba(217,164,65,.12)"/><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.28)"/><g class="hot sofa" data-s="puff"><rect x="88" y="62" width="116" height="36" rx="10" fill="#a06a38"/><rect x="82" y="48" width="128" height="24" rx="10" fill="#8a5a2e"/><rect x="96" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="150" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="94" y="96" width="6" height="14" fill="#3a2c1c"/><rect x="192" y="96" width="6" height="14" fill="#3a2c1c"/><g class="cotton"><ellipse cx="150" cy="72" rx="15" ry="9" fill="#f2ecd9"/><ellipse cx="142" cy="67" rx="7" ry="5" fill="#fffdf4"/><ellipse cx="158" cy="68" rx="6" ry="4" fill="#e8dfc8"/></g></g><g class="hot lamp" data-s="confirm"><rect x="250" y="52" width="3" height="58" fill="#3a2c1c"/><path d="M238 32h28l-5 22h-18z" fill="#d9a441"/><circle class="lampglow" cx="251" cy="52" r="30" fill="rgba(255,200,100,.16)"/></g><g class="hot tv" data-s="click"><rect x="26" y="56" width="52" height="38" rx="5" fill="#101820" stroke="#3a2c1c" stroke-width="3"/><g class="scrG"><rect class="scr" x="31" y="61" width="42" height="28" rx="3" fill="rgba(122,148,184,.18)"/><g class="ch c1"><rect x="31" y="61" width="42" height="28" filter="url(#tvn)" opacity=".9"/></g><g class="ch c2"><rect x="31" y="61" width="6" height="28" fill="#ececec"/><rect x="37" y="61" width="6" height="28" fill="#e8e33a"/><rect x="43" y="61" width="6" height="28" fill="#3ae8e4"/><rect x="49" y="61" width="6" height="28" fill="#3ae83c"/><rect x="55" y="61" width="6" height="28" fill="#e33ae8"/><rect x="61" y="61" width="6" height="28" fill="#e83a3a"/><rect x="67" y="61" width="6" height="28" fill="#3a3ae8"/></g><g class="ch c3"><rect x="31" y="61" width="42" height="28" fill="#0b1026"/><circle class="tw" cx="37" cy="66" r="1" fill="#fff"/><circle class="tw" cx="44" cy="72" r=".8" fill="#fff"/><circle class="tw" cx="39" cy="80" r="1.2" fill="#f5d68a"/><circle class="tw" cx="62" cy="66" r=".8" fill="#fff"/><circle class="tw" cx="58" cy="83" r="1" fill="#fff"/><circle cx="52" cy="70" r="4.6" fill="#f2dfa8"/><circle cx="54.6" cy="68.4" r="4.1" fill="#0b1026"/></g><g class="sl"><rect x="31" y="63" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="68" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="73" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="78" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="83" width="42" height="1.1" fill="rgba(0,0,0,.34)"/></g><defs><filter id="tvn" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="1" seed="2"><animate attributeName="seed" values="1;9" dur=".36s" repeatCount="indefinite" calcMode="discrete"/></feTurbulence><feColorMatrix type="saturate" values="0"/></filter></defs></g><rect x="46" y="94" width="12" height="6" fill="#3a2c1c"/><rect x="34" y="100" width="36" height="4" rx="2" fill="#241a10"/></g><g class="hot spin" data-s="coin"><circle cx="222" cy="107" r="8.5" fill="#1c1610" stroke="#d9a441" stroke-width="2"/><circle cx="222" cy="107" r="2.4" fill="#d9a441"/></g><g class="hot tank" data-s="splash"><title>玻璃鱼缸</title><rect x="272" y="56" width="42" height="34" rx="3" fill="rgba(120,180,210,.3)" stroke="#7aa8c4" stroke-width="2"/><rect x="274" y="68" width="38" height="20" rx="2" fill="rgba(90,150,190,.28)"/><path d="M277 89c0-6 2-10 3-13M309 89c0-5-1-9-2-13" stroke="#4a8a5c" stroke-width="2" fill="none"/><g class="fsh"><ellipse cx="284" cy="76" rx="4" ry="2.2" fill="#e8a04b"/><circle cx="281.6" cy="76" r=".9" fill="#3a2c1c"/><path d="M288 76l3.4-2.2v4.4z" fill="#e8a04b"/></g><g class="fsh fb"><ellipse cx="297" cy="81" rx="3.4" ry="1.9" fill="#c98a4e"/><circle cx="294.8" cy="81" r=".8" fill="#3a2c1c"/></g><g class="fsh fc"><ellipse cx="301" cy="71" rx="3" ry="1.7" fill="#8ab0d0"/><circle cx="299" cy="71" r=".7" fill="#3a2c1c"/></g><path d="M276 59q7-4 15 0t15 0" stroke="rgba(255,255,255,.35)" stroke-width="1.2" fill="none"/></g></svg>',
+living:'<svg class="art" viewBox="0 0 320 130"><ellipse cx="160" cy="118" rx="118" ry="9" fill="rgba(217,164,65,.12)"/><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.28)"/><g class="hot sofa" data-s="puff"><rect x="88" y="62" width="116" height="36" rx="10" fill="#a06a38"/><rect x="82" y="48" width="128" height="24" rx="10" fill="#8a5a2e"/><rect x="96" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="150" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="94" y="96" width="6" height="14" fill="#3a2c1c"/><rect x="192" y="96" width="6" height="14" fill="#3a2c1c"/><g class="cotton"><ellipse cx="150" cy="72" rx="15" ry="9" fill="#f2ecd9"/><ellipse cx="142" cy="67" rx="7" ry="5" fill="#fffdf4"/><ellipse cx="158" cy="68" rx="6" ry="4" fill="#e8dfc8"/></g></g><g class="hot lamp" data-s="confirm"><rect x="250" y="52" width="3" height="58" fill="#3a2c1c"/><path d="M238 32h28l-5 22h-18z" fill="#d9a441"/><circle class="lampglow" cx="251" cy="52" r="30" fill="rgba(255,200,100,.16)"/></g><g class="hot tv" data-s="click"><rect x="26" y="56" width="52" height="38" rx="5" fill="#101820" stroke="#3a2c1c" stroke-width="3"/><g class="scrG"><rect class="scr" x="31" y="61" width="42" height="28" rx="3" fill="rgba(122,148,184,.18)"/><g class="ch c1"><rect x="31" y="61" width="42" height="28" filter="url(#tvn)" opacity=".9"/></g><g class="ch c2"><rect x="31" y="61" width="6" height="28" fill="#ececec"/><rect x="37" y="61" width="6" height="28" fill="#e8e33a"/><rect x="43" y="61" width="6" height="28" fill="#3ae8e4"/><rect x="49" y="61" width="6" height="28" fill="#3ae83c"/><rect x="55" y="61" width="6" height="28" fill="#e33ae8"/><rect x="61" y="61" width="6" height="28" fill="#e83a3a"/><rect x="67" y="61" width="6" height="28" fill="#3a3ae8"/></g><g class="ch c3"><rect x="31" y="61" width="42" height="28" fill="#0b1026"/><circle class="tw" cx="37" cy="66" r="1" fill="#fff"/><circle class="tw" cx="44" cy="72" r=".8" fill="#fff"/><circle class="tw" cx="39" cy="80" r="1.2" fill="#f5d68a"/><circle class="tw" cx="62" cy="66" r=".8" fill="#fff"/><circle class="tw" cx="58" cy="83" r="1" fill="#fff"/><circle cx="52" cy="70" r="4.6" fill="#f2dfa8"/><circle cx="54.6" cy="68.4" r="4.1" fill="#0b1026"/></g><g class="sl"><rect x="31" y="63" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="68" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="73" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="78" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="83" width="42" height="1.1" fill="rgba(0,0,0,.34)"/></g><defs><filter id="tvn" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="1" seed="2"><animate attributeName="seed" values="1;9" dur=".36s" repeatCount="indefinite" calcMode="discrete"/></feTurbulence><feColorMatrix type="saturate" values="0"/></filter></defs></g><rect x="46" y="94" width="12" height="6" fill="#3a2c1c"/><rect x="34" y="100" width="36" height="4" rx="2" fill="#241a10"/></g><g class="hot spin" data-s="coin"><circle cx="222" cy="107" r="8.5" fill="#1c1610" stroke="#d9a441" stroke-width="2"/><circle cx="222" cy="107" r="2.4" fill="#d9a441"/></g><g class="hot tank" data-s="splash"><title>玻璃鱼缸</title><rect x="272" y="56" width="42" height="34" rx="3" fill="rgba(120,180,210,.3)" stroke="#7aa8c4" stroke-width="2"/><rect x="274" y="68" width="38" height="20" rx="2" fill="rgba(90,150,190,.28)"/><path d="M277 89c0-6 2-10 3-13M309 89c0-5-1-9-2-13" stroke="#4a8a5c" stroke-width="2" fill="none"/><g class="fsh"><ellipse cx="284" cy="76" rx="4" ry="2.2" fill="#e8a04b"/><circle cx="281.6" cy="76" r=".9" fill="#3a2c1c"/><path d="M288 76l3.4-2.2v4.4z" fill="#e8a04b"/></g><g class="fsh fb"><ellipse cx="297" cy="81" rx="3.4" ry="1.9" fill="#c98a4e"/><circle cx="294.8" cy="81" r=".8" fill="#3a2c1c"/></g><g class="fsh fc"><ellipse cx="301" cy="71" rx="3" ry="1.7" fill="#8ab0d0"/><circle cx="299" cy="71" r=".7" fill="#3a2c1c"/></g><path d="M276 59q7-4 15 0t15 0" stroke="rgba(255,255,255,.35)" stroke-width="1.2" fill="none"/></g><g class="hot rug" data-s="purr"><title>圆地毯</title><ellipse cx="150" cy="117" rx="42" ry="7.5" fill="#b0685c"/><ellipse cx="150" cy="116" rx="33" ry="5.5" fill="#c98a80"/><circle cx="150" cy="116" r="2.6" fill="#f2e8d5"/><path d="M122 117q28-8 56 0M128 119.5q22-5 44 0" stroke="rgba(242,232,213,.5)" stroke-width="1.2" fill="none"/></g><g class="hot gramo" data-s="confirm"><title>黑胶唱机</title><rect x="212" y="72" width="36" height="32" rx="3" fill="#5a3f26"/><rect x="215" y="74" width="30" height="4" rx="2" fill="#3a2a18"/><ellipse cx="227" cy="92" rx="13" ry="6" fill="#1c1610"/><circle class="gdisc" cx="227" cy="92" r="8.6" fill="#14100c" stroke="#8a7458" stroke-width="1.2"/><circle cx="227" cy="92" r="2" fill="#d9a441"/><line class="garm" x1="236" y1="84" x2="240" y2="76" stroke="#c9bfa8" stroke-width="1.6" stroke-linecap="round"/><circle cx="240" cy="76" r="1.6" fill="#c9bfa8"/></g><g class="hot rgpad" data-s="coin"><title>节奏地毯</title><line x1="124" y1="8" x2="152" y2="8" stroke="#8a7458" stroke-width="2.4"/><rect x="128" y="9" width="20" height="26" rx="2" fill="#8a4a5c"/><rect x="130" y="12" width="16" height="3" fill="#d9a441"/><rect x="130" y="17" width="16" height="3" fill="#7aa8c4"/><rect x="130" y="22" width="16" height="3" fill="#96e0b4"/><path d="M129 35h18M132 38h12M135 41h6" stroke="#d9a441" stroke-width="1.4"/></g></svg>',
 bedroom:'<svg class="art" viewBox="0 0 320 130"><g class="hot win" data-s="whoosh"><rect x="222" y="16" width="58" height="66" rx="6" fill="#24304e" stroke="#3a4358" stroke-width="3"/><line x1="251" y1="16" x2="251" y2="82" stroke="#3a4358" stroke-width="3"/><line x1="222" y1="49" x2="280" y2="49" stroke="#3a4358" stroke-width="3"/><circle cx="238" cy="34" r="8" fill="#f2e8d5" opacity=".9"/><circle cx="238" cy="34" r="15" fill="rgba(242,232,213,.12)"/><circle cx="290" cy="26" r="5" fill="#f2e8d5" opacity=".7"/><line class="meteor" x1="278" y1="20" x2="288" y2="28" stroke="#fdf6e3" stroke-width="1.8" stroke-linecap="round" opacity="0"/><g class="curtain"><rect x="216" y="12" width="24" height="72" rx="3" fill="#b0685c"/><rect x="262" y="12" width="24" height="72" rx="3" fill="#b0685c"/></g></g><g class="hot bed" data-s="purr"><rect x="30" y="88" width="126" height="20" rx="6" fill="#3a4258"/><rect x="35" y="76" width="116" height="15" rx="7" fill="#5a6480"/><rect x="42" y="67" width="28" height="13" rx="6" fill="#c8cede"/><g class="sleeper"><path d="M62 76q13-13 28-1t28-1l4 13H60z" fill="#8d97ad"/><circle cx="74" cy="69" r="6" fill="#e8c9a0"/></g><g class="bedcat" opacity="0"><ellipse cx="146" cy="82" rx="12" ry="6" fill="#4a3a28"/><circle cx="137" cy="79" r="5.5" fill="#4a3a28"/><path d="M157 82q6-3 5-8" stroke="#4a3a28" stroke-width="2.6" fill="none" stroke-linecap="round"/></g></g><rect x="0" y="106" width="320" height="24" fill="rgba(0,0,0,.3)"/><circle class="nlg" cx="186" cy="98" r="15" fill="rgba(255,214,140,.22)"/><circle cx="186" cy="98" r="4" fill="#ffd68c"/><g class="hot clock" data-s="achv" stroke="#aab3c8" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="120" cy="30" r="10"/><path d="M120 24v6l4 3"/></g></svg>',
-study:'<svg class="art" viewBox="0 0 320 130"><g class="hot shelf" data-s="coin"><rect x="18" y="14" width="152" height="76" rx="4" fill="#241a10" stroke="#4a3a28" stroke-width="5"/><line x1="18" y1="40" x2="170" y2="40" stroke="#4a3a28" stroke-width="4"/><line x1="18" y1="65" x2="170" y2="65" stroke="#4a3a28" stroke-width="4"/><rect x="26" y="22" width="16" height="18" fill="#8a5a2e"/><rect x="44" y="24" width="16" height="16" fill="#6a7488"/><rect x="62" y="21" width="15" height="19" fill="#4a8a5c"/><rect x="79" y="25" width="16" height="15" fill="#b57a42"/><rect x="97" y="22" width="15" height="18" fill="#7a94b8"/><rect x="114" y="24" width="16" height="16" fill="#956a4e"/><rect x="132" y="21" width="15" height="19" fill="#8a6aa0"/><rect x="26" y="46" width="56" height="19" rx="2" fill="#f2e8d5" opacity=".9"/><line x1="32" y1="53" x2="74" y2="53" stroke="#c9bfa8" stroke-width="2"/><line x1="32" y1="59" x2="64" y2="59" stroke="#c9bfa8" stroke-width="2"/><rect x="92" y="47" width="30" height="18" rx="3" fill="#6a7488"/><rect x="130" y="46" width="20" height="19" rx="4" fill="#d9a441"/></g><g class="hot" data-s="click" class="hot" data-s="click"><rect x="196" y="80" width="100" height="7" rx="2" fill="#3a2c1c"/><rect x="200" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="285" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="220" y="48" width="48" height="30" rx="4" fill="#101820" stroke="#4a3a28" stroke-width="3"/><rect class="flick" x="224" y="52" width="40" height="22" rx="2" fill="rgba(122,148,184,.4)"/><path d="M282 84 268 50" stroke="#3a2c1c" stroke-width="3"/><path d="M270 46 284 40l8 14-14 6z" fill="#d9a441"/><path d="M284 44 316 116 252 116z" fill="rgba(255,214,140,.07)"/></g><g fill="#9ecbff" opacity=".8"></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
+study:'<svg class="art" viewBox="0 0 320 130"><g class="hot shelf" data-s="coin"><rect x="18" y="14" width="152" height="76" rx="4" fill="#241a10" stroke="#4a3a28" stroke-width="5"/><line x1="18" y1="40" x2="170" y2="40" stroke="#4a3a28" stroke-width="4"/><line x1="18" y1="65" x2="170" y2="65" stroke="#4a3a28" stroke-width="4"/><rect x="26" y="22" width="16" height="18" fill="#6a7488"/><rect x="44" y="24" width="16" height="16" fill="#4a8a5c"/><rect x="62" y="21" width="15" height="19" fill="#8a5a2e"/><rect x="79" y="25" width="16" height="15" fill="#7a94b8"/><rect x="97" y="22" width="15" height="18" fill="#8a6aa0"/><rect x="114" y="24" width="16" height="16" fill="#956a4e"/><rect x="132" y="21" width="15" height="19" fill="#b57a42"/><rect x="26" y="46" width="56" height="19" rx="2" fill="#f2e8d5" opacity=".9"/><line x1="32" y1="53" x2="74" y2="53" stroke="#c9bfa8" stroke-width="2"/><line x1="32" y1="59" x2="64" y2="59" stroke="#c9bfa8" stroke-width="2"/><rect x="92" y="47" width="30" height="18" rx="3" fill="#6a7488"/><rect x="130" y="46" width="20" height="19" rx="4" fill="#d9a441"/></g><g class="hot" data-s="click" class="hot" data-s="click"><rect x="196" y="80" width="100" height="7" rx="2" fill="#3a2c1c"/><rect x="200" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="285" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="220" y="48" width="48" height="30" rx="4" fill="#101820" stroke="#4a3a28" stroke-width="3"/><rect class="flick" x="224" y="52" width="40" height="22" rx="2" fill="rgba(122,148,184,.4)"/><path d="M282 84 268 50" stroke="#3a2c1c" stroke-width="3"/><path d="M270 46 284 40l8 14-14 6z" fill="#d9a441"/><path d="M284 44 316 116 252 116z" fill="rgba(255,214,140,.07)"/></g><g fill="#9ecbff" opacity=".8"></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
 kitchen:'<svg class="art" viewBox="0 0 320 130"><line x1="66" y1="0" x2="66" y2="26" stroke="#3a2c1c" stroke-width="3"/><path d="M50 26h32l-6 18H56z" fill="#d9a441"/><ellipse cx="66" cy="52" rx="34" ry="10" fill="rgba(255,214,140,.12)"/><g class="hot rail" data-s="confirm"><line x1="104" y1="10" x2="196" y2="10" stroke="#8a7458" stroke-width="2"/><rect x="106" y="10" width="24" height="26" rx="2" fill="#f2e8d5"/><circle cx="112" cy="17" r="2.2" fill="#d94f3d"/><circle cx="118" cy="17" r="2.2" fill="#e8c25a"/><line x1="111" y1="24" x2="125" y2="24" stroke="#c9bfa8" stroke-width="2"/><line x1="111" y1="29" x2="120" y2="29" stroke="#c9bfa8" stroke-width="2"/><rect x="136" y="10" width="24" height="26" rx="2" fill="#f2e8d5"/><circle cx="142" cy="17" r="2.2" fill="#c98a4e"/><circle cx="148" cy="17" r="2.2" fill="#4a2f22"/><line x1="141" y1="24" x2="155" y2="24" stroke="#c9bfa8" stroke-width="2"/><line x1="141" y1="29" x2="150" y2="29" stroke="#c9bfa8" stroke-width="2"/><rect x="166" y="10" width="24" height="26" rx="2" fill="#f2e8d5"/><circle cx="172" cy="17" r="2.2" fill="#3d6b4f"/><circle cx="178" cy="17" r="2.2" fill="#e8c25a"/><line x1="171" y1="24" x2="185" y2="24" stroke="#c9bfa8" stroke-width="2"/><line x1="171" y1="29" x2="180" y2="29" stroke="#c9bfa8" stroke-width="2"/></g><rect x="22" y="92" width="132" height="8" rx="2" fill="#241a10"/><rect x="28" y="100" width="52" height="26" fill="#332014"/><rect x="96" y="100" width="52" height="26" fill="#332014"/><line x1="54" y1="100" x2="54" y2="126" stroke="#241a10" stroke-width="3"/><line x1="122" y1="100" x2="122" y2="126" stroke="#241a10" stroke-width="3"/><g class="hot pot" data-s="puff"><path d="M42 76h40v8a20 20 0 0 1-40 0z" fill="#5a6480"/><rect x="36" y="77" width="7" height="4" rx="2" fill="#5a6480"/><rect x="81" y="77" width="7" height="4" rx="2" fill="#5a6480"/><path class="steam" d="M54 70q4-8 0-16" stroke="rgba(255,255,255,.5)" stroke-width="2" fill="none" stroke-linecap="round"/><path class="steam s2" d="M68 70q-4-8 0-16" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/></g><g class="hot cab" data-s="click"><rect x="196" y="44" width="70" height="32" rx="6" fill="#8a5a2e"/><line x1="196" y1="54" x2="266" y2="54" stroke="#6a4a24" stroke-width="2"/><rect x="206" y="62" width="22" height="3" rx="1.5" fill="#f2e8d5" opacity=".7"/><rect x="234" y="62" width="22" height="3" rx="1.5" fill="#f2e8d5" opacity=".4"/></g><rect x="140" y="82" width="120" height="4" rx="2" fill="#b9854a"/><rect x="136" y="84" width="128" height="10" rx="3" fill="#9a6a38"/><rect x="142" y="94" width="8" height="24" fill="#5a3a1c"/><rect x="250" y="94" width="8" height="24" fill="#5a3a1c"/><g class="hot dish" data-d="番茄炒蛋" data-s="chomp"><title>番茄炒蛋</title><ellipse cx="148" cy="88" rx="7" ry="3.2" fill="#f2e8d5"/><ellipse cx="148" cy="86.6" rx="5" ry="2.4" fill="#e8c25a"/><circle cx="145.8" cy="86.6" r="1.7" fill="#d94f3d"/><circle cx="150.4" cy="87.2" r="1.5" fill="#d94f3d"/></g><g class="hot dish" data-d="蛋炒饭" data-s="chomp"><title>蛋炒饭</title><path d="M158 89h13a6.5 6.5 0 0 1-13 0z" fill="#c96a3a"/><ellipse cx="164.5" cy="88" rx="4.8" ry="2.4" fill="#e8c25a"/><circle cx="162.8" cy="87.6" r=".8" fill="#7aa84e"/><circle cx="166.4" cy="88.2" r=".8" fill="#7aa84e"/></g><g class="hot dish" data-d="葱油拌面" data-s="chomp"><title>葱油拌面</title><path d="M174 89h13a6.5 6.5 0 0 1-13 0z" fill="#a06a38"/><path d="M176.5 87.5q1.8-1.4 3.6 0t3.6 0t3.4 0" stroke="#e3c47e" stroke-width="1.5" fill="none"/><circle cx="179" cy="86.4" r=".8" fill="#7aa84e"/><circle cx="183" cy="87" r=".8" fill="#7aa84e"/></g><g class="hot dish" data-d="可乐鸡翅" data-s="chomp"><title>可乐鸡翅</title><ellipse cx="196" cy="88" rx="7" ry="3.2" fill="#f2e8d5"/><rect x="190.5" y="85.8" width="7" height="3.4" rx="1.7" fill="#8a4a2a"/><rect x="194.8" y="86.8" width="6" height="3" rx="1.5" fill="#a05a30"/><circle cx="190.8" cy="87.6" r=".9" fill="#f2e8d5"/><circle cx="200.8" cy="88.4" r=".8" fill="#f2e8d5"/></g><g class="hot dish" data-d="红烧肉" data-s="chomp"><title>红烧肉</title><ellipse cx="212" cy="88" rx="7" ry="3.2" fill="#f2e8d5"/><rect x="207.6" y="85.9" width="4.3" height="4" rx="1.2" fill="#6b3420"/><rect x="212.4" y="86.4" width="4" height="3.7" rx="1.2" fill="#8a4a2e"/><circle cx="210" cy="85.6" r=".7" fill="#f2e8d5" opacity=".85"/></g><g class="hot dish" data-d="酸辣土豆丝" data-s="chomp"><title>酸辣土豆丝</title><ellipse cx="228" cy="88" rx="7" ry="3.2" fill="#f2e8d5"/><path d="M222.8 87.7h10.4M223.6 86.5h8.8M224.6 88.7h6.8" stroke="#e8d27a" stroke-width="1.2"/><circle cx="230.4" cy="86.3" r=".9" fill="#c93b2e"/></g><g class="hot dish" data-d="紫菜蛋花汤" data-s="chomp"><title>紫菜蛋花汤</title><path d="M238 89h13a6.5 6.5 0 0 1-13 0z" fill="#3d6b4f"/><ellipse cx="244.5" cy="88.6" rx="4.6" ry="1.8" fill="#5a8a68"/><circle cx="242.6" cy="88.2" r=".9" fill="#2f4a36"/><circle cx="246.6" cy="88.9" r=".8" fill="#e8c25a"/><circle cx="245.2" cy="87.9" r=".8" fill="#e8c25a"/><path d="M243 85.4q1.3-1.8 0-3.6" stroke="rgba(255,255,255,.45)" stroke-width="1.1" fill="none" stroke-linecap="round"/></g><g class="hot ocade" data-s="coin"><rect x="278" y="56" width="32" height="56" rx="3" fill="#241a10" stroke="#d9a441" stroke-width="2"/><rect class="ocm" x="281" y="59" width="26" height="7" rx="2" fill="#d9a441"/><rect class="ocs" x="282" y="69" width="22" height="18" rx="2"/><path d="M288 72l8 5-8 5z" fill="rgba(20,14,8,.85)"/><rect x="284" y="91" width="20" height="5" rx="2" fill="#3a2c1c"/><circle cx="289" cy="102" r="1.7" fill="#d9a441"/><circle cx="296" cy="102" r="1.7" fill="#d9a441"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
-balcony:'<svg class="art" viewBox="0 0 320 130"><circle cx="46" cy="26" r="13" fill="#f5d68a"/><circle cx="46" cy="26" r="22" fill="rgba(245,214,138,.25)"/><g class="hot fly" data-s="coin" transform="translate(34,0)"><title>捕萤夜灯</title><line x1="88" y1="0" x2="88" y2="13" stroke="#8a7458" stroke-width="2"/><line x1="79" y1="13" x2="97" y2="13" stroke="#8a7458" stroke-width="2"/><ellipse cx="88" cy="26" rx="9.5" ry="12.5" fill="#c93b2e" stroke="#8a2418" stroke-width="2"/><path d="M83.5 15q4.5 24 9 24t9-24" fill="none" stroke="rgba(255,220,150,.45)" stroke-width="1.5"/><rect x="85" y="37" width="6" height="4" rx="1" fill="#8a2418"/><line x1="83" y1="41" x2="83" y2="48" stroke="#d9a441" stroke-width="1.4"/><line x1="93" y1="41" x2="93" y2="49" stroke="#d9a441" stroke-width="1.4"/><circle class="flg" cx="88" cy="26" r="3.6" fill="#ffd68c"/></g><g class="hot chime" data-s="chime"><title>琉璃风铃</title><line x1="300" y1="0" x2="300" y2="11" stroke="#8a7458" stroke-width="2"/><path d="M291 11h18l-3 8h-12z" fill="#b8a97f"/><g class="tu t1"><line x1="293" y1="19" x2="291" y2="33" stroke="#9ecbff" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><g class="tu t2"><line x1="300" y1="19" x2="300" y2="39" stroke="#c9a9f0" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><g class="tu t3"><line x1="307" y1="19" x2="309" y2="30" stroke="#96e0b4" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><circle cx="300" cy="43" r="2" fill="#d9a441"/></g><g class="hot" data-s="confirm" stroke="#7a6a4e" stroke-width="4"><line x1="0" y1="104" x2="320" y2="104"/></g><g stroke="#8a7458" stroke-width="3"><line x1="24" y1="104" x2="24" y2="126"/><line x1="80" y1="104" x2="80" y2="126"/><line x1="136" y1="104" x2="136" y2="126"/><line x1="192" y1="104" x2="192" y2="126"/><line x1="248" y1="104" x2="248" y2="126"/><line x1="304" y1="104" x2="304" y2="126"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M52 78h44l-5 26H57z" fill="#b57a42"/><path d="M74 78V58" stroke="#4a8a5c" stroke-width="3"/><path d="M74 64c-8-2-12-8-12-14 8 0 12 6 12 14z" fill="#5aa06a"/><path d="M74 60c8-2 12-8 12-14-8 0-12 6-12 14z" fill="#6ab07a"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M138 84h38l-4 20h-30z" fill="#a06a38"/><path d="M157 84V70" stroke="#4a8a5c" stroke-width="3"/><circle cx="157" cy="66" r="6" fill="#6ab07a"/><circle cx="148" cy="72" r="4.4" fill="#5aa06a"/><circle cx="166" cy="72" r="4.4" fill="#5aa06a"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M220 80h42l-5 24h-32z" fill="#b57a42"/><path d="M241 80V62" stroke="#4a8a5c" stroke-width="3"/><path d="M241 66c-7-1-10-6-10-11 7 0 10 5 10 11z" fill="#6ab07a"/><path d="M241 63c7-1 10-6 10-11-7 0-10 5-10 11z" fill="#5aa06a"/></g></svg>',
+balcony:'<svg class="art" viewBox="0 0 320 130"><circle cx="46" cy="26" r="13" fill="#f5d68a"/><circle cx="46" cy="26" r="22" fill="rgba(245,214,138,.25)"/><g class="hot scope" data-s="confirm"><title>星图望远镜</title><rect x="6" y="78" width="30" height="9" rx="3" transform="rotate(-16 21 82)" fill="#4a5468"/><rect x="8" y="80" width="4" height="5" rx="1.5" transform="rotate(-16 10 82)" fill="#3a4258"/><circle cx="9" cy="84" r="2.2" fill="#ffd68c"/><line x1="24" y1="88" x2="14" y2="122" stroke="#3a4458" stroke-width="3"/><line x1="24" y1="88" x2="34" y2="122" stroke="#3a4458" stroke-width="3"/><line x1="24" y1="88" x2="24" y2="122" stroke="#3a4458" stroke-width="2.4"/></g><g class="hot fly" data-s="coin" transform="translate(34,0)"><title>捕萤夜灯</title><line x1="88" y1="0" x2="88" y2="13" stroke="#8a7458" stroke-width="2"/><line x1="79" y1="13" x2="97" y2="13" stroke="#8a7458" stroke-width="2"/><ellipse cx="88" cy="26" rx="9.5" ry="12.5" fill="#c93b2e" stroke="#8a2418" stroke-width="2"/><path d="M83.5 15q4.5 24 9 24t9-24" fill="none" stroke="rgba(255,220,150,.45)" stroke-width="1.5"/><rect x="85" y="37" width="6" height="4" rx="1" fill="#8a2418"/><line x1="83" y1="41" x2="83" y2="48" stroke="#d9a441" stroke-width="1.4"/><line x1="93" y1="41" x2="93" y2="49" stroke="#d9a441" stroke-width="1.4"/><circle class="flg" cx="88" cy="26" r="3.6" fill="#ffd68c"/></g><g class="hot chime" data-s="chime"><title>琉璃风铃</title><line x1="300" y1="0" x2="300" y2="11" stroke="#8a7458" stroke-width="2"/><path d="M291 11h18l-3 8h-12z" fill="#b8a97f"/><g class="tu t1"><line x1="293" y1="19" x2="291" y2="33" stroke="#9ecbff" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><g class="tu t2"><line x1="300" y1="19" x2="300" y2="39" stroke="#c9a9f0" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><g class="tu t3"><line x1="307" y1="19" x2="309" y2="30" stroke="#96e0b4" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><circle cx="300" cy="43" r="2" fill="#d9a441"/></g><g class="hot feed" data-s="chirp"><title>喂鸟器</title><line x1="280" y1="79" x2="280" y2="85" stroke="#8a7458" stroke-width="2"/><circle cx="280" cy="77.5" r="2" fill="none" stroke="#8a7458" stroke-width="1.5"/><path d="M266 93l14-9 14 9z" fill="#8a5a2e"/><rect x="270" y="93" width="20" height="11" rx="2" fill="#b9854a"/><rect x="273" y="97" width="14" height="3.4" rx="1.7" fill="#241a10"/><g class="birdy"><circle cx="297" cy="84" r="4" fill="#c98a3a"/><circle cx="301" cy="79" r="2.7" fill="#c98a3a"/><path d="M303.6 78.4l3.4 1-3.4 1.5z" fill="#e8a04b"/><path d="M294 85.5l-3.4 1.3 1.7 1.8z" fill="#a06a28"/><circle cx="301.8" cy="78.6" r=".55" fill="#241a10"/></g></g><g class="hot" data-s="confirm" stroke="#7a6a4e" stroke-width="4"><line x1="0" y1="104" x2="320" y2="104"/></g><g stroke="#8a7458" stroke-width="3"><line x1="24" y1="104" x2="24" y2="126"/><line x1="80" y1="104" x2="80" y2="126"/><line x1="136" y1="104" x2="136" y2="126"/><line x1="192" y1="104" x2="192" y2="126"/><line x1="248" y1="104" x2="248" y2="126"/><line x1="304" y1="104" x2="304" y2="126"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M52 78h44l-5 26H57z" fill="#b57a42"/><path d="M74 78V58" stroke="#4a8a5c" stroke-width="3"/><path d="M74 64c-8-2-12-8-12-14 8 0 12 6 12 14z" fill="#5aa06a"/><path d="M74 60c8-2 12-8 12-14-8 0-12 6-12 14z" fill="#6ab07a"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M138 84h38l-4 20h-30z" fill="#a06a38"/><path d="M157 84V70" stroke="#4a8a5c" stroke-width="3"/><circle cx="157" cy="66" r="6" fill="#6ab07a"/><circle cx="148" cy="72" r="4.4" fill="#5aa06a"/><circle cx="166" cy="72" r="4.4" fill="#5aa06a"/></g><g class="hot" data-s="puff" class="hot" data-s="puff"><path d="M220 80h42l-5 24h-32z" fill="#b57a42"/><path d="M241 80V62" stroke="#4a8a5c" stroke-width="3"/><path d="M241 66c-7-1-10-6-10-11 7 0 10 5 10 11z" fill="#6ab07a"/><path d="M241 63c7-1 10-6 10-11-7 0-10 5-10 11z" fill="#5aa06a"/></g><g class="hot rocker" data-s="puff"><title>摇摇椅</title><g class="rseat"><line x1="13" y1="57" x2="41" y2="57" stroke="#8a5a2e" stroke-width="3" stroke-linecap="round"/><rect x="12" y="58" width="8" height="30" rx="4" fill="#8a5a2e"/><rect x="34" y="58" width="8" height="30" rx="4" fill="#8a5a2e"/><rect x="15" y="64" width="24" height="20" rx="5" fill="#b57a42"/><path d="M17 88q-5 6-9 8M39 88q5 6 9 8" stroke="#6a4a24" stroke-width="2.6" fill="none" stroke-linecap="round"/></g></g></svg>',
 gym:'<svg class="art" viewBox="0 0 320 130"><rect x="0" y="0" width="320" height="130" fill="#221c14"/><g class="hot" data-s="click"><rect x="196" y="42" width="12" height="52" rx="5" fill="#3a2c1c"/><rect x="160" y="42" width="12" height="52" rx="5" fill="#3a2c1c"/><rect x="150" y="52" width="68" height="12" rx="6" fill="#3a2c1c"/><rect x="140" y="46" width="14" height="24" rx="6" fill="#6a6278"/><rect x="214" y="46" width="14" height="24" rx="6" fill="#6a6278"/></g><g class="hot" data-s="confirm"><rect x="40" y="86" width="110" height="30" rx="6" fill="#3f5548"/><rect x="52" y="78" width="86" height="14" rx="7" fill="#4c6656"/></g><g class="hot tread"><title>跑步机</title><rect x="22" y="58" width="66" height="10" rx="4" fill="#241a10"/><rect x="28" y="60" width="48" height="5" rx="2.5" fill="#14100c"/><line class="belt" x1="30" y1="62.5" x2="74" y2="62.5" stroke="#d9a441" stroke-width="1.5"/><rect x="30" y="34" width="4" height="26" rx="2" fill="#3a2c1c"/><rect x="74" y="34" width="4" height="26" rx="2" fill="#3a2c1c"/><rect x="24" y="28" width="60" height="9" rx="3" fill="#241a10"/><rect class="tscreen" x="28" y="30" width="14" height="5" rx="1"/></g><g class="hot rack"><title>哑铃架</title><rect x="246" y="84" width="64" height="6" rx="2" fill="#4a3a26"/><rect x="250" y="90" width="5" height="26" fill="#3a2a1a"/><rect x="301" y="90" width="5" height="26" fill="#3a2a1a"/><g class="db-up"><circle cx="266" cy="78" r="4.5" fill="#241a10"/><circle cx="276" cy="78" r="4.5" fill="#241a10"/><line x1="266" y1="78" x2="276" y2="78" stroke="#8a7458" stroke-width="2.4"/></g><circle cx="290" cy="79" r="3.8" fill="#241a10"/><circle cx="298" cy="79" r="3.8" fill="#241a10"/><line x1="290" y1="79" x2="298" y2="79" stroke="#8a7458" stroke-width="2.2"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.35)"/><circle cx="250" cy="26" r="9" fill="rgba(255,214,140,.18)"/><circle cx="250" cy="26" r="3.4" fill="#ffd68c"/></svg>',
 loft:'<svg class="art" viewBox="0 0 320 130"><rect x="0" y="0" width="320" height="130" fill="#1a1626"/><g class="hot win" data-s="whoosh"><rect x="206" y="12" width="78" height="72" rx="6" fill="#0e1220" stroke="#3a3450" stroke-width="3"/><circle cx="224" cy="28" r="2" fill="#fff"/><circle cx="248" cy="22" r="1.5" fill="#fff"/><circle cx="262" cy="42" r="2" fill="#fff"/><circle cx="234" cy="50" r="1.5" fill="#fff"/><circle cx="256" cy="66" r="1.5" fill="#fff"/><circle cx="220" cy="64" r="1.3" fill="#fff"/></g><line class="meteor" x1="270" y1="18" x2="282" y2="26" stroke="#fdf6e3" stroke-width="1.8" stroke-linecap="round" opacity="0"/><g class="hot" data-s="click"><rect x="26" y="72" width="70" height="38" rx="4" fill="#6a5a3e"/><rect x="30" y="76" width="62" height="9" rx="3" fill="#8a7a54"/><path d="M40 110l-8 6h76l-8-6z" fill="#574a34"/></g><g class="hot" data-s="achv"><path d="M126 108l26-46 26 46z" fill="#4a4258"/><path d="M152 62v46" stroke="#6a6278" stroke-width="3"/><circle cx="152" cy="62" r="5" fill="#d9a441"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.35)"/></svg>',
-cellar:'<svg class="art" viewBox="0 0 320 130"><path d="M160 0 236 96 84 96z" fill="rgba(255,240,200,.06)"/><g class="hot" data-s="click" class="swing"><line x1="160" y1="0" x2="160" y2="30" stroke="#4a4438" stroke-width="3"/><circle cx="160" cy="40" r="9" fill="#f2e8d5" opacity=".92"/><circle cx="160" cy="40" r="17" fill="rgba(255,240,200,.14)"/></g><g class="hot" data-s="door" class="hot" data-s="door"><rect x="42" y="86" width="52" height="34" fill="#6a5236"/><rect x="42" y="100" width="52" height="4" fill="#4a3a26"/><rect x="60" y="86" width="6" height="34" fill="#4a3a26"/><rect x="98" y="94" width="44" height="26" fill="#755c3c"/><rect x="116" y="94" width="5" height="26" fill="#4a3a26"/></g><g><rect x="206" y="78" width="46" height="10" rx="3" fill="#4a4438"/><rect x="214" y="88" width="6" height="32" fill="#4a4438"/><rect x="238" y="88" width="6" height="32" fill="#4a4438"/><path d="M262 88c0-7 5-12 12-12s12 5 12 12z" fill="#5a5244"/><rect x="274" y="88" width="4" height="18" fill="#4a4438"/></g><g fill="rgba(255,255,255,.35)"></g><rect x="0" y="118" width="320" height="12" fill="rgba(0,0,0,.4)"/></svg>',
+cellar:'<svg class="art" viewBox="0 0 320 130"><path d="M160 0 236 96 84 96z" fill="rgba(255,240,200,.06)"/><g class="hot" data-s="click" class="swing"><line x1="160" y1="0" x2="160" y2="30" stroke="#4a4438" stroke-width="3"/><circle cx="160" cy="40" r="9" fill="#f2e8d5" opacity=".92"/><circle cx="160" cy="40" r="17" fill="rgba(255,240,200,.14)"/></g><g class="hot" data-s="door" class="hot" data-s="door"><rect x="42" y="86" width="52" height="34" fill="#6a5236"/><rect x="42" y="100" width="52" height="4" fill="#4a3a26"/><rect x="60" y="86" width="6" height="34" fill="#4a3a26"/><rect x="98" y="94" width="44" height="26" fill="#755c3c"/><rect x="116" y="94" width="5" height="26" fill="#4a3a26"/></g><g><rect x="206" y="78" width="46" height="10" rx="3" fill="#4a4438"/><rect x="214" y="88" width="6" height="32" fill="#4a4438"/><rect x="238" y="88" width="6" height="32" fill="#4a4438"/><path d="M262 88c0-7 5-12 12-12s12 5 12 12z" fill="#5a5244"/><rect x="274" y="88" width="4" height="18" fill="#4a4438"/></g><g class="hot fire" data-s="whoosh"><title>地下暖炉</title><rect x="150" y="64" width="54" height="44" rx="3" fill="#4a4438"/><rect x="154" y="68" width="46" height="36" rx="2" fill="#2a241c"/><path d="M150 74h54M150 84h54M168 64v26M186 64v26" stroke="#3a342c" stroke-width="1.6"/><rect x="161" y="74" width="32" height="24" rx="10" fill="#14100c"/><g class="flames"><path class="fl1" d="M172 96q-6-8 0-16 6 8 0 16z" fill="#e8944b"/><path class="fl2" d="M180 96q-7-10 1-20 6 10-1 20z" fill="#f5b942"/><path class="fl3" d="M170 96q-4-5 0-10 4 5 0 10z" fill="#f2e0a0"/></g><rect x="158" y="60" width="38" height="5" rx="2" fill="#5a5244"/><ellipse cx="177" cy="98" rx="30" ry="8" fill="rgba(245,185,66,.08)"/></g><g fill="rgba(255,255,255,.35)"></g><rect x="0" y="118" width="320" height="12" fill="rgba(0,0,0,.4)"/></svg>',
 };
 const RARE_NAME = { tool:"工具", web:"网页", book:"藏书", food:"菜谱", plant:"绿植", furn:"家具" };
 /* CG 画廊：七段真事 */
@@ -1102,6 +1179,9 @@ quote:"<b>「穷得很踏实。房子还是那个欠债的房子，但书房里�
 { id:"cg8", name:"星尘杂货铺", date:"2026-10-12", hint:"商城购齐全部商品",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#1d1626"/><g fill="#f0c46a"><path d="M40 22l2.6 5.2 5.2 2.6-5.2 2.6L40 40l-2.6-5.2-5.2-2.6 5.2-2.6z"/><path d="M158 16l2 4 4 2-4 2-2 4-2-4-4-2 4-2z"/><path d="M170 64l2.4 4.8 4.8 2.4-4.8 2.4-2.4 4.8-2.4-4.8-4.8-2.4 4.8-2.4z"/><path d="M28 72l1.8 3.6 3.6 1.8-3.6 1.8L28 88l-1.8-3.6-3.6-1.8 3.6-1.8z"/></g><g transform="rotate(-8 100 62)"><rect x="78" y="32" width="44" height="58" rx="6" fill="#2a1c10" stroke="#e8892c" stroke-width="2.5"/><rect x="90" y="44" width="20" height="20" rx="4" fill="rgba(245,185,66,.25)"/><circle cx="100" cy="54" r="5" fill="#f5b942"/><rect x="86" y="74" width="28" height="4" rx="2" fill="rgba(242,209,145,.6)"/><rect x="86" y="82" width="18" height="4" rx="2" fill="rgba(242,209,145,.35)"/></g><ellipse cx="100" cy="96" rx="46" ry="6" fill="rgba(240,150,50,.12)"/></svg>',
 quote:"<b>「货架买空了，橙卡还是没抽够。」</b>——开包那一下最好玩：卡背落下、爆开、流光飞走。星尘花得值。" },
+{ id:"cg9", name:"客厅演唱会", date:"2026-10-13", hint:"节奏地毯拿下高分",
+art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#241a2e"/><rect x="70" y="8" width="60" height="32" rx="4" fill="#8a4a5c"/><rect x="76" y="14" width="12" height="8" rx="2" fill="#d9a441"/><rect x="94" y="14" width="12" height="8" rx="2" fill="#7aa8c4"/><rect x="112" y="14" width="12" height="8" rx="2" fill="#96e0b4"/><line x1="20" y1="74" x2="180" y2="74" stroke="#f0c46a" stroke-width="2" opacity=".65"/><g fill="#f0c46a"><circle cx="52" cy="48" r="4"/><rect x="55" y="34" width="2" height="14"/><circle cx="96" cy="54" r="4"/><rect x="99" y="40" width="2" height="14"/><circle cx="142" cy="46" r="4"/><rect x="145" y="32" width="2" height="14"/></g><g><circle cx="88" cy="86" r="7" fill="#f2e0c8"/><rect x="82" y="92" width="12" height="12" rx="4" fill="#5a6f92"/><rect x="76" y="94" width="6" height="10" rx="3" fill="#5a6f92"/><rect x="94" y="90" width="6" height="8" rx="3" fill="#5a6f92"/></g><g><ellipse cx="124" cy="97" rx="9" ry="5.5" fill="#4a3a28"/><circle cx="116" cy="92" r="5" fill="#4a3a28"/><path d="M131 97q5-2 4-6" stroke="#4a3a28" stroke-width="2.4" fill="none" stroke-linecap="round"/></g><line x1="14" y1="104" x2="186" y2="104" stroke="rgba(255,255,255,.22)" stroke-width="2"/></svg>',
+quote:"<b>「音乐会散场，猫在沙发扶手上打着拍子，意犹未尽。」</b>——挂毯卷开的那晚，四个键按出了半个乐队。" },
 ];
 const QUESTS = [
 { id:"q-boot", name:"开机自检", desc:"从标题画面进入小家", goal:1, reward:5, stat:"entered" },
@@ -1112,7 +1192,8 @@ const QUESTS = [
 { id:"q-rooms6", name:"全屋巡礼", desc:"走遍全部 6 间房", goal:6, reward:30, stat:"rooms" },
 { id:"q-buy", name:"第一桶星尘", desc:"在商城买下一件商品", goal:1, reward:15, stat:"buys" },
 { id:"q-cg1", name:"回忆", desc:"解锁第一张 CG", goal:1, reward:15, stat:"cgs" },
-{ id:"q-cg7", name:"集大功成", desc:"集齐 7 张 CG", goal:7, reward:50, stat:"cgs" },
+{ id:"q-cg7", name:"集大功成", desc:"集齐 9 张 CG", goal:9, reward:50, stat:"cgs" },
+{ id:"q-rg", name:"开毯", desc:"客厅 · 节奏地毯打完一首", goal:1, reward:20, stat:"rgPlay" },
 { id:"q-smoke", name:"？？？", desc:"？？？", hidden:true, goal:3, reward:20, stat:"smoke" },
 { id:"q-dj", name:"？？？", desc:"？？？", hidden:true, goal:2, reward:10, stat:"dj" },
 { id:"q-talk3", name:"唠家常", desc:"和住户聊 3 回", goal:3, reward:15, stat:"talks" },
@@ -1164,8 +1245,12 @@ tips: [
 "装修队还能给健身房添跑步机和哑铃架，装好点上跑步、举上两把。",
 "书架上的书能整本翻着读，楷体配纸声；翻完记进任务，读完五本有座银杯。",
 "阳台的灯笼是捕萤夜灯：商城解锁后点亮，六十秒收萤，连击越高收得越多。",
+"阳台支起望远镜就能观星：星序亮三秒，记住再连，一夜连出四座有座银杯。",
+"栏杆上的喂鸟器买下就有房客：点一下撒把谷子，小雀会低头来啄。",
 "商城分货架了：玩伴、玩具、游戏、天气、氛围、家当、主题，各归各的架。",
-"星尘够就添家当：客厅能摆鱼缸，阳台能挂风铃，夜里还能开星空投影灯。"
+"星尘够就添家当：客厅能摆鱼缸，阳台能挂风铃，夜里还能开星空投影灯。",
+"客厅挂毯卷开就是节奏地毯：音符落下来按下去，打完一首浑身舒坦。",
+"储藏室装了暖炉，拨一把火苗窜一窜；客厅的唱机点一下自己放一段。"
 ],
 cat: [
 "猫咪室友是星尘换的，不亏。它把沙发蹭出了专属毛毯区。",
@@ -1180,7 +1265,7 @@ const TIER = { bronze: "铜", silver: "银", gold: "金", plat: "白金" };
 const ACHV = [
 { id:"a-boot", t:"bronze", name:"安家", desc:"进入小家" },
 { id:"a-rooms", t:"silver", name:"全屋巡礼", desc:"走遍 6 间房" },
-{ id:"a-cg", t:"gold", name:"收藏家", desc:"集齐 7 张回忆" },
+{ id:"a-cg", t:"gold", name:"收藏家", desc:"集齐 9 张回忆" },
 { id:"a-buy3", t:"silver", name:"购物袋", desc:"商城购入 3 件" },
 { id:"a-talk5", t:"bronze", name:"唠家常", desc:"和住户聊 5 回" },
 { id:"a-phase4",t:"silver", name:"四时俱备", desc:"怀表拨遍四时" },
@@ -1195,6 +1280,8 @@ const ACHV = [
 { id:"a-oc",  t:"gold", name:"胡闹厨神", desc:"胡闹厨房单班出餐 8 盘" },
 { id:"a-read5",t:"silver",name:"书虫", desc:"书架翻完 5 本书" },
 { id:"a-fy",  t:"silver", name:"守夜人", desc:"捕萤一夜收下 20 只" },
+{ id:"a-sg",  t:"silver", name:"观星人", desc:"星图一夜拿下 2200 分" },
+{ id:"a-rg",  t:"gold", name:"节拍灵魂", desc:"节奏地毯拿下 14000 分" },
 { id:"a-week", t:"silver", name:"常客", desc:"连续入住 3 天" },
 { id:"a-plat", t:"plat", name:"这个家", desc:"集齐其余全部奖杯" },
 ];
@@ -1216,6 +1303,8 @@ const achvCond = {
 "a-oc": () => { try { return (parseInt(localStorage.getItem("oc_best"), 10) || 0) >= 8; } catch (e) { return false; } },
 "a-read5": () => (S.stats.reads || 0) >= 5,
 "a-fy": () => { try { return (parseInt(localStorage.getItem("fy_best"), 10) || 0) >= 20; } catch (e) { return false; } },
+"a-sg": () => { try { return (parseInt(localStorage.getItem("sg_best"), 10) || 0) >= 2200; } catch (e) { return false; } },
+"a-rg": () => { try { return (parseInt(localStorage.getItem("rg_best"), 10) || 0) >= 14000; } catch (e) { return false; } },
 "a-week": () => (S.stats.streak || 0) >= 3,
 };
 const SHOP = [
@@ -1225,6 +1314,14 @@ const SHOP = [
 { id:"yarn", icon:"yarn", name:"毛线球", price:40, kind:"toy", desc:"扔出去，猫扑着玩" },
 { id:"oc", icon:"cooking-pot", name:"胡闹厨房", price:45, kind:"game", desc:"厨房街机通电，接单开火" },
 { id:"fy", icon:"fly", name:"捕萤夜灯", price:45, kind:"game", desc:"阳台灯笼亮起，夏夜收萤" },
+{ id:"sg", icon:"telescope", name:"星图望远镜", price:45, kind:"game", desc:"阳台支镜，一夜连四座星座" },
+{ id:"rg", icon:"disc-3", name:"节奏地毯", price:45, kind:"game", desc:"客厅挂毯卷开，音符落键" },
+{ id:"bird", icon:"bird", name:"喂鸟器", price:40, kind:"decor", desc:"栏杆小屋，雀鸟常来" },
+{ id:"fire", icon:"flame", name:"柴火壁炉", price:55, kind:"decor", desc:"卧室西墙，冬夜噼啪" },
+{ id:"gramo", icon:"music", name:"黑胶唱机", price:45, kind:"decor", desc:"客厅矮柜，点它来一段" },
+{ id:"rocker", icon:"armchair", name:"摇摇椅", price:45, kind:"decor", desc:"阳台角落，吱呀吱呀" },
+{ id:"rug", icon:"circle-dot", name:"圆地毯", price:35, kind:"decor", desc:"沙发脚下，猫的地盘" },
+{ id:"mail", icon:"mail", name:"信鸽邮筒", price:30, kind:"decor", desc:"院子门口，偶有短笺" },
 { id:"snow", icon:"snowflake", name:"鹅毛雪", price:40, kind:"weather", desc:"全屋下雪" },
 { id:"sakura", icon:"flower", name:"樱花雨", price:40, kind:"weather", desc:"全屋樱花" },
 { id:"rain", icon:"cloud-rain", name:"听雨", price:45, kind:"weather", desc:"全屋落雨" },
@@ -1358,6 +1455,7 @@ case "page": this.noise(t, 0.3, { vol: 0.1, from: 1600, to: 260, q: 1.7 });
 this.noise(t + 0.06, 0.12, { vol: 0.04, from: 2400, to: 900, q: 2 }); break;
 case "chime": [88, 93, 97].forEach((n, i) => this.tone(this.midi(n + Math.floor(Math.random() * 2)), t + i * 0.09, 0.9, { vol: 0.05, attack: 0.004 })); break;
 case "splash": this.noise(t, 0.25, { vol: 0.1, from: 800, to: 2400, q: 1 }); this.tone(300, t + 0.05, 0.14, { vol: 0.06, slideTo: 620 }); break;
+case "chirp": this.tone(3100, t, 0.06, { vol: 0.05 }); this.tone(2650, t + 0.1, 0.08, { vol: 0.05, slideTo: 3300 }); break;
 }
 },
 /* 天气环境声：循环白噪过低通，挂 BGM 通道 · 雨声亮、雪声密而轻 */
@@ -1870,8 +1968,9 @@ AU.sfx("coin");
 if (it.kind === "theme") { S.equipped.theme = it.id; applyTheme(); }
 		if (it.kind === "weather") { S.equipped.weather = it.id; FXC.ambient = FXC.ambient.filter(a => a.kind === "fly"); AU.setWx(it.id); applyTheme(); }
 			if (it.kind === "toy") { S.equipped.toy = it.id; TOY.reset(); }
-		if (it.id === "cat") startCat();
-		if (it.id === "firework") document.getElementById("btn-firework").style.display = "";
+			if (it.id === "cat") startCat();
+			if (it.id === "firework") document.getElementById("btn-firework").style.display = "";
+			if (it.id === "mail") document.getElementById("mailbox").classList.add("on");
 			closeModal();
 			openPack(it, () => { if (S.owned.length >= SHOP.length + 1) unlockCG("cg8"); checkQuests(); save(); });
 		} else if (equipBtn) {
@@ -2081,6 +2180,7 @@ document.body.classList.toggle("reduce-motion", !!S.settings.reduceMotion);
 function applySettingsUI() {
 document.getElementById("btn-music").classList.toggle("off", !S.settings.bgm);
 document.getElementById("btn-firework").style.display = S.owned.includes("firework") ? "" : "none";
+document.getElementById("mailbox").classList.toggle("on", S.owned.includes("mail"));
 document.getElementById("cat").classList.toggle("on", S.owned.includes("cat"));
 if (S.owned.includes("cat")) startCat();
 }
@@ -2108,32 +2208,138 @@ setTimeout(step1, 80);
 }
 const roomOverlay = document.getElementById("room-overlay");
 let curRoom = null;
+/* ── 3D 剖面小家：楼层/家具数据驱动 ── */
+const FLOORS = [
+[["客厅", -150, 174, 0, 86], ["厨房", 24, 126, 0, 86]],
+[["卧室", -150, 114, -86, 86], ["书房", -36, 102, -86, 86], ["阳台", 66, 84, -86, 86]],
+];
+const DBOXES = [];   /* 各房 3D 盒，供点选投影定位 */
+const FURN = {
+"客厅": [[26, 54, 22, "#8a5a2e"], [114, 32, 26, "#141c2c"], [78, 26, 12, "#b57a42"]],
+"厨房": [[40, 38, 26, "#5a6480"], [40, 32, 15, "#f2e8d5", 44]],
+"卧室": [[26, 54, 22, "#5a6480"], [88, 16, 20, "#f2e0c8"]],
+"书房": [[28, 44, 34, "#6a4a24"], [58, 32, 20, "#8a6a3e"]],
+"阳台": [[12, 16, 18, "#4a8a5c"], [48, 16, 18, "#5aa06a"]],
+"健身房": [[8, 36, 22, "#6a6278"], [50, 34, 16, "#241a10"]],
+"储藏室": [[40, 24, 17, "#8a7458"], [86, 20, 14, "#a08a64"], [176, 26, 16, "#8a7458"]],
+"阁楼": [[96, 26, 18, "#6a5a3e"], [176, 34, 10, "#4a4258"]],
+};
+const furnOf = n => (FURN[n] || []).map(f => '<i class="furn" style="left:' + f[0] + "px;bottom:" + (f[4] || 6) +
+"px;width:" + f[1] + "px;height:" + f[2] + 'px;background:' + f[3] + '"></i>').join("");
+function drHTML(name, x, w, y, h, cls) {
+DBOXES.push({ name: name, x0: x, x1: x + w, y0: y, y1: y + h });
+let win = "";
+if (y < 0) win = Array.from({ length: w > 100 ? 2 : 1 }, (_, i) =>
+'<i class="dwin' + (Math.random() < .3 ? " dflick" : "") + '" style="right:' + (16 + i * 26) + 'px;top:16px"></i>').join("");
+return '<div class="droom' + (S.visited.includes(name) ? " seen" : "") + (cls ? " " + cls : "") +
+'" data-room="' + name + '" tabindex="0" style="--w:' + w + 'px;--h:' + h + 'px;transform:translate3d(' + x + 'px,' + y + 'px,75px)">' +
+'<div class="df"></div><div class="dc"></div><div class="dl"></div><div class="drt"></div>' +
+'<div class="dbk"><span class="dtag">' + name + "</span>" + win + furnOf(name) + "</div></div>";
+}
 function renderRooms() {
-const box = document.getElementById("rooms");
-box.innerHTML = "";
-const rlist = ["客厅", "卧室", "书房", "厨房", "阳台"];
-rlist.push("健身房");
-if (S.renov["rv-loft"]) rlist.push("阁楼");
-for (const name of rlist) {
-const r = ROOMS[name];
-if (!r) continue;
-const el = document.createElement("div");
-el.className = "room" + (S.visited.includes(name) ? " visited" : "");
-el.dataset.room = name;
-el.tabIndex = 0;
-el.innerHTML = '<span class="plate">' + r.no + '</span>' +
-'<div class="r-ic">' + ic(r.icon) + "</div>" +
-'<div class="r-tx"><h2>' + name + '</h2><div class="cnt">藏品 ×' + r.items.length + "</div></div>" +
-ic("chevron-right", "position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--ink-3)");
-el.addEventListener("click", ev => enterRoom(name, ev.clientX, ev.clientY));
-el.addEventListener("keydown", ev => { if (ev.key === "Enter") enterRoom(name, innerWidth / 2, innerHeight / 2); });
-el.addEventListener("mouseenter", () => AU.sfx("tick"));
-box.appendChild(el);
+DBOXES.length = 0;
+const H = ['<div class="dground"></div>'];
+for (const row of FLOORS) for (const f of row) H.push(drHTML.apply(null, f));
+H.push(drHTML("健身房", -244, 92, 0, 64));
+H.push(drHTML("储藏室", -150, 300, 86, 40, "deep"));
+const loft = S.renov["rv-loft"];
+H.push('<div class="dloft' + (loft ? " un" : "") + '" data-loft="1" tabindex="0" ' +
+'style="--w:300px;--h:40px;transform:translate3d(-150px,-212px,75px)">' +
+'<div class="df"></div><div class="dl"></div><div class="drt"></div>' +
+'<div class="dbk"><span class="dtag">F2 · 阁楼</span>' + (loft ? furnOf("阁楼") : "") +
+'<i class="lock">' + ic(loft ? "moon" : "lock") + "</i></div></div>");
+H.push('<div class="drf drfF"></div><div class="drf drfB"></div><div class="dchm"></div>');
+const dh = document.getElementById("dhouse");
+dh.innerHTML = H.join("");
+if (!dprobe) {
+dprobe = document.createElement("i");
+dprobe.style.cssText = "position:absolute;pointer-events:none";
 }
-const cellar = document.querySelector(".cellar");
-cellar.addEventListener("click", ev => enterRoom("储藏室", ev.clientX, ev.clientY));
-cellar.addEventListener("mouseenter", () => AU.sfx("tick"));
+dh.appendChild(dprobe);   /* 点选定位探针：渲染重建后重挂 */
 }
+/* 拖转 / 点选 / 掀顶 / 名牌 */
+const dhouse = document.getElementById("dhouse"), dstage = document.getElementById("dstage"), dinfo = document.getElementById("dinfo");
+let dRX = -24, dRY = -30, dDrag = null, dprobe = null;
+function applyDoll() {
+dhouse.style.setProperty("--drx", dRX + "deg");
+dhouse.style.setProperty("--dry", dRY + "deg");
+}
+/* ── 点选定位：探针投影 3D 盒的后墙/地板四边形，点内即中，重叠取近 ── */
+function projPt(px, py, pz) {
+dprobe.style.transform = "translate3d(" + px + "px," + py + "px," + pz + "px)";
+const r = dprobe.getBoundingClientRect();
+return [r.left, r.top];
+}
+function inQuad(x, y, q) {
+let pos = false, neg = false;
+for (let i = 0; i < 4; i++) {
+const a = q[i], b = q[(i + 1) % 4];
+const cr = (b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]);
+if (cr > 0) pos = true; else if (cr < 0) neg = true;
+if (pos && neg) return false;
+}
+return true;
+}
+function dollRoomAt(x, y) {
+if (!dprobe) return null;
+let best = null, bestSc = -1;
+for (const b of DBOXES) {
+const zb = -150;
+const back = [projPt(b.x0, b.y0, zb), projPt(b.x1, b.y0, zb), projPt(b.x1, b.y1, zb), projPt(b.x0, b.y1, zb)];
+const flor = [projPt(b.x0, b.y0, 0), projPt(b.x1, b.y0, 0), projPt(b.x1, b.y0, zb), projPt(b.x0, b.y0, zb)];
+if (inQuad(x, y, back) || inQuad(x, y, flor)) {
+const c0 = projPt((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, -75);
+const c1 = projPt((b.x0 + b.x1) / 2 + 40, (b.y0 + b.y1) / 2, -75);
+const sc = (Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) || 1) / 40;
+if (sc > bestSc) { bestSc = sc; best = b; }
+}
+}
+return best;
+}
+dstage.addEventListener("pointerdown", e => {
+dDrag = { x: e.clientX, y: e.clientY, moved: 0 };
+try { dstage.setPointerCapture(e.pointerId); } catch (er) {}
+dhouse.classList.add("drag");
+});
+dstage.addEventListener("pointermove", e => {
+if (!dDrag) return;
+const dx = e.clientX - dDrag.x, dy = e.clientY - dDrag.y;
+dDrag.x = e.clientX; dDrag.y = e.clientY;
+dDrag.moved += Math.abs(dx) + Math.abs(dy);
+dRY = Math.max(-78, Math.min(78, dRY + dx * .3));
+dRX = Math.max(-46, Math.min(-6, dRX - dy * .2));
+applyDoll();
+});
+dstage.addEventListener("pointerup", e => {
+if (!dDrag) return;
+dhouse.classList.remove("drag");
+const tap = dDrag.moved < 9;
+dDrag = null;
+if (!tap) return;
+const el = document.elementFromPoint(e.clientX, e.clientY);
+const winEl = el && el.closest(".dwin");
+if (winEl) { winEl.classList.toggle("off"); AU.sfx("puff"); return; }
+const loft = el && el.closest(".dloft");
+if (loft) { AU.sfx("click"); if (S.renov["rv-loft"]) enterRoom("阁楼", e.clientX, e.clientY); else showRenov("阁楼"); return; }
+if (el && el.closest(".drf,.dchm")) { AU.sfx("door"); dhouse.classList.toggle("lfd"); return; }
+const box = dollRoomAt(e.clientX, e.clientY);   /* 3D 盒投影定位，不靠面片命中 */
+if (box) enterRoom(box.name, e.clientX, e.clientY);
+});
+dstage.addEventListener("keydown", e => {
+if (e.key !== "Enter") return;
+const r = e.target.closest && e.target.closest(".droom");
+if (r) enterRoom(r.dataset.room, innerWidth / 2, innerHeight / 2);
+});
+dstage.addEventListener("mouseover", e => {
+const r = e.target.closest && e.target.closest(".droom");
+if (!r) return;
+const name = r.dataset.room, rm = ROOMS[name];
+dinfo.textContent = rm.no + " · " + name + " · " + rm.sub + " · 藏品 ×" + rm.items.length +
+(S.visited.includes(name) ? "" : " · 新");
+});
+dstage.addEventListener("mouseleave", () => {
+dinfo.textContent = "拖动转一转 · 点屋顶开合 · 点房间进门";
+});
 function enterRoom(name, cx, cy) {
 if (dlgOpen()) closeTalk();
 AU.sfx("door");
@@ -2220,9 +2426,10 @@ const BK = [
 { n: "REA 家常菜", c: "#b57a42", s: "没源码也看得懂", t: "主人让我去找一个叫 engineer-anything 的项目学着用。找了一圈，正主是 morluto/rea——逆向工程任你拆，十三万颗星的工具集，专把逆向分析接到 AI 代理手上。这本菜谱记的是我在自家 Windows 灶台上试过的招式，案例是真的，数字也是真的，骗人的部分一个都没有。一句话：没有源码，也能搞清一个软件是怎么实现功能的——从应用行为到原生二进制，结论都要带证据。两种用法：rea 命令行最快，或者把 MCP 服务接给代理。能分析 .NET 程序集、Electron 应用、Go 二进制的构建信息、网站和 APK；原生反编译要自备大家伙。装机一条命令的事，源码副本放在门外，纯参考，不进门。" }
 ];
 function showShelf() {
+const row = (a, b) => '<div class="rail">' + BK.slice(a, b).map((bk2, i) =>
+'<button class="spine' + (bk2.n.length > 9 ? " long" : "") + '" data-bk="' + (a + i) + '" style="background:' + bk2.c + '">' + bk2.n + "</button>").join("") + "</div>";
 openModal(ic("library") + "书架", "点书脊取书，慢慢翻",
-'<div class="shelf-bk"><div class="rail">' + BK.map((b, i) =>
-'<button class="spine" data-bk="' + i + '" style="background:' + b.c + '">' + b.n + "</button>").join("") + "</div></div>");
+'<div class="shelf-bk">' + row(0, 4) + row(4, BK.length) + "</div>");
 }
 /* 正文按句切页，一页恰好一盏茶的工夫 */
 function paginate(t, per) {
@@ -2376,10 +2583,63 @@ h.classList.remove("ring"); void h.getBoundingClientRect(); h.classList.add("rin
 setTimeout(() => h.classList.remove("ring"), 1900);
 return;
 }
+if (h.classList.contains("scope")) { // 望远镜：解锁后支镜观星
+if (!S.owned.includes("sg")) { toast("lock", "镜盖还扣着", "星尘商城解锁「星图望远镜」后开看"); return; }
+const rc = h.getBoundingClientRect();
+openRoomPage("阳台/星图.html", rc.left + rc.width / 2, rc.top + rc.height / 2);
+return;
+}
+if (h.classList.contains("feed")) { // 喂鸟器：撒一撮谷子，雀鸟低头啄
+h.classList.remove("peck"); void h.getBoundingClientRect(); h.classList.add("peck");
+setTimeout(() => h.classList.remove("peck"), 1100);
+return;
+}
 if (h.classList.contains("fly")) { // 捕萤灯笼：解锁后点亮开张
 if (!S.owned.includes("fy")) { toast("lock", "灯笼还没亮", "星尘商城解锁「捕萤夜灯」后开张"); return; }
 const rc = h.getBoundingClientRect();
 openRoomPage("阳台/捕萤.html", rc.left + rc.width / 2, rc.top + rc.height / 2);
+return;
+}
+if (h.classList.contains("rgpad")) { // 节奏挂毯：解锁后开毯
+if (!S.owned.includes("rg")) { toast("lock", "挂毯还卷着", "星尘商城解锁「节奏地毯」后开张"); return; }
+const rc = h.getBoundingClientRect();
+openRoomPage("客厅/节奏地毯.html", rc.left + rc.width / 2, rc.top + rc.height / 2);
+return;
+}
+if (h.classList.contains("rug")) { // 圆地毯：猫的地盘
+if (S.owned.includes("cat")) {
+const r5 = h.getBoundingClientRect();
+FXC.hearts(r5.left + r5.width / 2, r5.top + 8); AU.sfx("purr");
+toast("meow", "猫的地盘", "毯子一铺，它第一个验收");
+} else toast("info", "沙发脚下", "铺上正合适，就差一只猫");
+return;
+}
+if (h.classList.contains("gramo")) { // 黑胶唱机：落针放一小段，三段轮着来
+st.gm = ((st.gm || 0) + 1) % 3;
+h.classList.remove("spin"); void h.getBoundingClientRect(); h.classList.add("spin");
+if (AU.ctx && S.settings.sfx) {
+const t0 = AU.ctx.currentTime;
+[[72,74,76,79,76,74,72,67],[69,72,74,72,69,67,69,72],[74,76,79,81,79,76,74,72]][st.gm]
+.forEach((n, i) => AU.tone(AU.midi(n), t0 + i * 0.22, 0.5, { vol: 0.1, type: "triangle", attack: 0.01 }));
+}
+return;
+}
+if (h.classList.contains("fire")) { // 暖炉：拨一把火，苗头窜一窜
+h.classList.remove("flare"); void h.getBoundingClientRect(); h.classList.add("flare");
+if (AU.ctx && S.settings.sfx) {
+const t0 = AU.ctx.currentTime;
+AU.noise(t0, 0.24, { vol: 0.09, from: 500, to: 1600, q: 0.8 });
+AU.noise(t0 + 0.2, 0.3, { vol: 0.07, from: 380, to: 900, q: 0.9 });
+}
+return;
+}
+if (h.classList.contains("rocker")) { // 摇椅：吱呀吱呀
+h.classList.remove("rock"); void h.getBoundingClientRect(); h.classList.add("rock");
+if (AU.ctx && S.settings.sfx) {
+const t0 = AU.ctx.currentTime;
+AU.tone(320, t0 + 0.35, 0.16, { vol: 0.06, type: "sawtooth", slideTo: 250 });
+AU.tone(300, t0 + 1.15, 0.14, { vol: 0.05, type: "sawtooth", slideTo: 240 });
+}
 return;
 }
 }
@@ -2387,15 +2647,21 @@ function applySceneState(name, sc) { // 重进房恢复状态
 const st = SCST[name] || {};
 const q = c => sc.querySelector("." + c);
 	if (name === "客厅") {
-	if (st.tv) q("tv") && q("tv").classList.add("on");
-	if (st.lamp) q("lamp") && q("lamp").classList.add("lit");
-	if ((st.sc || 0) >= 8) q("sofa") && q("sofa").classList.add("bulge");
-	if (S.owned.includes("fishtank")) q("tank") && q("tank").classList.add("on");
-	}
-	if (name === "阳台") {
-	if (S.owned.includes("chime")) q("chime") && q("chime").classList.add("on");
-	if (S.owned.includes("fy")) q("fly") && q("fly").classList.add("on");
-	}
+		if (st.tv) q("tv") && q("tv").classList.add("on");
+		if (st.lamp) q("lamp") && q("lamp").classList.add("lit");
+		if ((st.sc || 0) >= 8) q("sofa") && q("sofa").classList.add("bulge");
+		if (S.owned.includes("fishtank")) q("tank") && q("tank").classList.add("on");
+		if (S.owned.includes("gramo")) q("gramo") && q("gramo").classList.add("on");
+		if (S.owned.includes("rug")) q("rug") && q("rug").classList.add("on");
+		if (S.owned.includes("rg")) q("rgpad") && q("rgpad").classList.add("on");
+		}
+		if (name === "阳台") {
+			if (S.owned.includes("chime")) q("chime") && q("chime").classList.add("on");
+			if (S.owned.includes("fy")) q("fly") && q("fly").classList.add("on");
+			if (S.owned.includes("sg")) q("scope") && q("scope").classList.add("on");
+			if (S.owned.includes("bird")) q("feed") && q("feed").classList.add("on");
+			if (S.owned.includes("rocker")) q("rocker") && q("rocker").classList.add("on");
+			}
 if (name === "卧室") {
 const bed = q("bed");
 if (st.sleep && bed) { bed.classList.add("sleeping", st.side ? "s1" : "s0"); document.getElementById("zface").style.visibility = "hidden"; }
@@ -2404,10 +2670,11 @@ if (S.owned.includes("cat")) { const c = q("bedcat"); if (c) c.setAttribute("opa
 if (S.owned.includes("meteor") && document.body.dataset.phase === "night") sc.classList.add("met");
 }
 if (name === "阁楼") sc.classList.add("met");
-if (name === "厨房") {
-if (st.cab) q("cab") && q("cab").classList.add("open");
-if (S.owned.includes("oc")) q("ocade") && q("ocade").classList.add("on");
-}
+	if (name === "厨房") {
+	if (st.cab) q("cab") && q("cab").classList.add("open");
+	if (S.owned.includes("oc")) q("ocade") && q("ocade").classList.add("on");
+	}
+	if (name === "储藏室" && S.owned.includes("fire")) q("fire") && q("fire").classList.add("on");
 if (name === "健身房") {
 if (S.renov["rv-tread"]) { const t = q("tread"); if (t) { t.classList.add("on"); if (st.tread) t.classList.add("run"); } }
 if (S.renov["rv-rack"]) q("rack") && q("rack").classList.add("on");
@@ -2432,6 +2699,13 @@ function closeRoomPage() {
 AU.sfx("door");
 irisOpen2(innerWidth / 2, innerHeight / 2, () => { frameWrap.classList.remove("on"); roomFrame.src = "about:blank"; });
 if (gramoDuck) { gramoDuck = false; AU.applyVol(); }
+try { // 节奏地毯战果：打完一首记任务，高分解锁回忆
+const rb = parseInt(localStorage.getItem("rg_best"), 10) || 0;
+if (rb > 0) {
+if (!S.stats.rgPlay) { S.stats.rgPlay = 1; }
+if (rb >= 7500) unlockCG("cg9");
+}
+} catch (e) {}
 checkQuests(); // 从子页回家：电视里的战果（奖杯等）当场验一验
 }
 document.getElementById("frame-back").addEventListener("click", closeRoomPage);
@@ -2680,14 +2954,10 @@ track("talks");
 });
 }
 
-document.querySelectorAll(".win").forEach(w => w.addEventListener("click", () => {
- w.classList.toggle("off");
- AU.sfx("puff");
-}));
 /* 屋顶小屋 · 过山车：沿门面外框滚动，重力切向加速 + 摩擦，可拖拽甩出 */
 (function () {
 const mark = document.querySelector(".roofline"), box = document.getElementById("facade");
-let pts = [], L = 0, s = 0, v = 0, drag = null, last = performance.now(), lastW = 0, built = false;
+let pts = [], L = 0, s = 0, v = 0, drag = null, sto = 0, last = performance.now(), lastW = 0, built = false;
 function build() {
  const w = box.offsetWidth, h = box.offsetHeight, r = 20;
  if (w < 40 || h < 40) return;
@@ -2732,9 +3002,11 @@ function loop(now) {
  S.stats.coasterDist = (S.stats.coasterDist || 0) + Math.abs(v) * dt; // 里程表：成就「长途跋涉」认它
  s = (s + v * dt + L) % L; place();
  }
+ clearTimeout(sto); sto = setTimeout(() => loop(performance.now()), 50); /* rAF 冻结时兜底驱动 */
  requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+sto = setTimeout(() => loop(performance.now()), 60);
 mark.addEventListener("pointerdown", e => {
  e.preventDefault();
  try { mark.setPointerCapture(e.pointerId); } catch (er) {}
@@ -2742,24 +3014,23 @@ mark.addEventListener("pointerdown", e => {
 });
 mark.addEventListener("pointermove", e => {
  if (!drag) return;
- const ns = projS(e.clientX, e.clientY), now = performance.now(), dt = Math.max(6, now - drag.t) / 1000;
+ const ns = projS(e.clientX, e.clientY), now = performance.now(), dt = Math.max(6, now - drag.t) / 1e3;
  let d = ns - drag.s; if (d > L / 2) d -= L; if (d < -L / 2) d += L;
- (drag.vs = drag.vs || []).push(d / dt);
- if (drag.vs.length > 6) drag.vs.shift();
+ const iv = d / dt, sgn = iv >= 0 ? 1 : -1;
+ if (!drag.dir) { drag.dir = sgn; drag.peak = 0; drag.swings = 1; drag.lastFlip = now; }
+ else if (sgn !== drag.dir) {   // 回摆完成，短时间连摆记次蓄能
+ drag.swings = now - drag.lastFlip < 700 ? drag.swings + 1 : 1;
+ drag.dir = sgn; drag.peak = 0; drag.lastFlip = now;
+ }
+ drag.peak = Math.max(drag.peak, Math.abs(iv));
  drag.moved += Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy); drag.sx = e.clientX; drag.sy = e.clientY;
  drag.t = now;
  drag.s = ns; s = ns; place();
 });
 mark.addEventListener("pointerup", () => {
- if (drag) {
- const vs = drag.vs || [];
- if (vs.length) {
- let wsum = 0, vsum = 0;
- vs.forEach((vv, i) => { const w = i + 1; wsum += w; vsum += vv * w; });
- v = Math.max(-2600, Math.min(2600, vsum / wsum * 0.9));
- }
- if (drag.moved < 6) { v += (v >= 0 ? 1 : -1) * 300; AU.sfx("door"); }
- else if (Math.abs(v) > 900) AU.sfx("whoosh");
+ if (drag && drag.moved >= 6 && drag.peak) {
+ v = drag.dir * Math.min(3400, drag.peak * (0.62 + 0.25 * Math.min(drag.swings, 5)));
+ if (Math.abs(v) > 900) AU.sfx("whoosh");
  if (Math.abs(v) > 1500) { S.stats.coaster = 1; checkQuests(); }
  }
  drag = null;
@@ -2776,6 +3047,14 @@ FXC.burst(e.clientX, e.clientY, { color: ["#e8e4da", "#cfc9bd", "#b8b2a6"] });
 S.stats.smoke++;
 if (S.stats.smoke === 3) toast("info", "……！", "烟囱表示并无大碍");
 checkQuests(); save();
+});
+/* 信鸽邮筒：买了就有信来 */
+const MAIL = ["薄荷掐了尖，泡了一杯，提神。","查账本今天对平了，一分不差，睡得踏实。","猫咪室友在沙发第三格蹭出了专属毛毯区。","书架第二格加了书挡，木料是打书架剩的边角。","紫菜蛋花汤还是那句：关火再倒蛋液。","昨夜阁楼星星很亮，望远镜支架垫了块布。","大扫除五盏绿灯全亮，今晚收工早。","待收的账不急，先把今天的活干完。"];
+document.getElementById("mailbox").addEventListener("click", e => {
+const mb = e.currentTarget;
+mb.classList.remove("takemail"); void mb.offsetWidth; mb.classList.add("takemail");
+AU.sfx("chirp");
+toast("mail", "信鸽短笺", MAIL[Math.floor(Math.random() * MAIL.length)]);
 });
 document.getElementById("btn-firework").addEventListener("click", () => {
 FXC.firework();
