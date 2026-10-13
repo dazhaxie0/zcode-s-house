@@ -237,9 +237,6 @@ filter: blur(2px); opacity: 0; animation: puff 4s ease-out infinite;
 .dinfo { text-align: center; font-size: 12px; color: var(--ink-3); letter-spacing: .12em; padding: 2px 0 0; min-height: 24px; }
 .dstage { height: 478px; perspective: 1150px; perspective-origin: 50% 26%; touch-action: none; cursor: grab; overflow: hidden; }
 .dstage:active { cursor: grabbing; }
-.dsway { position: absolute; inset: 0; transform-style: preserve-3d; animation: dsway 9s ease-in-out infinite alternate; }
-.dhouse.drag .dsway { animation-play-state: paused; }
-@keyframes dsway { from { transform: rotateY(1.4deg); } to { transform: rotateY(-1.4deg); } }
 .dhouse { position: absolute; left: 50%; top: 254px; width: 0; height: 0; transform-style: preserve-3d;
 transform: translateZ(-30px) rotateX(var(--drx,-24deg)) rotateY(var(--dry,-30deg));
 transition: transform .5s cubic-bezier(.2,.8,.3,1); }
@@ -247,9 +244,9 @@ transition: transform .5s cubic-bezier(.2,.8,.3,1); }
 .dground { position: absolute; left: -212px; top: -124px; width: 424px; height: 248px;
 background: linear-gradient(180deg, rgba(158,146,112,.13), rgba(120,110,88,.06));
 border: 2px solid rgba(58,44,28,.2); border-radius: 12px; transform: rotateX(90deg); }
-.dground, .df, .dc, .dtag, .furn { pointer-events: none; } /* 水平面/贴墙饰件纯视觉，点击穿到墙面 */
-.droom, .dloft { pointer-events: none; }                    /* 3D 锚点容器不接事件，由面片接 */
-.droom .dbk, .droom .dl, .droom .drt, .dloft .dbk, .drf, .dchm, .dwin { pointer-events: auto; }
+.dground, .dl, .drt, .dc, .dtag, .furn { pointer-events: none; } /* 侧墙俯视会盖下层，点击只认后墙/地板，定位另走 3D 投影算法 */
+.droom, .dloft { pointer-events: none; }
+.droom .dbk, .droom .df, .dloft .dbk, .drf, .dchm { pointer-events: auto; }
 .droom, .droom > div, .drf, .dchm { position: absolute; transform-style: preserve-3d; }
 .droom { cursor: pointer; outline: none; }
 .dbk { width: var(--w); height: var(--h); transform: translateZ(-150px);
@@ -271,7 +268,7 @@ font-size: 10px; letter-spacing: .1em; color: var(--ink-2); text-shadow: 0 1px 2
 .droom.deep .df { background: rgba(36,26,18,.3); }
 .furn { position: absolute; border-radius: 4px; border: 1.5px solid rgba(58,44,28,.5);
 box-shadow: 0 2px 0 rgba(58,44,28,.18); }
-.dwin { position: absolute; width: 12px; height: 14px; border-radius: 2px 2px 3px 3px;
+.dwin { position: absolute; width: 12px; height: 14px; border-radius: 2px;
 background: linear-gradient(180deg, #7fb2d9, #a8cbe4); border: 2px solid var(--wood-2); cursor: pointer; }
 body[data-phase="night"] .dwin:not(.off) { background: radial-gradient(circle at 50% 60%, #ffd98a, #d9962e);
 box-shadow: 0 0 8px rgba(255,200,100,.6); }
@@ -284,18 +281,15 @@ background: repeating-linear-gradient(100deg, #9a5a40 0 12px, #8a4e36 12px 14px)
 border: 2px solid #5f3423; box-shadow: inset 0 -14px 18px rgba(0,0,0,.22);
 transition: transform .8s cubic-bezier(.3,.9,.3,1); }
 .drfF { transform: translate3d(-150px,-214px,0) rotateX(61deg); }
-.drfB { transform: translate3d(-150px,-214px,0) rotateX(-61deg); opacity: .94; }
+.drfB { transform: translate3d(-150px,-214px,0) rotateX(-61deg); }
 .dhouse.lfd .drfF { transform: translate3d(-150px,-214px,0) rotateX(-103deg); }
 .dchm { width: 13px; height: 26px; background: #6a4a2e; border: 2px solid #4a3218; border-radius: 2px;
 transform: translate3d(88px,-244px,-14px) rotateY(45deg); }
-.dchm::after { content: ""; position: absolute; left: 4px; top: 5px; width: 4px; height: 4px;
-border-radius: 50%; background: #241a10; }
 .dloft { position: absolute; cursor: pointer; }
 .dloft .dbk { background: rgba(26,22,38,.2); }
 .dloft .lock { transform: translate3d(120px,2px,-40px); width: 40px; height: 40px; color: var(--ink-3);
 display: flex; align-items: center; justify-content: center; font-size: 20px; background: none; border: none; }
 .dloft.un .lock { color: var(--gold-2); }
-.dhint { position: absolute; left: -999px; }
 @media (max-width: 640px) {
 .dstage { height: 396px; }
 .doll .dscale { position: absolute; inset: 0; transform: scale(.66); transform-origin: 50% 64%; }
@@ -930,7 +924,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <div class="chimney-smoke" id="smoke"><i class="puff"></i><i class="puff"></i><i class="puff"></i></div>
 <div class="doll" id="rooms">
 <div class="dinfo" id="dinfo">拖动转一转 · 点屋顶开合 · 点房间进门</div>
-<div class="dstage" id="dstage"><div class="dscale"><div class="dsway"><div class="dhouse lfd" id="dhouse"></div></div></div></div>
+<div class="dstage" id="dstage"><div class="dscale"><div class="dhouse lfd" id="dhouse"></div></div></div>
 </div>
 </div>
 <footer class="house-foot">慢慢变得温馨</footer>
@@ -2143,6 +2137,7 @@ const FLOORS = [
 [["客厅", -150, 174, 0, 86], ["厨房", 24, 126, 0, 86]],
 [["卧室", -150, 114, -86, 86], ["书房", -36, 102, -86, 86], ["阳台", 66, 84, -86, 86]],
 ];
+const DBOXES = [];   /* 各房 3D 盒，供点选投影定位 */
 const FURN = {
 "客厅": [[26, 54, 22, "#8a5a2e"], [114, 32, 26, "#141c2c"], [78, 26, 12, "#b57a42"]],
 "厨房": [[40, 38, 26, "#5a6480"], [40, 32, 15, "#f2e8d5", 44]],
@@ -2153,38 +2148,77 @@ const FURN = {
 "储藏室": [[40, 24, 17, "#8a7458"], [86, 20, 14, "#a08a64"], [176, 26, 16, "#8a7458"]],
 "阁楼": [[96, 26, 18, "#6a5a3e"], [176, 34, 10, "#4a4258"]],
 };
+const furnOf = n => (FURN[n] || []).map(f => '<i class="furn" style="left:' + f[0] + "px;bottom:" + (f[4] || 6) +
+"px;width:" + f[1] + "px;height:" + f[2] + 'px;background:' + f[3] + '"></i>').join("");
 function drHTML(name, x, w, y, h, cls) {
+DBOXES.push({ name: name, x0: x, x1: x + w, y0: y, y1: y + h });
 let win = "";
 if (y < 0) win = Array.from({ length: w > 100 ? 2 : 1 }, (_, i) =>
 '<i class="dwin' + (Math.random() < .3 ? " dflick" : "") + '" style="right:' + (16 + i * 26) + 'px;top:16px"></i>').join("");
 return '<div class="droom' + (S.visited.includes(name) ? " seen" : "") + (cls ? " " + cls : "") +
 '" data-room="' + name + '" tabindex="0" style="--w:' + w + 'px;--h:' + h + 'px;transform:translate3d(' + x + 'px,' + y + 'px,75px)">' +
 '<div class="df"></div><div class="dc"></div><div class="dl"></div><div class="drt"></div>' +
-'<div class="dbk"><span class="dtag">' + name + "</span>" + win +
-(FURN[name] || []).map(f => '<i class="furn" style="left:' + f[0] + "px;bottom:" + (f[4] || 6) + "px;width:" + f[1] +
-"px;height:" + f[2] + 'px;background:' + f[3] + '"></i>').join("") + "</div></div>";
+'<div class="dbk"><span class="dtag">' + name + "</span>" + win + furnOf(name) + "</div></div>";
 }
 function renderRooms() {
+DBOXES.length = 0;
 const H = ['<div class="dground"></div>'];
 for (const row of FLOORS) for (const f of row) H.push(drHTML.apply(null, f));
 H.push(drHTML("健身房", -244, 92, 0, 64));
-H.push(drHTML("储藏室", -150, 300, 0, 40, "deep"));
+H.push(drHTML("储藏室", -150, 300, 86, 40, "deep"));
 const loft = S.renov["rv-loft"];
 H.push('<div class="dloft' + (loft ? " un" : "") + '" data-loft="1" tabindex="0" ' +
-'style="--w:300px;--h:40px;transform:translate3d(-150px,-172px,75px)">' +
+'style="--w:300px;--h:40px;transform:translate3d(-150px,-212px,75px)">' +
 '<div class="df"></div><div class="dl"></div><div class="drt"></div>' +
-'<div class="dbk"><span class="dtag">F2 · 阁楼</span>' + (loft ? (FURN["阁楼"] || []).map(f =>
-'<i class="furn" style="left:' + f[0] + "px;bottom:6px;width:" + f[1] + "px;height:" + f[2] + 'px;background:' + f[3] + '"></i>').join("") : "") +
+'<div class="dbk"><span class="dtag">F2 · 阁楼</span>' + (loft ? furnOf("阁楼") : "") +
 '<i class="lock">' + ic(loft ? "moon" : "lock") + "</i></div></div>");
 H.push('<div class="drf drfF"></div><div class="drf drfB"></div><div class="dchm"></div>');
-document.getElementById("dhouse").innerHTML = H.join("");
+const dh = document.getElementById("dhouse");
+dh.innerHTML = H.join("");
+if (!dprobe) {
+dprobe = document.createElement("i");
+dprobe.style.cssText = "position:absolute;pointer-events:none";
+}
+dh.appendChild(dprobe);   /* 点选定位探针：渲染重建后重挂 */
 }
 /* 拖转 / 点选 / 掀顶 / 名牌 */
 const dhouse = document.getElementById("dhouse"), dstage = document.getElementById("dstage"), dinfo = document.getElementById("dinfo");
-let dRX = -24, dRY = -30, dDrag = null;
+let dRX = -24, dRY = -30, dDrag = null, dprobe = null;
 function applyDoll() {
 dhouse.style.setProperty("--drx", dRX + "deg");
 dhouse.style.setProperty("--dry", dRY + "deg");
+}
+/* ── 点选定位：探针投影 3D 盒的后墙/地板四边形，点内即中，重叠取近 ── */
+function projPt(px, py, pz) {
+dprobe.style.transform = "translate3d(" + px + "px," + py + "px," + pz + "px)";
+const r = dprobe.getBoundingClientRect();
+return [r.left, r.top];
+}
+function inQuad(x, y, q) {
+let pos = false, neg = false;
+for (let i = 0; i < 4; i++) {
+const a = q[i], b = q[(i + 1) % 4];
+const cr = (b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]);
+if (cr > 0) pos = true; else if (cr < 0) neg = true;
+if (pos && neg) return false;
+}
+return true;
+}
+function dollRoomAt(x, y) {
+if (!dprobe) return null;
+let best = null, bestSc = -1;
+for (const b of DBOXES) {
+const zb = -150;
+const back = [projPt(b.x0, b.y0, zb), projPt(b.x1, b.y0, zb), projPt(b.x1, b.y1, zb), projPt(b.x0, b.y1, zb)];
+const flor = [projPt(b.x0, b.y0, 0), projPt(b.x1, b.y0, 0), projPt(b.x1, b.y0, zb), projPt(b.x0, b.y0, zb)];
+if (inQuad(x, y, back) || inQuad(x, y, flor)) {
+const c0 = projPt((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, -75);
+const c1 = projPt((b.x0 + b.x1) / 2 + 40, (b.y0 + b.y1) / 2, -75);
+const sc = (Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) || 1) / 40;
+if (sc > bestSc) { bestSc = sc; best = b; }
+}
+}
+return best;
 }
 dstage.addEventListener("pointerdown", e => {
 dDrag = { x: e.clientX, y: e.clientY, moved: 0 };
@@ -2206,15 +2240,14 @@ dhouse.classList.remove("drag");
 const tap = dDrag.moved < 9;
 dDrag = null;
 if (!tap) return;
-/* pointer capture 后 e.target 恒为舞台，按坐标实探命中 */
 const el = document.elementFromPoint(e.clientX, e.clientY);
 const winEl = el && el.closest(".dwin");
 if (winEl) { winEl.classList.toggle("off"); AU.sfx("puff"); return; }
 const loft = el && el.closest(".dloft");
 if (loft) { AU.sfx("click"); if (S.renov["rv-loft"]) enterRoom("阁楼", e.clientX, e.clientY); else showRenov("阁楼"); return; }
 if (el && el.closest(".drf,.dchm")) { AU.sfx("door"); dhouse.classList.toggle("lfd"); return; }
-const r = el && el.closest(".droom");
-if (r) enterRoom(r.dataset.room, e.clientX, e.clientY);
+const box = dollRoomAt(e.clientX, e.clientY);   /* 3D 盒投影定位，不靠面片命中 */
+if (box) enterRoom(box.name, e.clientX, e.clientY);
 });
 dstage.addEventListener("keydown", e => {
 if (e.key !== "Enter") return;
@@ -2222,12 +2255,8 @@ const r = e.target.closest && e.target.closest(".droom");
 if (r) enterRoom(r.dataset.room, innerWidth / 2, innerHeight / 2);
 });
 dstage.addEventListener("mouseover", e => {
-const r = e.target.closest && e.target.closest(".droom,.dloft");
+const r = e.target.closest && e.target.closest(".droom");
 if (!r) return;
-if (r.classList.contains("dloft")) {
-dinfo.textContent = S.renov["rv-loft"] ? "F2 · 阁楼 · 顶楼看星" : "F2 · 阁楼 · 装修队待命（80 星尘）";
-return;
-}
 const name = r.dataset.room, rm = ROOMS[name];
 dinfo.textContent = rm.no + " · " + name + " · " + rm.sub + " · 藏品 ×" + rm.items.length +
 (S.visited.includes(name) ? "" : " · 新");
