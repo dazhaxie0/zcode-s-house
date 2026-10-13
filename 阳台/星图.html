@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>阳台 · 星图</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+font-family: "Kaiti SC", KaiTi, STKaiti, Georgia, serif;
+background: linear-gradient(180deg, #070b1c 0%, #0d1330 52%, #141d3e 82%, #1a2446 100%);
+color: #f2ecd9; user-select: none; touch-action: manipulation;
+}
+#sky { position: absolute; inset: 0; overflow: hidden; }
+#milky { position: absolute; left: -10%; top: -12%; width: 130%; height: 80%; transform: rotate(24deg);
+background: radial-gradient(ellipse 42% 60% at 50% 50%, rgba(190,205,240,.10), rgba(190,205,240,0) 70%); }
+.bgstar { position: absolute; border-radius: 50%; background: #dfe6f4;
+animation: twk var(--ts) ease-in-out infinite alternate; }
+@keyframes twk { from { opacity: .1; } to { opacity: .75; } }
+#moon { position: absolute; right: 9%; top: 7%; width: 46px; height: 46px; border-radius: 50%;
+background: radial-gradient(circle at 40% 36%, #f4ead0, #d8c692 72%, #b8a470);
+box-shadow: 0 0 30px rgba(244,234,208,.35); }
+#moon::after { content: ""; position: absolute; left: -14px; top: -4px; width: 46px; height: 46px; border-radius: 50%;
+background: #0a0f26; }
+#deck { position: absolute; left: 0; right: 0; bottom: 0; height: 17%; }
+#scope { position: absolute; left: 4.5%; bottom: 15.5%; opacity: .9; }
+#field { position: absolute; left: 0; right: 0; top: 56px; bottom: 17%; z-index: 5; }
+#lines { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 6; pointer-events: none; }
+#lines line { stroke: #ffe9a8; stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke;
+filter: drop-shadow(0 0 3px rgba(255,233,168,.8)); }
+#lines line.drew { stroke-dashoffset: 0; }
+#lines line.ghost { stroke: rgba(170,196,240,.5); stroke-dasharray: 3 5; filter: none; }
+#lines line.out { stroke: rgba(255,138,110,.55); }
+.star { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; z-index: 7;
+cursor: pointer; transition: transform .18s; }
+.star i { position: absolute; left: 50%; top: 50%; width: var(--sz); height: var(--sz);
+margin: calc(var(--sz) / -2); border-radius: 50%; background: #fdf6e3;
+box-shadow: 0 0 calc(var(--sz)*1.4) rgba(253,246,227,.85), 0 0 calc(var(--sz)*3) rgba(253,246,227,.3);
+animation: breathe 2.4s ease-in-out infinite alternate; }
+@keyframes breathe { from { transform: scale(.8); opacity: .75; } to { transform: scale(1.08); opacity: 1; } }
+.star.red i { background: #ffb9a0; box-shadow: 0 0 10px rgba(255,150,110,.9), 0 0 24px rgba(255,120,80,.35); }
+.star.blue i { background: #cfe2ff; box-shadow: 0 0 10px rgba(170,205,255,.9), 0 0 24px rgba(150,190,255,.35); }
+.star:active { transform: scale(1.25); }
+.star.lit i { background: #ffe9a8; box-shadow: 0 0 12px rgba(255,233,168,1), 0 0 34px rgba(255,233,168,.55);
+animation: none; transform: scale(1.15); }
+.star.now { z-index: 8; }
+.star.now::before { content: ""; position: absolute; inset: 7px; border-radius: 50%;
+border: 1.5px solid rgba(255,233,168,.9); animation: ringp 1s ease-out infinite; }
+@keyframes ringp { from { transform: scale(.55); opacity: .95; } to { transform: scale(1.5); opacity: 0; } }
+.star.bad { animation: shakeX .3s; }
+.star.bad i { background: #ff8a7a; }
+@keyframes shakeX { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.pop { position: absolute; z-index: 30; font-size: 16px; font-weight: 700; pointer-events: none;
+animation: popup .8s ease-out forwards; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.pop.neg { color: #ff9a8a; }
+.pop.pos { color: #ffe9a8; }
+@keyframes popup { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-42px); opacity: 0; } }
+#hud { position: absolute; top: 0; left: 0; right: 0; z-index: 20; display: flex; align-items: center;
+gap: 12px; padding: 10px 16px; }
+#conname { font-size: 19px; letter-spacing: 4px; color: #cfe0ff; }
+#conname small { display: block; font-size: 11px; letter-spacing: 2px; color: #7a8ab0; }
+#score { font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #ffe9a8;
+text-shadow: 0 2px 6px rgba(0,0,0,.5); font-family: Georgia, serif; }
+#timer { margin-left: auto; font-size: 22px; font-family: Georgia, serif; letter-spacing: 1px; }
+#timer.hurry { color: #ff9a7a; animation: tpulse .5s ease-in-out infinite alternate; }
+@keyframes tpulse { to { transform: scale(1.12); } }
+#hint { border: 1px solid rgba(170,196,240,.45); background: rgba(16,24,48,.7); color: #cfe0ff;
+border-radius: 999px; padding: 7px 14px; font-size: 13px; font-family: inherit; letter-spacing: 2px;
+cursor: pointer; transition: .15s; }
+#hint:disabled { opacity: .35; }
+#home { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 22;
+border: 1px solid rgba(240,196,106,.5); background: rgba(16,24,44,.72); color: #f0c46a;
+border-radius: 999px; padding: 6px 18px; font-size: 13px; font-family: inherit; letter-spacing: 2px; cursor: pointer; }
+#namecard { position: absolute; left: 50%; top: 42%; transform: translate(-50%,-50%); z-index: 26;
+text-align: center; pointer-events: none; opacity: 0; transition: opacity .5s; }
+#namecard.show { opacity: 1; }
+#namecard h2 { font-size: 34px; letter-spacing: 14px; color: #ffe9a8; text-shadow: 0 0 24px rgba(255,233,168,.5); }
+#namecard p { font-size: 13px; letter-spacing: 2px; color: #9fb2d8; margin-top: 8px; }
+#board { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+background: rgba(5,8,20,.68); backdrop-filter: blur(3px); }
+#board .panel { text-align: center; padding: 32px 42px; border-radius: 18px;
+background: linear-gradient(165deg, #131c3a, #0b1126); border: 1px solid rgba(170,196,240,.4);
+box-shadow: 0 24px 60px rgba(0,0,0,.55); animation: panelin .4s cubic-bezier(.2,.9,.3,1.2); max-width: 86vw; }
+@keyframes panelin { from { transform: translateY(26px) scale(.92); opacity: 0; } }
+#board h1 { font-size: 30px; letter-spacing: 10px; margin-bottom: 6px; color: #ffe9a8; }
+#board .sub { font-size: 13px; letter-spacing: 3px; color: #8e9cbf; margin-bottom: 16px; }
+#board .rows { font-size: 15px; line-height: 2.15; letter-spacing: 1px; margin-bottom: 16px; }
+#board .big { font-size: 40px; font-weight: 900; color: #ffe9a8; font-family: Georgia, serif; }
+#board .grade { font-size: 16px; letter-spacing: 4px; color: #ffd68c; }
+#board button { border: 1px solid rgba(240,196,106,.6); background: rgba(240,196,106,.12); color: #ffe9a8;
+border-radius: 999px; padding: 10px 28px; font-size: 15px; font-family: inherit; letter-spacing: 3px;
+cursor: pointer; margin: 0 6px; transition: .15s; }
+#board button:hover { background: rgba(240,196,106,.28); transform: translateY(-2px); }
+.hinttxt { font-size: 12px; color: #6e7ea0; letter-spacing: 1px; margin-top: 12px; line-height: 1.9; }
+@media (max-width: 640px) {
+#conname { font-size: 15px; letter-spacing: 2px; }
+#score { font-size: 19px; }
+#timer { font-size: 18px; }
+#hint { padding: 6px 10px; font-size: 12px; }
+#home { top: auto; bottom: 12px; }
+#board .panel { padding: 24px 20px; }
+#namecard h2 { font-size: 26px; letter-spacing: 9px; }
+}
+</style>
+</head>
+<body>
+<div id="sky"><div id="milky"></div><div id="moon"></div><div id="deck"></div></div>
+<svg id="scope" width="54" height="78" viewBox="0 0 54 78"><g class="scg"><line x1="27" y1="46" x2="10" y2="76" stroke="#2a3448" stroke-width="3.4"/><line x1="27" y1="46" x2="44" y2="76" stroke="#2a3448" stroke-width="3.4"/><rect x="8" y="18" width="38" height="11" rx="4" transform="rotate(-24 27 24)" fill="#3a4458"/><circle cx="12" cy="32" r="5" fill="#4a5468"/><circle cx="13" cy="32" r="2" fill="#ffd68c"/></g></svg>
+<div id="field"><svg id="lines" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
+<div id="hud">
+<div id="conname">星图<small id="conno">阳台 · 观星</small></div>
+<div id="score">0</div>
+<div id="timer">--</div>
+<button id="hint" disabled>提示</button>
+</div>
+<button id="home">← 小家</button>
+<div id="namecard"><h2></h2><p></p></div>
+<div id="board"><div class="panel" id="panel"></div></div>
+<script>
+"use strict";
+/* ═══ 阳台 · 星图：一夜连四座真星座 ═══
+   星形按真实相对坐标布；演示三秒后凭记忆依序连星。
+   全 DOM+CSS 动画，计时认 Date.now 差值，后台慢下来也不丢账。 */
+var $ = function (s) { return document.querySelector(s); };
+var field = $("#field"), svg = $("#lines"), board = $("#board"), panel = $("#panel");
+/* 四座：顺序连点（含闭合边，末星可重复首星） */
+var CSTS = [
+{ name: "仙后座", sub: "W 五星", note: "天上一个 W，找北极星的备用路标",
+seq: [[0.20,0.42],[0.33,0.58],[0.47,0.35],[0.61,0.60],[0.74,0.44]] },
+{ name: "北斗七星", sub: "勺口四星 · 勺柄三星", note: "天璇对着天枢，勺口五倍远是北极星",
+seq: [[0.17,0.55],[0.28,0.47],[0.40,0.43],[0.51,0.41],[0.53,0.59],[0.67,0.61],[0.69,0.43],[0.51,0.41]] },
+{ name: "天琴座", sub: "织女一 · 小平行四边形", note: "织女星是夏夜第五亮星，七夕的主角",
+seq: [[0.42,0.20],[0.36,0.44],[0.51,0.36],[0.64,0.45],[0.56,0.58],[0.36,0.44]] },
+{ name: "猎户座", sub: "腰带三星 · 沙漏形", note: "肩上参宿四偏红，脚上参宿七偏蓝，冬夜门面",
+seq: [[0.34,0.16],[0.63,0.18],[0.68,0.76],[0.58,0.45],[0.51,0.48],[0.44,0.51],[0.40,0.80],[0.34,0.16]],
+tone: [[0.34,0.16,"red"],[0.68,0.76,"blue"]] }
+];
+var LIM = function (n) { return 12 + n * 2.2; };   // 每座限时：演示结束才起表
+var playing = false, ci = 0, score = 0, got = 0, misses = 0, hintUsed = 0;
+var stars = [], idx = 0, deadline = 0, limit = 0, tickT = null, locked = true;
+/* ── 布景 ── */
+(function night() {
+var h = "";
+for (var i = 0; i < 64; i++) {
+var sz = (1 + Math.random() * 1.5).toFixed(1);
+h += '<i class="bgstar" style="left:' + (Math.random() * 100).toFixed(1) + "%;top:" + (Math.random() * 100).toFixed(1) +
+"%;width:" + sz + "px;height:" + sz + "px;--ts:" + (1.4 + Math.random() * 2.6).toFixed(2) + 's"></i>';
+}
+$("#sky").insertAdjacentHTML("beforeend", h);
+$("#deck").innerHTML =
+'<svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 320 54">' +
+'<line x1="0" y1="14" x2="320" y2="14" stroke="#232c40" stroke-width="5"/>' +
+'<g stroke="#1d2536" stroke-width="4">' +
+'<line x1="24" y1="14" x2="24" y2="54"/><line x1="104" y1="14" x2="104" y2="54"/>' +
+'<line x1="184" y1="14" x2="184" y2="54"/><line x1="264" y1="14" x2="264" y2="54"/></g>' +
+'<path d="M236 14V4" stroke="#1f4a34" stroke-width="3"/>' +
+'<path d="M236 8c-7-2-10-7-10-11 7 0 10 5 10 11z" fill="#22543a"/>' +
+'<path d="M236 6c7-2 10-7 10-11-7 0-10 5-10 11z" fill="#2a6446"/></svg>';
+})();
+/* ── 合成音 ── */
+var AC = null;
+function audio() {
+if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (C) AC = new C(); }
+if (AC && AC.state === "suspended") AC.resume();
+return AC;
+}
+function tone(f, d, v, type, slide) {
+var c = audio(); if (!c) return;
+var t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+o.type = type || "sine"; o.frequency.setValueAtTime(f, t);
+if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
+g.gain.setValueAtTime(0, t);
+g.gain.linearRampToValueAtTime(v, t + 0.006);
+g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+o.connect(g); g.connect(c.destination);
+o.start(t); o.stop(t + d + 0.05);
+}
+var PENTA = [57, 60, 62, 64, 67, 69, 72, 74, 76];
+function sLink(i) { tone(440 * Math.pow(2, (PENTA[Math.min(i, 8)] - 69) / 12), 0.34, 0.09, "triangle"); }
+function sMiss() { tone(180, 0.09, 0.1, "square"); setTimeout(function () { tone(140, 0.12, 0.09, "square"); }, 90); }
+function sDone() { [64, 67, 72, 76].forEach(function (n, i) { setTimeout(function () {
+tone(440 * Math.pow(2, (n - 69) / 12), 0.5, 0.08, "triangle"); }, i * 110); }); }
+function sFail() { tone(330, 0.5, 0.09, "triangle", 165); }
+function sEnd() { [57, 64, 69, 72].forEach(function (n, i) { setTimeout(function () {
+tone(440 * Math.pow(2, (n - 69) / 12), 0.9, 0.07, "triangle"); }, i * 130); }); }
+/* ── 画线 ── */
+function line(a, b, cls) {
+var l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+l.setAttribute("x1", a[0] * 100); l.setAttribute("y1", a[1] * 100);
+l.setAttribute("x2", b[0] * 100); l.setAttribute("y2", b[1] * 100);
+if (cls === "drew") {
+var len = Math.hypot((b[0] - a[0]) * 100, (b[1] - a[1]) * 100);
+l.style.strokeDasharray = len; l.style.strokeDashoffset = len;
+l.style.transition = "stroke-dashoffset .3s ease-out";
+}
+if (cls) l.setAttribute("class", cls);
+svg.appendChild(l);
+if (cls === "drew") { // rAF 在内嵌浏览器里会被节流，setTimeout 兜底触发过渡
+var show = function () { l.style.strokeDashoffset = 0; };
+requestAnimationFrame(show); setTimeout(show, 60);
+}
+return l;
+}
+/* ── 一座 ── */
+function clearField() {
+stars.forEach(function (s) { s.el.remove(); }); stars = [];
+svg.innerHTML = "";
+$("#namecard").classList.remove("show");
+}
+function setup(i) {
+ci = i; idx = 0; misses = 0; hintUsed = 0;
+var c = CSTS[i];
+$("#conname").childNodes[0].nodeValue = c.name;
+$("#conno").textContent = "第 " + (i + 1) + " / 4 座 · " + c.sub;
+$("#hint").disabled = false;
+clearField();
+var cls = {};
+(c.tone || []).forEach(function (t) { cls[t[0] + "," + t[1]] = t[2]; });
+c.seq.forEach(function (p, k) {
+var el = document.createElement("div");
+el.className = "star" + (cls[p[0] + "," + p[1]] ? " " + cls[p[0] + "," + p[1]] : "");
+el.style.left = (6 + p[0] * 88) + "%";
+el.style.top = (4 + p[1] * 86) + "%";
+el.style.setProperty("--sz", (k === 0 && i === 2 ? 15 : 9 + (c.name === "北斗七星" && (k === 3 || k === 6) ? 3 : 0)) + "px");
+el.innerHTML = "<i></i>";
+stars.push({ p: p, el: el });
+el.addEventListener("pointerdown", function (ev) { ev.stopPropagation(); tap(k); });
+field.appendChild(el);
+});
+demo(c);
+}
+/* 演示：虚线整条走一遍，三秒后开表 */
+function demo(c) {
+locked = true;
+$("#timer").textContent = "看";
+$("#timer").classList.remove("hurry");
+var gs = [];
+for (var k = 1; k < c.seq.length; k++) gs.push(line(c.seq[k - 1], c.seq[k], "ghost"));
+setTimeout(function () {
+gs.forEach(function (l) { l.remove(); });
+locked = false;
+limit = LIM(c.seq.length);
+deadline = Date.now() + limit * 1000;
+stars[0].el.classList.add("now");   // 起始星给定，路自己认
+tickT = setInterval(tick, 120);
+tick();
+}, 3000);
+}
+function tap(k) {
+if (locked || !playing) return;
+var c = CSTS[ci];
+if (k === idx) {
+var s = stars[k];
+if (idx > 0) line(c.seq[idx - 1], c.seq[idx], "drew");
+s.el.classList.add("lit"); s.el.classList.remove("now");
+sLink(idx); idx++;
+addPop(s.el, "+80", "pos");
+score += 80; $("#score").textContent = score;
+if (idx < c.seq.length) stars[idx].el.classList.add("now");
+else finishC(true);
+} else if (!stars[k].el.classList.contains("lit")) {
+misses++;
+var s2 = stars[k].el;
+s2.classList.remove("bad"); void s2.offsetWidth; s2.classList.add("bad");
+setTimeout(function () { s2.classList.remove("bad"); }, 620);
+sMiss();
+deadline -= 3000;
+addPop(s2, "-3秒", "neg");
+}
+}
+function addPop(star, txt, cls) {
+var p = document.createElement("b");
+p.className = "pop " + cls;
+p.textContent = txt;
+var r = star.getBoundingClientRect(), f = field.getBoundingClientRect();
+p.style.left = (r.left - f.left + 22) + "px";
+p.style.top = (r.top - f.top - 6) + "px";
+field.appendChild(p);
+setTimeout(function () { p.remove(); }, 820);
+}
+/* 一座收尾：成 / 散 */
+function finishC(ok) {
+clearInterval(tickT);
+locked = true;
+if (stars[idx]) stars[idx].el.classList.remove("now");
+var c = CSTS[ci], bonus = 0;
+if (ok) {
+got++;
+var left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+bonus = left * 15 + (misses === 0 ? 250 : 0);
+score += bonus; $("#score").textContent = score;
+stars.forEach(function (s) { s.el.classList.add("lit"); });
+sDone();
+msgs.push("剩余 " + left + " 秒 ×15" + (misses === 0 ? " · 一笔没错 +250" : ""));
+} else {
+sFail();
+svg.querySelectorAll("line").forEach(function (l) { l.classList.add("out"); });
+}
+var nc = $("#namecard");
+nc.querySelector("h2").textContent = c.name;
+nc.querySelector("p").textContent = ok ? c.note + (bonus ? " · +" + bonus : "") : "这座溜走了，下一座别慌";
+nc.classList.add("show");
+$("#timer").textContent = "0.0";
+setTimeout(function () { ci + 1 < CSTS.length ? setup(ci + 1) : nightEnd(); }, ok ? 2400 : 1700);
+}
+function tick() {
+var left = Math.max(0, deadline - Date.now()) / 1000;
+var t = $("#timer");
+t.textContent = left.toFixed(1);
+t.classList.toggle("hurry", left < 6);
+if (left <= 0) finishC(false);
+}
+/* ── 提示：下一颗亮三拍 ── */
+$("#hint").addEventListener("click", function () {
+if (locked || !playing || hintUsed) return;
+hintUsed = 1;
+this.disabled = true;
+score = Math.max(0, score - 120); $("#score").textContent = score;
+var s = stars[idx];
+if (!s) return;
+s.el.classList.add("now");
+setTimeout(function () {
+if (s.p !== CSTS[ci].seq[idx]) s.el.classList.remove("now");
+}, 1150);
+});
+/* ── 一夜流程 ── */
+function nightStart() {
+audio();
+board.style.display = "none";
+playing = true; score = 0; got = 0;
+$("#score").textContent = "0";
+setup(0);
+}
+function nightEnd() {
+playing = false;
+sEnd();
+var best = 0;
+try { best = parseInt(localStorage.getItem("sg_best") || "0", 10) || 0; } catch (e) {}
+var isNew = score > best;
+if (isNew) { try { localStorage.setItem("sg_best", String(score)); } catch (e) {} }
+var g = got === 4 && misses === 0 ? "S · 满天星斗" : got === 4 ? "A · 一夜四座" : got >= 2 ? "B · 认得半空" : "C · 星光可鉴";
+panel.innerHTML = "<h1>夜 图 收 了</h1><div class='sub'>阳台 · 观星</div>" +
+"<div class='rows'><span class='big'>" + score + "</span> 分<br>" +
+"连成 " + got + " / 4 座星座<br><span class='grade'>" + g + "</span><br>" +
+"本夜最佳 " + Math.max(best, score) + (isNew ? " · 新纪录" : "") + "</div>" +
+"<button id='again'>再来一夜</button><button id='back'>回小家</button>" +
+"<div class='hinttxt'>演示三秒记星序，连对一颗八十分；剩余秒数也换分，一笔没错另加二百五。</div>";
+board.style.display = "flex";
+$("#again").onclick = nightStart;
+$("#back").onclick = goHome;
+}
+function goHome() {
+try {
+if (window.parent && window.parent !== window) { window.parent.postMessage("zhouse-back", "*"); return; }
+} catch (e) {}
+location.href = "../我的家.html";
+}
+$("#home").onclick = goHome;
+/* ── 开场 ── */
+(function intro() {
+var best = 0;
+try { best = parseInt(localStorage.getItem("sg_best") || "0", 10) || 0; } catch (e) {}
+panel.innerHTML = "<h1>星 图</h1><div class='sub'>阳台 · 一夜四座</div>" +
+"<div class='rows'>星序亮三秒，记住了再动手。<br>仙后座 · 北斗七星 · 天琴座 · 猎户座。<br>" +
+(best ? "本夜最佳 " + best + " 分" : "今夜头一回支望远镜") + "</div>" +
+"<button id='go'>支 镜 开 夜</button>" +
+"<div class='hinttxt'>按演示的顺序点星连线，连对一颗八十分，点错扣三秒；卡住了点「提示」，花一百二。</div>";
+$("#go").onclick = nightStart;
+})();
+/* 嵌在画中门里时，母页听 zhouse-back 关门 */
+</script>
+</body>
+</html>
