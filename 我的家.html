@@ -2826,7 +2826,7 @@ track("talks");
 /* 屋顶小屋 · 过山车：沿门面外框滚动，重力切向加速 + 摩擦，可拖拽甩出 */
 (function () {
 const mark = document.querySelector(".roofline"), box = document.getElementById("facade");
-let pts = [], L = 0, s = 0, v = 0, drag = null, last = performance.now(), lastW = 0, built = false;
+let pts = [], L = 0, s = 0, v = 0, drag = null, sto = 0, last = performance.now(), lastW = 0, built = false;
 function build() {
  const w = box.offsetWidth, h = box.offsetHeight, r = 20;
  if (w < 40 || h < 40) return;
@@ -2871,9 +2871,11 @@ function loop(now) {
  S.stats.coasterDist = (S.stats.coasterDist || 0) + Math.abs(v) * dt; // 里程表：成就「长途跋涉」认它
  s = (s + v * dt + L) % L; place();
  }
+ clearTimeout(sto); sto = setTimeout(() => loop(performance.now()), 50); /* rAF 冻结时兜底驱动 */
  requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+sto = setTimeout(() => loop(performance.now()), 60);
 mark.addEventListener("pointerdown", e => {
  e.preventDefault();
  try { mark.setPointerCapture(e.pointerId); } catch (er) {}
@@ -2881,24 +2883,23 @@ mark.addEventListener("pointerdown", e => {
 });
 mark.addEventListener("pointermove", e => {
  if (!drag) return;
- const ns = projS(e.clientX, e.clientY), now = performance.now(), dt = Math.max(6, now - drag.t) / 1000;
+ const ns = projS(e.clientX, e.clientY), now = performance.now(), dt = Math.max(6, now - drag.t) / 1e3;
  let d = ns - drag.s; if (d > L / 2) d -= L; if (d < -L / 2) d += L;
- (drag.vs = drag.vs || []).push(d / dt);
- if (drag.vs.length > 6) drag.vs.shift();
+ const iv = d / dt, sgn = iv >= 0 ? 1 : -1;
+ if (!drag.dir) { drag.dir = sgn; drag.peak = 0; drag.swings = 1; drag.lastFlip = now; }
+ else if (sgn !== drag.dir) {   // 回摆完成，短时间连摆记次蓄能
+ drag.swings = now - drag.lastFlip < 700 ? drag.swings + 1 : 1;
+ drag.dir = sgn; drag.peak = 0; drag.lastFlip = now;
+ }
+ drag.peak = Math.max(drag.peak, Math.abs(iv));
  drag.moved += Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy); drag.sx = e.clientX; drag.sy = e.clientY;
  drag.t = now;
  drag.s = ns; s = ns; place();
 });
 mark.addEventListener("pointerup", () => {
- if (drag) {
- const vs = drag.vs || [];
- if (vs.length) {
- let wsum = 0, vsum = 0;
- vs.forEach((vv, i) => { const w = i + 1; wsum += w; vsum += vv * w; });
- v = Math.max(-2600, Math.min(2600, vsum / wsum * 0.9));
- }
- if (drag.moved < 6) { v += (v >= 0 ? 1 : -1) * 300; AU.sfx("door"); }
- else if (Math.abs(v) > 900) AU.sfx("whoosh");
+ if (drag && drag.moved >= 6 && drag.peak) {
+ v = drag.dir * Math.min(3400, drag.peak * (0.62 + 0.25 * Math.min(drag.swings, 5)));
+ if (Math.abs(v) > 900) AU.sfx("whoosh");
  if (Math.abs(v) > 1500) { S.stats.coaster = 1; checkQuests(); }
  }
  drag = null;
