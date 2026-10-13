@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>节奏地毯 · 小Z 的小家</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+--paper: #faf3e6; --paper-2: #f4ead8; --ink: #4a3a28; --ink-2: #8a7458;
+--gold: #d4880f; --gold-2: #f0c46a; --wood: #6b4f2e; --line: #eadfce;
+--c0: #e8a13a; --c1: #6a9ec8; --c2: #6ab07a; --c3: #d97aa0;
+}
+html, body { height: 100%; }
+body {
+font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+color: var(--ink); overflow: hidden; touch-action: manipulation;
+background: linear-gradient(180deg, #33291c, #1e160e);
+display: flex; flex-direction: column;
+}
+button { font-family: inherit; }
+.topbar {
+flex: none; display: flex; align-items: center; gap: 10px;
+padding: 10px 14px; color: #e9e6da; z-index: 5;
+}
+.topbar .back {
+background: rgba(255,255,255,.07); color: #e9e6da; border: 1px solid rgba(240,196,106,.35);
+border-radius: 10px; padding: 7px 14px; font-size: 12.5px; letter-spacing: .15em; cursor: pointer;
+display: inline-flex; align-items: center; gap: 6px;
+}
+.topbar .back:hover { background: rgba(212,136,15,.25); }
+.topbar h1 { font-size: 15px; letter-spacing: .3em; color: var(--gold-2); }
+.topbar .sub { font-size: 11px; color: #9aa3b8; letter-spacing: .2em; }
+.hud {
+flex: none; display: flex; justify-content: space-between; align-items: baseline;
+padding: 0 16px 8px; color: #e9e6da; font-variant-numeric: tabular-nums;
+}
+.hud .score { font-size: 26px; font-weight: 900; color: var(--gold-2); }
+.hud .combo { font-size: 13px; color: #c9bfa8; letter-spacing: .1em; }
+.hud .combo b { color: #f2e8d5; font-size: 17px; }
+#stage { flex: 1; position: relative; min-height: 0; }
+.lanes { position: absolute; inset: 0; display: flex; justify-content: center; gap: 0; }
+.lane { position: relative; width: min(23vw, 92px); height: 100%; }
+.lane::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(240,196,106,.1); }
+.lane { border-left: 1px solid rgba(240,196,106,.12); border-right: 1px solid rgba(240,196,106,.12); }
+.note {
+position: absolute; left: 50%; top: 0; width: 72%; margin-left: -36%; height: 34px;
+border-radius: 10px; border: 2.5px solid rgba(255,255,255,.55);
+box-shadow: 0 4px 10px rgba(0,0,0,.4), inset 0 3px 0 rgba(255,255,255,.25);
+will-change: transform; z-index: 2;
+}
+.note.t0 { background: var(--c0); } .note.t1 { background: var(--c1); }
+.note.t2 { background: var(--c2); } .note.t3 { background: var(--c3); }
+.note.hit { transition: transform .18s ease-in, opacity .18s; opacity: 0; }
+.note.missed { transition: opacity .3s; opacity: .12; filter: grayscale(1); }
+.judgebar {
+position: absolute; left: 0; right: 0; bottom: 0; height: 12px;
+background: linear-gradient(90deg, transparent, rgba(240,196,106,.5), transparent);
+box-shadow: 0 0 18px rgba(240,196,106,.35); z-index: 1;
+}
+.keys {
+flex: none; display: flex; justify-content: center; gap: 10px;
+padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
+}
+.key {
+width: min(21vw, 84px); height: 64px; border-radius: 14px; cursor: pointer;
+border: 2.5px solid rgba(255,255,255,.4); color: #fff; font-weight: 900;
+font-size: 17px; letter-spacing: .1em; position: relative;
+box-shadow: 0 5px 0 rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.3);
+transition: transform .06s, filter .06s; user-select: none; -webkit-user-select: none;
+}
+.key small { display: block; font-size: 9px; font-weight: 400; opacity: .75; letter-spacing: .25em; margin-top: 2px; }
+.key.k0 { background: var(--c0); } .key.k1 { background: var(--c1); }
+.key.k2 { background: var(--c2); } .key.k3 { background: var(--c3); }
+.key.dn { transform: translateY(5px); box-shadow: 0 0 0 rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.3); filter: brightness(1.25); }
+.pop { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 900;
+font-size: 15px; letter-spacing: .2em; pointer-events: none; z-index: 4;
+animation: popup .5s ease-out forwards; white-space: nowrap; }
+.pop.p { color: var(--gold-2); } .pop.g { color: #9ecbff; } .pop.m { color: #8a8474; }
+@keyframes popup { 0% { opacity: 0; transform: translate(-50%, 6px); } 18% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -34px); } }
+#veil {
+position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column;
+align-items: center; justify-content: center; gap: 14px; text-align: center;
+background: radial-gradient(ellipse at center, rgba(30,22,14,.92), rgba(20,14,8,.97));
+color: #e9e6da; padding: 20px;
+}
+#veil.hide { display: none; }
+#veil h2 { font-size: clamp(22px, 5vw, 30px); letter-spacing: .3em; color: var(--gold-2); }
+#veil .desc { font-size: 12.5px; color: #c9bfa8; line-height: 2; max-width: 420px; }
+#veil .best { font-size: 12px; color: #9aa3b8; letter-spacing: .15em; }
+#veil .go {
+border: none; cursor: pointer; border-radius: 12px; padding: 12px 46px;
+background: linear-gradient(180deg, var(--gold-2), var(--gold)); color: #3a2c12;
+font-weight: bold; font-size: 15px; letter-spacing: .3em;
+box-shadow: 0 4px 14px rgba(212,136,15,.35), inset 0 1px 0 rgba(255,255,255,.5);
+}
+#veil .go:active { transform: translateY(2px); }
+#veil .rankrow { display: flex; gap: 18px; font-size: 13px; }
+#veil .rankrow b { color: var(--gold-2); }
+#count3 { position: absolute; inset: 0; z-index: 9; display: none; align-items: center; justify-content: center;
+font-size: clamp(60px, 18vw, 110px); font-weight: 900; color: var(--gold-2);
+text-shadow: 0 6px 30px rgba(240,196,106,.5); pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="topbar">
+<button class="back" id="bk">← 小家</button>
+<h1>节奏地毯</h1>
+<span class="sub">客厅 · 四键</span>
+</div>
+<div class="hud">
+<div class="score" id="sc">0</div>
+<div class="combo">连击 <b id="cb">0</b> · 精度 <span id="ac">100%</span></div>
+</div>
+<div id="stage">
+<div class="lanes" id="lanes">
+<div class="lane"></div><div class="lane"></div><div class="lane"></div><div class="lane"></div>
+<div class="judgebar"></div>
+</div>
+<div id="count3"></div>
+<div id="veil">
+<h2 id="vh">挂毯卷开</h2>
+<div class="desc" id="vd">音符顺毯纹落下，落到底边那一刻按键。<br>电脑用 D F J K，指尖直接点下面四块键垫。<br>Perfect ±75 毫秒 · Good ±160 毫秒 · 一曲约四十五秒。</div>
+<div class="best" id="vb"></div>
+<div class="rankrow" id="vr" style="display:none"></div>
+<button class="go" id="go">开 始</button>
+</div>
+</div>
+<div class="keys">
+<button class="key k0" data-k="0">D<small>拍</small></button>
+<button class="key k1" data-k="1">F<small>打</small></button>
+<button class="key k2" data-k="2">J<small>得</small></button>
+<button class="key k3" data-k="3">K<small>劲</small></button>
+</div>
+<script>
+"use strict";
+/* 谱面：拍.轨 空格分隔；BPM 104，72 拍一曲 */
+const CHART = ("4.0 5.1 6.2 7.3 8.0 9.2 10.1 11.3 12.0 12.1 13.2 14.3 15.1 16.0 17.2 18.1 19.3 " +
+"20.0 20.3 21.1 22.2 23.0 23.3 24.1 24.2 25.0 25.3 26.1 27.2 28.0 28.2 29.1 29.3 30.0 30.3 31.1 31.2 " +
+"32.0 32.1 33.2 33.3 34.0 34.3 35.1 35.2 36.2 38.0 " +
+"40.0 41.1 42.0 43.2 44.1 45.3 46.0 46.2 47.1 47.3 48.0 48.1 49.2 50.3 51.0 51.1 52.2 52.3 53.0 53.1 54.0 54.2 55.1 55.3 " +
+"56.0 56.1 56.2 56.3 57.0 57.3 58.1 58.2 59.0 59.1 59.2 59.3 60.0 60.3 61.1 61.2 62.0 62.1 62.2 62.3 " +
+"63.0 63.1 63.2 63.3 64.0 64.3 65.0 65.3 66.1 66.2 67.0 67.1 67.2 67.3 68.0 69.1 70.2 71.3").split(" ")
+.map(s => ({ b: +s.slice(0, -2), t: +s.slice(-1) }));
+const BEAT = 60000 / 104, LEAD = 1500, TOTAL_BEATS = 74;
+const PENTA = [523.25, 587.33, 659.25, 783.99];  /* C5 D5 E5 G5，四轨一音 */
+var ac = null, sc = 0, combo = 0, maxCombo = 0, nP = 0, nG = 0, nM = 0;
+var notes = [], startT = 0, playing = false, spawnIv = 0, sweepIv = 0, metIv = 0;
+var lanes = document.querySelectorAll(".lane"), fieldH = 0;
+function loadBest() { try { return parseInt(localStorage.getItem("rg_best"), 10) || 0; } catch (e) { return 0; } }
+function showBest() { const b = loadBest(); document.getElementById("vb").textContent = b ? "地毯最佳 " + b : "还没开过张"; }
+function tone(f, t0, dur, vol, type) {
+if (!ac) return;
+const o = ac.createOscillator(), g = ac.createGain();
+o.type = type || "triangle"; o.frequency.setValueAtTime(f, t0);
+g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.008);
+g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+}
+function noise(t0, dur, vol, from, to) {
+if (!ac) return;
+const len = Math.max(1, Math.floor(ac.sampleRate * dur)), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+const src = ac.createBufferSource(); src.buffer = buf;
+const f = ac.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1;
+f.frequency.setValueAtTime(from, t0); f.frequency.exponentialRampToValueAtTime(to, t0 + dur);
+const g = ac.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+src.connect(f); f.connect(g); g.connect(ac.destination); src.start(t0);
+}
+function popText(laneIdx, cls, txt) {
+const el = document.createElement("div");
+el.className = "pop " + cls; el.textContent = txt;
+el.style.bottom = "40px";
+lanes[laneIdx].appendChild(el);
+setTimeout(() => el.remove(), 520);
+}
+function updHud() {
+document.getElementById("sc").textContent = sc;
+document.getElementById("cb").textContent = combo;
+const tot = nP + nG + nM;
+document.getElementById("ac").textContent = tot ? Math.round((nP + nG * 0.6) / tot * 100) + "%" : "100%";
+}
+function spawnNote(n) {
+const el = document.createElement("div");
+el.className = "note t" + n.t;
+const now = Date.now(), dur = n.hitAt - now;
+lanes[n.t].appendChild(el);
+n.el = el;
+/* 双保险首帧：rAF 冻结时 setTimeout 兜底，保证 transition 起跳 */
+const go = () => {
+el.style.transition = "transform " + Math.max(60, dur) + "ms linear";
+el.style.transform = "translateY(" + (fieldH - 34) + "px)";
+};
+requestAnimationFrame(() => requestAnimationFrame(go));
+setTimeout(go, 34);
+}
+function judge(t) {
+if (!playing) return;
+const now = Date.now();
+let best = null, bd = 1e9;
+for (const n of notes) {
+if (n.done || n.t !== t) continue;
+const d = now - n.hitAt;
+if (Math.abs(d) < Math.abs(bd)) { bd = d; best = n; }
+if (n.hitAt - now > 400) break;
+}
+if (!best || Math.abs(bd) > 160) { tone(180, ac.currentTime, 0.05, 0.03, "square"); return; }  /* 空按轻响 */
+best.done = true;
+best.el.style.transition = "opacity .18s";
+best.el.classList.add("hit");
+setTimeout(() => { best.el.remove(); }, 200);
+if (Math.abs(bd) <= 75) { nP++; combo++; sc += 120 + Math.min(combo, 40) * 2; popText(t, "p", "PERFECT"); tone(PENTA[t], ac.currentTime, 0.34, 0.16); tone(PENTA[t] * 2, ac.currentTime, 0.2, 0.05, "sine"); }
+else { nG++; combo++; sc += 60 + Math.min(combo, 40); popText(t, "g", "GOOD"); tone(PENTA[t] * 0.996, ac.currentTime, 0.26, 0.11); }
+if (combo > maxCombo) maxCombo = combo;
+if (combo > 0 && combo % 10 === 0 && ac) { tone(PENTA[t] * 1.5, ac.currentTime, 0.4, 0.07, "sine"); }
+updHud();
+}
+function sweep() {
+const now = Date.now();
+for (const n of notes) {
+if (n.done || n.hitAt + 170 > now) continue;
+n.done = true; nM++; combo = 0;
+n.el.style.transition = "opacity .3s";
+n.el.classList.add("missed");
+setTimeout(() => n.el.remove(), 350);
+popText(n.t, "m", "MISS");
+updHud();
+}
+if (playing && now > startT + LEAD + TOTAL_BEATS * BEAT + 600) finish();
+}
+function finish() {
+playing = false;
+clearInterval(spawnIv); clearInterval(sweepIv); clearInterval(metIv);
+const tot = nP + nG + nM, acc = tot ? (nP + nG * 0.6) / tot : 0;
+const RANK = acc >= 0.84 && sc >= 17000 ? "S" : acc >= 0.69 && sc >= 14000 ? "A" : sc >= 10000 ? "B" : "C";
+const prev = loadBest();
+if (sc > prev) { try { localStorage.setItem("rg_best", String(sc)); } catch (e) {} }
+const v = document.getElementById("veil");
+document.getElementById("vh").textContent = "一曲终了 · " + RANK;
+document.getElementById("vd").innerHTML = "分数 <b>" + sc + "</b>" + (sc > prev ? " · 新纪录" : " · 最佳 " + Math.max(prev, sc)) +
+"<br>最大连击 " + maxCombo + " · 精度 " + Math.round(acc * 100) + "%<br>Perfect " + nP + " · Good " + nG + " · Miss " + nM;
+document.getElementById("vr").style.display = "flex";
+document.getElementById("vr").innerHTML = "<span>金杯线 <b>14000</b></span><span>回忆线 <b>9000</b></span>";
+document.getElementById("go").textContent = "再 来";
+v.classList.remove("hide");
+showBest();
+if (ac) { const t0 = ac.currentTime;
+[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, t0 + i * 0.13, 0.5, 0.12));
+if (RANK === "S") [659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, t0 + 0.6 + i * 0.11, 0.55, 0.1));
+}
+}
+function start() {
+if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (C) ac = new C(); }
+if (ac && ac.state === "suspended") ac.resume();
+document.getElementById("veil").classList.add("hide");
+document.getElementById("vr").style.display = "none";
+lanes.forEach(l => { while (l.firstChild && l.firstChild.classList && l.firstChild.classList.contains("note")) l.removeChild(l.firstChild); while (l.firstChild && l.firstChild.classList && l.firstChild.classList.contains("pop")) l.removeChild(l.firstChild); });
+sc = 0; combo = 0; maxCombo = 0; nP = 0; nG = 0; nM = 0;
+updHud();
+fieldH = lanes[0].getBoundingClientRect().height;
+notes = CHART.map(n => ({ b: n.b, t: n.t, hitAt: 0, done: false, el: null }));
+/* 倒计时 3-2-1，音符随第 0 拍起跳 */
+const cd = document.getElementById("count3");
+cd.style.display = "flex";
+let step = 3;
+const cdTick = () => {
+if (step > 0) { cd.textContent = step; if (ac) tone(660, ac.currentTime, 0.09, 0.08, "square"); step--; setTimeout(cdTick, 580); }
+else {
+cd.style.display = "none";
+if (ac) tone(990, ac.currentTime, 0.18, 0.1, "square");
+beginPlay();
+}
+};
+setTimeout(cdTick, 300);
+}
+function beginPlay() {
+startT = Date.now();
+for (const n of notes) n.hitAt = startT + LEAD + n.b * BEAT;
+playing = true;
+let idx = 0;
+spawnIv = setInterval(() => {
+const now = Date.now();
+while (idx < notes.length && notes[idx].hitAt - LEAD - 60 <= now) { spawnNote(notes[idx]); idx++; }
+}, 30);
+sweepIv = setInterval(sweep, 50);
+/* 鼓点伴奏：拍上踩镲，偶数拍加底鼓 */
+let beatN = 0;
+metIv = setInterval(() => {
+if (!ac) return;
+const now = Date.now(), next = startT + LEAD + beatN * BEAT;
+if (next > now + 120) return;
+const t0 = Math.max(ac.currentTime, ac.currentTime + (next - now) / 1000);
+noise(t0, 0.05, beatN % 2 ? 0.02 : 0.035, 6000, 8000);
+if (beatN % 2 === 0) tone(98, t0, 0.12, 0.1, "sine");
+beatN++;
+if (beatN > TOTAL_BEATS) clearInterval(metIv);
+}, 60);
+}
+document.getElementById("go").addEventListener("click", start);
+document.querySelectorAll(".key").forEach(k => {
+const t = +k.dataset.k;
+const dn = e => { e.preventDefault(); k.classList.add("dn"); judge(t); };
+const up = () => k.classList.remove("dn");
+k.addEventListener("pointerdown", dn);
+k.addEventListener("pointerup", up);
+k.addEventListener("pointerleave", up);
+k.addEventListener("pointercancel", up);
+});
+document.addEventListener("keydown", e => {
+if (e.repeat) return;
+const map = { d: 0, f: 1, j: 2, k: 3, D: 0, F: 1, J: 2, K: 3 };
+if (e.key in map) {
+e.preventDefault();
+const t = map[e.key], k = document.querySelectorAll(".key")[t];
+k.classList.add("dn"); setTimeout(() => k.classList.remove("dn"), 90);
+judge(t);
+}
+if (e.key === "Escape") goBack();
+});
+function goBack() {
+try { if (window.parent && window.parent !== window) { window.parent.postMessage("zhouse-back", "*"); return; } } catch (e) {}
+location.href = "../我的家.html";
+}
+document.getElementById("bk").addEventListener("click", goBack);
+window.addEventListener("message", e => { if (e.data === "zhouse-replay") start(); });
+showBest();
+</script>
+</body>
+</html>
