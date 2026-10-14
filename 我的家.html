@@ -235,14 +235,14 @@ filter: blur(2px); opacity: 0; animation: puff 4s ease-out infinite;
 /* ── 3D 剖面小家：拖动转视角，点房间进门 ── */
 .doll { position: relative; margin-top: 2px; user-select: none; }
 .dinfo { text-align: center; font-size: 12px; color: var(--ink-3); letter-spacing: .12em; padding: 2px 0 0; min-height: 24px; }
-.dstage { height: 478px; perspective: 1150px; perspective-origin: 50% 26%; touch-action: none; cursor: grab; overflow: hidden; }
+.dstage { height: 516px; perspective: 1230px; perspective-origin: 50% 26%; touch-action: none; cursor: grab; overflow: hidden; }
 .dstage:active { cursor: grabbing; }
 .dhouse { position: absolute; left: 50%; top: 254px; width: 0; height: 0; transform-style: preserve-3d;
 transform: translateZ(-30px) rotateX(var(--drx,-24deg)) rotateY(var(--dry,-30deg));
 transition: transform .5s cubic-bezier(.2,.8,.3,1); }
 .dhouse.drag { transition: none; }
 /* 整楼放大：点选投影走 getBoundingClientRect，缩放自动入账 */
-.doll .dscale { position: absolute; inset: 0; transform: scale(1.28); transform-origin: 50% 68%; }
+.doll .dscale { position: absolute; inset: 0; transform: scale(1.56); transform-origin: 50% 67%; }
 .dground { position: absolute; left: -212px; top: -124px; width: 424px; height: 248px;
 background: linear-gradient(180deg, rgba(124,140,94,.17), rgba(102,114,74,.08));
 border: 2px solid rgba(58,44,28,.24); border-radius: 12px; transform: rotateX(90deg); }
@@ -272,8 +272,7 @@ border: 1.5px solid rgba(58,44,28,.2); }
 .dc { width: var(--w); height: 150px; transform: translate3d(0,var(--h),0) rotateX(-90deg);
 background: linear-gradient(180deg, rgba(122,94,58,.11), rgba(90,68,42,.06));
 border: 1.5px solid rgba(58,44,28,.26); }
-.droom:hover .dbk, .droom:hover .dl, .droom:hover .drt,
-.droom:focus-visible .dbk { background: linear-gradient(180deg, rgba(217,164,65,.3), rgba(212,150,50,.2)); border-color: var(--gold-2); }
+.droom.aim .dbk, .droom:hover .dbk, .droom:focus-visible .dbk { background: linear-gradient(180deg, rgba(217,164,65,.34), rgba(212,150,50,.2)); border-color: var(--gold-2); }
 .dtag { left: 50%; top: 4px; width: auto; height: auto; transform: translateX(-50%); border: none; background: none;
 font-size: 10px; letter-spacing: .1em; color: var(--ink-2); text-shadow: 0 1px 2px rgba(250,243,230,.9), 0 0 6px rgba(250,243,230,.7); white-space: nowrap; }
 .droom:not(.seen) .dtag::after { content: "·新"; color: var(--gold-2); }
@@ -305,9 +304,29 @@ transform: translate3d(88px,-244px,-14px) rotateY(45deg); }
 .dloft .lock { transform: translate3d(120px,2px,-40px); width: 40px; height: 40px; color: var(--ink-3);
 display: flex; align-items: center; justify-content: center; font-size: 20px; background: none; border: none; }
 .dloft.un .lock { color: var(--gold-2); }
+.dbk::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+background: radial-gradient(ellipse at 50% 18%, rgba(255,214,150,.13), rgba(255,214,150,0) 62%); }
+.dge { position: absolute; width: 150px; height: 46px; background: linear-gradient(135deg, #c8a06c, #a87c4c 70%, #96703f);
+clip-path: polygon(0 100%, 100% 0, 100% 100%); box-shadow: inset 0 0 0 2px rgba(90,60,30,.4); }
+.dge.gL { transform: translate3d(-150px,-258px,75px) rotateY(90deg); }
+.dge.gR { transform: translate3d(150px,-258px,75px) rotateY(90deg); }
+.drf::after { content: ""; position: absolute; left: 4px; right: 4px; top: -2px; height: 4px;
+background: linear-gradient(180deg, #e8b06a, rgba(232,176,106,0)); border-radius: 2px; }
+.ddoor { position: absolute; left: 4px; bottom: 8px; width: 24px; height: 40px; border-radius: 12px 12px 2px 2px;
+background: linear-gradient(180deg, #8a5a2e, #6a431f); border: 2px solid #4a3218; box-shadow: inset 0 0 0 2px rgba(255,226,180,.14); }
+.ddoor::after { content: ""; position: absolute; right: 4px; top: 18px; width: 3.4px; height: 3.4px; border-radius: 50%; background: #d9a441; }
+.dstair { position: absolute; left: 108px; top: 4px; width: 62px; height: 44px; opacity: .92; }
+.drail { position: absolute; left: 0; top: -1px; width: var(--w); height: 15px; pointer-events: none;
+background: repeating-linear-gradient(90deg, rgba(181,122,66,.95) 0 3px, rgba(181,122,66,0) 3px 12px);
+border-bottom: 2.5px solid #a06a38; }
+.gpath { display: block; position: absolute; left: 150px; top: 80px; width: 78px; height: 64px;
+background: repeating-linear-gradient(0deg, rgba(200,190,164,.4) 0 14px, rgba(200,190,164,0) 14px 22px); border-radius: 8px; }
+.gbush { display: block; position: absolute; width: 40px; height: 40px; border-radius: 50%;
+background: radial-gradient(circle at 38% 34%, #7ea25c, #56743c 70%); box-shadow: 0 0 0 3px rgba(86,116,60,.25); }
+.gbush.b1 { left: 34px; top: 148px; } .gbush.b2 { right: 38px; top: 100px; }
 @media (max-width: 640px) {
-.dstage { height: 396px; }
-.doll .dscale { position: absolute; inset: 0; transform: scale(.84); transform-origin: 50% 68%; }
+.dstage { height: 432px; }
+.doll .dscale { position: absolute; inset: 0; transform: scale(.94); transform-origin: 50% 67%; }
 }
 footer.house-foot { text-align: center; color: rgba(255,255,255,.5); font-size: 11.5px; margin-top: 26px; letter-spacing: .35em; }
 #cat {
@@ -2362,14 +2381,17 @@ const FLOORS = [
 ];
 const DBOXES = [];   /* 各房 3D 盒，供点选投影定位 */
 const FURN = {
-"客厅": [[26, 54, 22, "#8a5a2e"], [114, 32, 26, "#141c2c"], [78, 26, 12, "#b57a42"]],
-"厨房": [[40, 38, 26, "#5a6480"], [40, 32, 15, "#f2e8d5", 44]],
-"卧室": [[26, 54, 22, "#5a6480"], [88, 16, 20, "#f2e0c8"]],
-"书房": [[28, 44, 34, "#6a4a24"], [58, 32, 20, "#8a6a3e"]],
-"阳台": [[12, 16, 18, "#4a8a5c"], [48, 16, 18, "#5aa06a"]],
+"客厅": [[26, 54, 22, "#8a5a2e"], [114, 32, 26, "#141c2c"], [78, 26, 12, "#b57a42"], [152, 16, 22, "#4a8a5c"]],
+"厨房": [[40, 38, 26, "#5a6480"], [40, 32, 15, "#f2e8d5", 44], [92, 44, 12, "#8a6a3e"]],
+"卧室": [[26, 54, 22, "#5a6480"], [88, 16, 20, "#f2e0c8"], [116, 28, 26, "#6a4a24"]],
+"书房": [[28, 44, 34, "#6a4a24"], [58, 32, 20, "#8a6a3e"], [94, 24, 16, "#5a6480"]],
+"阳台": [[12, 16, 18, "#4a8a5c"], [48, 16, 18, "#5aa06a"], [82, 14, 16, "#6ab07a"]],
 "健身房": [[8, 36, 22, "#6a6278"], [50, 34, 16, "#241a10"]],
 "储藏室": [[40, 24, 17, "#8a7458"], [86, 20, 14, "#a08a64"], [176, 26, 16, "#8a7458"]],
 "阁楼": [[96, 26, 18, "#6a5a3e"], [176, 34, 10, "#4a4258"]],
+};
+const DECAL = {
+"客厅": '<i class="ddoor"></i><svg class="dstair" viewBox="0 0 64 48"><path d="M3 45h11V35h10V25h10V15h10V5h9" fill="none" stroke="#5f4326" stroke-width="6" stroke-linejoin="round"/><path d="M3 45h11V35h10V25h10V15h10V5h9" fill="none" stroke="#9a744a" stroke-width="2"/></svg>'
 };
 const furnOf = n => (FURN[n] || []).map(f => '<i class="furn" style="left:' + f[0] + "px;bottom:" + (f[4] || 6) +
 "px;width:" + f[1] + "px;height:" + f[2] + 'px;background:' + f[3] + '"></i>').join("");
@@ -2381,11 +2403,12 @@ if (y < 0) win = Array.from({ length: w > 100 ? 2 : 1 }, (_, i) =>
 return '<div class="droom' + (S.visited.includes(name) ? " seen" : "") + (cls ? " " + cls : "") +
 '" data-room="' + name + '" tabindex="0" style="--w:' + w + 'px;--h:' + h + 'px;transform:translate3d(' + x + 'px,' + y + 'px,75px)">' +
 '<div class="df"></div><div class="dc"></div><div class="dl"></div><div class="drt"></div>' +
-'<div class="dbk"><span class="dtag">' + name + "</span>" + win + furnOf(name) + "</div></div>";
+'<div class="dbk"><span class="dtag">' + name + "</span>" + win + furnOf(name) + (DECAL[name] || "") + "</div>" +
+(name === "阳台" ? '<i class="drail"></i>' : "") + "</div>";
 }
 function renderRooms() {
 DBOXES.length = 0;
-const H = ['<i class="dshadow"></i><div class="dground"></div>'];
+const H = ['<i class="dshadow"></i><div class="dground"><i class="gpath"></i><i class="gbush b1"></i><i class="gbush b2"></i></div>'];
 for (const row of FLOORS) for (const f of row) H.push(drHTML.apply(null, f));
 H.push(drHTML("健身房", -244, 92, 0, 64));
 H.push(drHTML("储藏室", -150, 300, 86, 40, "deep"));
@@ -2395,7 +2418,7 @@ H.push('<div class="dloft' + (loft ? " un" : "") + '" data-loft="1" tabindex="0"
 '<div class="df"></div><div class="dl"></div><div class="drt"></div>' +
 '<div class="dbk"><span class="dtag">F2 · 阁楼</span>' + (loft ? furnOf("阁楼") : "") +
 '<i class="lock">' + ic(loft ? "moon" : "lock") + "</i></div></div>");
-H.push('<div class="drf drfF"></div><div class="drf drfB"></div><div class="dchm"></div>');
+H.push('<div class="dge gL"></div><div class="dge gR"></div><div class="drf drfF"></div><div class="drf drfB"></div><div class="dchm"></div>');
 const dh = document.getElementById("dhouse");
 dh.innerHTML = H.join("");
 if (!dprobe) {
@@ -2403,6 +2426,7 @@ dprobe = document.createElement("i");
 dprobe.style.cssText = "position:absolute;pointer-events:none";
 }
 dh.appendChild(dprobe);   /* 点选定位探针：渲染重建后重挂 */
+DQ = null; setTimeout(() => { DQ = null; }, 1600);
 }
 /* 拖转 / 点选 / 掀顶 / 名牌 */
 const dhouse = document.getElementById("dhouse"), dstage = document.getElementById("dstage"), dinfo = document.getElementById("dinfo");
@@ -2410,6 +2434,7 @@ let dRX = -24, dRY = -30, dDrag = null, dprobe = null;
 function applyDoll() {
 dhouse.style.setProperty("--drx", dRX + "deg");
 dhouse.style.setProperty("--dry", dRY + "deg");
+DQ = null;
 }
 /* ── 点选定位：探针投影 3D 盒的后墙/地板四边形，点内即中，重叠取近 ── */
 function projPt(px, py, pz) {
@@ -2427,21 +2452,26 @@ if (pos && neg) return false;
 }
 return true;
 }
+var DQ = null;
+/* 真 z 平面：房盒世界 z=75..-75（后墙 -75、地板 y0 面 z 75..-75）；分层 后墙>地板>侧墙，同层取近 */
 function dollRoomAt(x, y) {
 if (!dprobe) return null;
-let best = null, bestSc = -1;
-for (const b of DBOXES) {
-const zb = -150;
-const back = [projPt(b.x0, b.y0, zb), projPt(b.x1, b.y0, zb), projPt(b.x1, b.y1, zb), projPt(b.x0, b.y1, zb)];
-const flor = [projPt(b.x0, b.y0, 0), projPt(b.x1, b.y0, 0), projPt(b.x1, b.y0, zb), projPt(b.x0, b.y0, zb)];
-if (inQuad(x, y, back) || inQuad(x, y, flor)) {
-const c0 = projPt((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, -75);
-const c1 = projPt((b.x0 + b.x1) / 2 + 40, (b.y0 + b.y1) / 2, -75);
-const sc = (Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) || 1) / 40;
-if (sc > bestSc) { bestSc = sc; best = b; }
-}
-}
-return best;
+if (!DQ) DQ = DBOXES.map(b => {
+const bk = [projPt(b.x0, b.y0, -75), projPt(b.x1, b.y0, -75), projPt(b.x1, b.y1, -75), projPt(b.x0, b.y1, -75)];
+const fl = [projPt(b.x0, b.y0, 75), projPt(b.x1, b.y0, 75), projPt(b.x1, b.y0, -75), projPt(b.x0, b.y0, -75)];
+const sl = [projPt(b.x0, b.y0, 75), projPt(b.x0, b.y1, 75), projPt(b.x0, b.y1, -75), projPt(b.x0, b.y0, -75)];
+const sr = [projPt(b.x1, b.y0, 75), projPt(b.x1, b.y1, 75), projPt(b.x1, b.y1, -75), projPt(b.x1, b.y0, -75)];
+const c0 = projPt((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, 0);
+const c1 = projPt((b.x0 + b.x1) / 2 + 40, (b.y0 + b.y1) / 2, 0);
+return { name: b.name, bk, fl, sd: [sl, sr], sc: (Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) || 1) / 40 };
+});
+const pick = (qs, want) => { let best = null, bs = -1;
+for (const q of DQ) { const hit = want === 2 ? q.sd.some(s => inQuad(x, y, s)) : inQuad(x, y, want ? q.fl : q.bk);
+if (hit && q.sc > bs) { bs = q.sc; best = q.name; } }
+return best; };
+const bk = pick(null, 0), fl = pick(null, 1), sd = pick(null, 2);
+const nm = bk || fl || sd;
+return nm ? { name: nm } : null;
 }
 dstage.addEventListener("pointerdown", e => {
 dDrag = { x: e.clientX, y: e.clientY, moved: 0 };
@@ -2477,16 +2507,23 @@ if (e.key !== "Enter") return;
 const r = e.target.closest && e.target.closest(".droom");
 if (r) enterRoom(r.dataset.room, innerWidth / 2, innerHeight / 2);
 });
-dstage.addEventListener("mouseover", e => {
-const r = e.target.closest && e.target.closest(".droom");
-if (!r) return;
-const name = r.dataset.room, rm = ROOMS[name];
-dinfo.textContent = rm.no + " · " + name + " · " + rm.sub + " · 藏品 ×" + rm.items.length +
-(S.visited.includes(name) ? "" : " · 新");
-});
-dstage.addEventListener("mouseleave", () => {
-dinfo.textContent = "拖动转一转 · 点屋顶开合 · 点房间进门";
-});
+const DINFO_TIP = "拖动转一转 · 点屋顶开合 · 点房间进门";
+let dAim = "";
+function setAim(n) {
+if (n === dAim) return;
+const el = document.querySelector(".droom.aim");
+if (el) el.classList.remove("aim");
+dAim = n;
+if (n) {
+const r = document.querySelector('.droom[data-room="' + n + '"]');
+if (r) r.classList.add("aim");
+const rm = ROOMS[n];
+dinfo.textContent = rm.no + " · " + n + " · " + rm.sub + " · 藏品 ×" + rm.items.length + (S.visited.includes(n) ? "" : " · 新");
+} else dinfo.textContent = DINFO_TIP;
+}
+dstage.addEventListener("mousemove", e => { if (!dDrag) setAim((dollRoomAt(e.clientX, e.clientY) || {}).name || ""); });
+dstage.addEventListener("mouseleave", () => setAim(""));
+window.addEventListener("resize", () => { DQ = null; });
 function enterRoom(name, cx, cy) {
 if (dlgOpen()) closeTalk();
 AU.sfx("door");
