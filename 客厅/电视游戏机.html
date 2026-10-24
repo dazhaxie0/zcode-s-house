@@ -231,6 +231,18 @@
     .speaker{ display:none; }        /* 小屏塞不下喇叭就收起来 */
     .brand{ letter-spacing:2px; font-size:18px; }
   }
+  /* 一排六个键塞不下时：旋钮一行，频道键换行铺成 3×2，全部够得着 */
+  @media (max-width:820px){
+    .panel{ flex-wrap:wrap; justify-content:center; gap:12px 18px; }
+    .channels{
+      order:5; flex-basis:100%;
+      display:grid; grid-template-columns:repeat(3,minmax(64px,1fr)); gap:9px;
+    }
+    .chbtn{ min-width:0; width:100%; }
+  }
+  @media (max-width:400px){
+    .chbtn{ font-size:17px; padding:7px 4px 6px; }
+  }
 
   /* ---------- 屏上十字键：没键盘也能玩 ---------- */
   .padwrap{ display:flex; justify-content:center; }
@@ -368,12 +380,12 @@
     <div class="manual">
       <h3>使用小卡 · 萌牌电视</h3>
       <p>
-        按面板 <b>1 / 2</b> 换台（也可直接按键盘 <kbd>1</kbd><kbd>2</kbd>），换台时会有一点雪花，属正常现象。<br>
+        按面板 <b>1–5</b> 换台（也可直接按键盘 <kbd>1</kbd>–<kbd>5</kbd>），换台时会有一点雪花，属正常现象。<br>
         <b>没有键盘？</b>用电视下方的<b>十字键</b>，或直接在屏幕上<b>滑动</b>。<br>
         <b>频道 1 贪吃蛇</b>：先 <kbd>←</kbd><kbd>→</kbd> 挑难度（慢 / 中 / 快，越快越难），方向键出发，<kbd>空格</kbd> 暂停，撞墙撞自己会结束；最快档拿到 500 分是一枚藏在家里的奖杯。<br>
         <b>频道 2 · 2048</b>：方向键滑动合并，相同数字碰一起会变大，合出 2048 就赢啦。<br>
         <b>频道 3 · 打砖块</b>：<kbd>←</kbd><kbd>→</kbd> 接球，<kbd>空格</kbd> 发球，三条命，砖清光就过关。<br>
-        <b>频道 4 · 打地鼠</b>：方向键挪锤子，<kbd>空格</kbd> 砸，三十秒内看你能敲几只。<br>
+        <b>频道 4 · 打地鼠</b>：方向键挪锤子，<kbd>空格</kbd> 砸；触屏或鼠标直接<b>点冒头的地鼠</b>，三十秒内看你能敲几只。<br>
         <b>频道 5 · 砍怪</b>：方向键走位，<kbd>空格</kbd> 朝面前砍一刀，怪物摸到会掉血，红心补命，撑得越久分越高。<br>
         <kbd>R</kbd> 或面板 <b>重来</b> 键：重新开始当前游戏；<kbd>M</kbd> 或音效旋钮：开关音效（默认安静）。<br>
         最高分记在电视肚子里（浏览器本地），下次打开还在。
@@ -681,6 +693,8 @@ function drawBrick(now) {
 }
 
 /* ---------- 6.6 打地鼠 ---------- */
+var MGW = 88, MGP = 16;   // 洞格 3×3：收进 HUD 条以下的屏（老版 108 格底排出屏）
+var MOX = (W - MGW * 3 - MGP * 2) / 2, MOY = 52;
 var M = {
   gx: 1, gy: 1,                   // 锤子光标（3×3）
   hole: { c: 0, r: 0, t0: 0, up: 0 },   // 哪个洞、何时冒头、冒多久
@@ -698,7 +712,10 @@ function moleDir(d) {
   Sfx.click();
 }
 function moleSpace() {
-  if (!M.running) { M.running = true; M.lastT = performance.now(); M.nextT0 = 0; return; }
+  if (!M.running) {
+    if (M.timeLeft <= 0) initMole();   // 上一局打完了：先重摆一局再开局
+    M.running = true; M.lastT = performance.now(); M.nextT0 = 0; return;
+  }
   // 砸：光标对准冒头洞才算中
   if (M.hole.up > 0 && M.gx === M.hole.c && M.gy === M.hole.r) {
     var fast = M.hole.up - (performance.now() - M.hole.t0) < 320;
@@ -712,6 +729,17 @@ function moleSpace() {
     M.score = Math.max(0, M.score - 2);
     Sfx.lose();
   }
+}
+/* 触屏 / 鼠标点屏幕：换算到画布坐标，锤子瞬移到点中的格子直接砸 */
+function moleTap(cx, cy) {
+  var c = Math.floor((cx - MOX) / (MGW + MGP));
+  var r = Math.floor((cy - MOY) / (MGW + MGP));
+  if (c < 0 || c > 2 || r < 0 || r > 2) {   // 点在格子外：没开局就当按下开始
+    if (!M.running) moleSpace();
+    return;
+  }
+  M.gx = c; M.gy = r;
+  moleSpace();
 }
 function stepMole(now) {
   if (!M.running) return;
@@ -738,41 +766,40 @@ function stepMole(now) {
 function drawMole(now) {
   ctx.fillStyle = '#241610'; ctx.fillRect(0, 0, W, H);
   drawHudBar('得分 ' + M.score, M.running ? '剩 ' + Math.ceil(M.timeLeft) + ' 秒' : '最高 ' + M.high, '频道 4 · 打地鼠');
-  var gw = 108, gap = 22, ox = (W - gw * 3 - gap * 2) / 2, oy = 58;
   for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) {
-    var x = ox + c * (gw + gap), y = oy + r * (gw + gap);
+    var x = MOX + c * (MGW + MGP), y = MOY + r * (MGW + MGP);
     ctx.fillStyle = '#171009';
-    ctx.beginPath(); ctx.ellipse(x + gw / 2, y + gw - 18, gw / 2 - 8, 16, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + MGW / 2, y + MGW - 14, MGW / 2 - 8, 14, 0, 0, Math.PI * 2); ctx.fill();
     // 冒头的地鼠
     if (M.hole.up > 0 && M.hole.c === c && M.hole.r === r) {
       var p = Math.min(1, (now - M.hole.t0) / 120);
-      var dy = (1 - p) * 40;
+      var dy = (1 - p) * 34;
       ctx.fillStyle = '#a97c50';
-      rr(x + 24, y + 18 + dy, gw - 48, gw - 44, 14); ctx.fill();
+      rr(x + 20, y + 14 + dy, MGW - 40, MGW - 34, 12); ctx.fill();
       ctx.fillStyle = '#5d3f24';
-      ctx.beginPath(); ctx.arc(x + gw / 2 - 13, y + 40 + dy, 5, 0, Math.PI * 2);
-      ctx.arc(x + gw / 2 + 13, y + 40 + dy, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + MGW / 2 - 11, y + 32 + dy, 4.5, 0, Math.PI * 2);
+      ctx.arc(x + MGW / 2 + 11, y + 32 + dy, 4.5, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#2a1508';
-      ctx.beginPath(); ctx.arc(x + gw / 2 - 11, y + 32 + dy, 3, 0, Math.PI * 2);
-      ctx.arc(x + gw / 2 + 11, y + 32 + dy, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + MGW / 2 - 9, y + 25 + dy, 2.5, 0, Math.PI * 2);
+      ctx.arc(x + MGW / 2 + 9, y + 25 + dy, 2.5, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#e8a0a0';
-      ctx.beginPath(); ctx.arc(x + gw / 2, y + 42 + dy, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + MGW / 2, y + 34 + dy, 5, 0, Math.PI * 2); ctx.fill();
     }
   }
   // 锤子光标
-  var hx = ox + M.gx * (gw + gap) + gw / 2, hy = oy + M.gy * (gw + gap) + gw / 2;
+  var hx = MOX + M.gx * (MGW + MGP) + MGW / 2, hy = MOY + M.gy * (MGW + MGP) + MGW / 2;
   ctx.strokeStyle = M.combo >= 3 ? '#ffd98a' : '#e8b77a';
   ctx.lineWidth = 3;
-  rr(hx - 46, hy - 46, 92, 92, 12); ctx.stroke();
+  rr(hx - 38, hy - 38, 76, 76, 10); ctx.stroke();
   ctx.lineWidth = 2;                                       // 中心准星
   ctx.beginPath();
-  ctx.moveTo(hx - 10, hy); ctx.lineTo(hx + 10, hy);
-  ctx.moveTo(hx, hy - 10); ctx.lineTo(hx, hy + 10);
+  ctx.moveTo(hx - 9, hy); ctx.lineTo(hx + 9, hy);
+  ctx.moveTo(hx, hy - 9); ctx.lineTo(hx, hy + 9);
   ctx.stroke();
-  if (M.combo >= 3) { ctx.font = 'bold 13px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#ffd98a'; ctx.fillText('连击 ×' + M.combo, hx, hy + 24); }
+  if (M.combo >= 3) { ctx.font = 'bold 13px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#ffd98a'; ctx.fillText('连击 ×' + M.combo, hx, hy + 21); }
   if (!M.running) overlay(M.score > 0 ? '时间到！' : '打地鼠', M.score > 0
-    ? '本局 ' + M.score + ' 分 · 最高 ' + M.high + ' · 空格再来'
-    : '方向键挪锤子 · 空格砸 · 快砸双倍分');
+    ? '本局 ' + M.score + ' 分 · 最高 ' + M.high + ' · 点屏幕或空格再来'
+    : '点冒头的地鼠 · 空格砸 · 快砸双倍分');
 }
 
 /* ---------- 6.7 砍怪（小 RPG） ---------- */
@@ -1529,11 +1556,20 @@ window.addEventListener('pointerup', function (e) {
   if (!swipeStart) return;
   var dx = e.clientX - swipeStart.x, dy = e.clientY - swipeStart.y;
   swipeStart = null;
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;   // 抖一下不算滑动
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) { screenTap(e); return; }   // 轻一下不算滑动：地鼠频道当砸
   inputDir(Math.abs(dx) > Math.abs(dy)
     ? { x: (dx > 0 ? 1 : -1), y: 0 }
     : { x: 0, y: (dy > 0 ? 1 : -1) });
 });
+
+/* 轻点屏幕（触屏 / 鼠标）：换算成画布坐标交给当前频道，目前只有打地鼠用 */
+function screenTap(e) {
+  if (state !== 'mole') return;
+  var rect = cv.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  moleTap((e.clientX - rect.left) * W / rect.width,
+          (e.clientY - rect.top) * H / rect.height);
+}
 
 /* ---------- 通电！ ---------- */
 S.high = parseInt(store.get(K_SNAKE, '0'), 10) || 0;
