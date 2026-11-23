@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-23",
+  "timezone": "Asia/Shanghai",
+  "goal": "逐步推进3A演进，做完记得测试",
+  "source": {
+    "mainHtmlBytes": 307349,
+    "sha256": {
+      "厨房/胡闹厨房.html": "3DBC4B65476B1346253E8F499AD7B7ABC5C9A834CB54C35F11D64CE2F4A1799A",
+      "储藏室/结算队列.js": "07346F77DF1285A49635DAB1888515DDA691687422F6217D87B76080495E4F16",
+      "储藏室/存档事务.js": "8E03F728A37FA2B4F46C430901FF0786D98304B8D3835674825AD4F229633423",
+      "储藏室/存档格式.js": "A75B0A02A1E084841A6AA5AB4A24EE8F9489C2292E6EC59A9A88DC3D2A411F2C",
+      "储藏室/演出镜头.js": "99B27997DE32727794784EF4C3297C48889573DD9EA9BF5DB1F0D7D51A1EE17B",
+      "kitchen-journey.cjs": "7BD13BB5F31061C287EA0A496C88DD3FFABB44A19AFAFB200C0B6318EA5C4B36",
+      "game-regression.cjs": "DC9A896DB0C355244EEDC461666BE025C85AF90577643385DF4D85F72D64EA75",
+      "我的家.html": "BE505648408C2A700DD6426A044C9687EF17D9E93A3D7BF4F02BF7057FF20A62",
+      "house-regression.cjs": "C6507A9455A48EE3C04C68E936FBA20E9E44FCE21B3CC39A99BD956ED529C578",
+      "客厅/迎新餐桌.js": "9D2B87A77972CCFF3EF27FE6BCB0A08F5D88C3D7FF6806CFCA3A607FD4661B72"
+    }
+  },
+  "results": {
+    "saveState": {
+      "passed": 7,
+      "failed": 0
+    },
+    "saveFormat": {
+      "passed": 4,
+      "failed": 0
+    },
+    "house": {
+      "passed": 41,
+      "failed": 0,
+      "runtimeErrors": 0,
+      "failedResponses": 0,
+      "browser": "144.0.7559.133"
+    },
+    "games": {
+      "passed": 20,
+      "failed": 0,
+      "assertions": 191,
+      "browser": "144.0.7559.133"
+    },
+    "musicSession": {
+      "passed": 13,
+      "failed": 0,
+      "assertions": 111,
+      "browser": "144.0.7559.133"
+    },
+    "musicTheory": {
+      "passed": 16,
+      "failed": 0,
+      "assertions": 198,
+      "browser": "144.0.7559.133"
+    },
+    "kitchenMobile": {
+      "horizontalOverflow": false,
+      "passed": 1,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "failed": 0
+    },
+    "health": {
+      "fullSubjects": 5,
+      "warnings": 0,
+      "files": 105
+    },
+    "welcomeAssertions": {
+      "passed": 5,
+      "failed": 0,
+      "browser": "144.0.7559.133"
+    }
+  },
+  "evidence": {
+    "house": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-qa-results-final5\\house-results.json",
+    "games": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-qa-results-cine2\\games.json",
+    "musicSession": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-qa-results-cine2\\music-session.json",
+    "musicTheory": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-qa-results-cine2\\music-theory.json",
+    "cinematicDesktop": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-qa-results-final5\\cinematic-welcome.png",
+    "cinematicMobile": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-qa-results-final5\\cinematic-mobile.png",
+    "kitchenMobile": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-nov22-dinner\\welcome-mobile.json",
+    "kitchenScreenshot": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-nov22-dinner\\welcome-mobile.png",
+    "saveUnits": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-nov23-table\\save-units.txt",
+    "health": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-nov23-table\\health.json",
+    "welcomeAssertions": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-nov23-table\\welcome-assertions\\house-results.json",
+    "welcomeLamp": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-nov23-table\\welcome-assertions\\welcome-lamp.png",
+    "welcomeFireMobile": "C:\\Users\\14120\\AppData\\Local\\Temp\\zhouse-nov23-table\\welcome-assertions\\welcome-mobile-fire.png"
+  },
+  "limits": [
+    "The welcome kitchen uses actual keyboard actions for all three dishes. The script reads the grid to plan movement.",
+    "The rhythm timeline is accelerated and the memory test pairs cards using their text. The run does not measure novice completion time.",
+    "The touch viewport is simulated in Chromium. Physical touch, gamepad input and audible mixing require separate testing.",
+    "Cinematic ducking is asserted through AudioParam values in headless Chrome; the actual listening impression still needs a human.",
+    "Main house and minigame results are from November 23. The music suites and kitchen layout check are from November 22.",
+    "The full house suite and the focused follow-up use the same product files. The focused run adds the final welcome dialogue and seven-plate rejection assertions."
+  ]
+}

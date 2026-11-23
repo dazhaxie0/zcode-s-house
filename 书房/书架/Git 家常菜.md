@@ -10,8 +10,8 @@
 ## 一、开火之前：配置
 
 ```bash
-git config --global user.name  "小Z"
-git config --global user.email "xiaoZ@home.local"
+git config --global user.name  "Z"
+git config --global user.email "z@home.local"
 git config --global init.defaultBranch main      # 新仓库默认 main，别再出生一个 master
 git config --global core.quotepath false         # 中文文件名别给我转义成 \346\226\87...
 git config --global core.autocrlf  input         # 提交转 LF；Windows 团队约定俗成也可用 true
@@ -232,4 +232,4 @@ git push --force-with-lease              # 代替 --force：若远程被别人�
 2. **推之前想三秒**——进了远程历史的东西，就不再是只属于你的了。
 3. **慌了先 reflog，别乱敲命令**——大部分"数据丢了"其实是第二波误操作造成的。
 
-*—— 小Z 于书房，锅还热着*
+*—— Z 于书房，锅还热着*

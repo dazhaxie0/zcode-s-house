@@ -68,6 +68,12 @@ header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
 #panel{position:fixed;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;
 	background:rgba(16,12,6,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 #panel.hide{display:none}
+#pause-dialog{margin:auto;max-width:calc(100vw - 32px);width:360px;border:1px solid #aa884b;border-radius:16px;padding:28px 24px;color:#f5e6ca;background:#29231f;text-align:center;box-shadow:0 20px 80px #0009}
+#pause-dialog::backdrop{background:#080b13bc;backdrop-filter:blur(3px)}
+#pause-dialog h2{font-size:24px;margin-bottom:12px}#pause-dialog p{line-height:1.8;font-size:14px;margin-bottom:14px}
+#pause-dialog button{display:block;margin:10px auto 0;width:100%;padding:12px;border-radius:8px;border:1px solid #b58c45;font:inherit;cursor:pointer;background:#d6a14c;color:#211a10}
+#pause-dialog #leave-game{background:transparent;color:#e9d9b9}
+body.paused .card{animation-play-state:paused}
 #panel .cardp{width:min(88vw,380px);border-radius:14px;padding:26px 24px 20px;text-align:center;
 	background:linear-gradient(170deg,#3a3126,#241e14);box-shadow:0 22px 60px rgba(0,0,0,.6),inset 0 0 0 1px rgba(217,164,65,.28);
 	animation:pin .45s cubic-bezier(.2,1.3,.36,1)}
@@ -94,7 +100,7 @@ button.go:active{transform:translateY(3px);box-shadow:0 2px 0 #8a6a1e}
 </head>
 <body>
 <div id="stage">
-	<header><h1>翻箱倒柜</h1>
+	<header><h1>翻箱倒柜</h1><button id="pause-toggle" type="button" aria-controls="pause-dialog" aria-expanded="false">暂停 · P</button>
 		<div id="hud">
 			<span>分 <b id="t-score">0</b></span>
 			<span class="cbo" id="t-cbow">连击 <b id="t-combo">0</b></span>
@@ -106,11 +112,14 @@ button.go:active{transform:translateY(3px);box-shadow:0 2px 0 #8a6a1e}
 	<div id="board"></div>
 	<div id="foot">方 向 键 · 回 车 ｜ 触 屏 直 点</div>
 </div>
+<dialog id="pause-dialog" aria-labelledby="pause-title"><h2 id="pause-title">歇口气</h2><p>木箱不动，表也停了。<br>离开不会记录这局成绩。</p><button type="button" id="resume-game" autofocus>继续翻箱</button><button type="button" id="leave-game">离开本局，回小家</button></dialog>
 <div id="panel"><div class="cardp" id="pcard"></div></div>
+<script src="../储藏室/结算队列.js"></script>
 <script>
 "use strict";
 var $ = function(id){ return document.getElementById(id); };
 var KEY = "mm_best";
+var runId = "", runStarted = 0;
 var ITEMS = [
 	{ n:"地铺床垫", m:"赊账十五块买的，九成新", i:'<rect x="3" y="10.5" width="18" height="7" rx="2"/><path d="M7.5 10.5v7M16.5 10.5v7"/><rect x="4" y="6.5" width="7" height="3" rx="1.5"/>' },
 	{ n:"留声机", m:"桂花牌八音盒，上弦摇三圈", i:'<path d="M4.5 20.5h10c0-2.6-2.4-4-5-4s-5 1.4-5 4z"/><path d="M9.5 16.5v-4"/><path d="M9.5 12.5c0-4 3-7 6.8-8.2l4-1.2c.7 2.7-.4 5.6-3.1 7.2l-6.2 3.2"/>' },
@@ -194,7 +203,7 @@ function paintCur(){
 	for (var i = 0; i < cards.length; i++) cards[i].classList.toggle("cur", playing && i === curIdx);
 }
 function flip(i){
-	if (!playing || flipLock || st[i] !== 0) return;
+	if (!playing || paused || flipLock || st[i] !== 0) return;
 	var cards = $("board").children, c = cards[i];
 	st[i] = 1; c.classList.add("open"); sFlip();
 	if (first < 0) { first = i; return; }
@@ -229,7 +238,8 @@ function flip(i){
 	}
 }
 function finish(){
-	playing = false;
+	if (!playing) return;
+	playing = false; resetPause();
 	var el = (Date.now() - t0) / 1000;
 	var tBonus = Math.max(0, Math.round((180 - el) * 8));
 	var final = score + tBonus;
@@ -237,6 +247,7 @@ function finish(){
 	for (var k = 0; k < GRADES.length; k++) { if (final >= GRADES[k][0]) { g = GRADES[k]; break; } }
 	var isNew = final > best;
 	if (isNew) { best = final; try { localStorage.setItem(KEY, String(best)); } catch (e) {} }
+	HouseRuns.enqueue("mm", final, runId, matched === 8 ? 1 : 0, runStarted);
 	sWin();
 	$("pcard").innerHTML =
 		'<div class="grade">' + g[1] + '</div><div class="gname">' + g[2] + " · 旧物八件，各归各位</div>" +
@@ -247,14 +258,44 @@ function finish(){
 	$("panel").classList.remove("hide");
 	$("btn-ag").onclick = start;
 }
+var paused = false, pausedAt = 0;
+function goHome(){ try { if (parent && parent !== window) { parent.postMessage("zhouse-back", "*"); return; } } catch (e) {} location.href = "../我的家.html"; }
+function pauseGame(){
+	if (paused || !playing) return;
+	paused = true; pausedAt = Date.now();
+	document.body.classList.add("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "true");
+	$("pause-dialog").showModal();
+}
+function resumeGame(){
+	if (!paused || document.hidden) return;
+	paused = false;
+	t0 += Date.now() - pausedAt; // 表停了多久，就补回多久
+	document.body.classList.remove("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "false");
+	$("pause-dialog").close();
+}
+function resetPause(){
+	paused = false; $("pause-dialog").close();
+	document.body.classList.remove("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "false");
+}
+$("pause-toggle").onclick = function(){ paused ? resumeGame() : pauseGame(); };
+$("resume-game").onclick = resumeGame;
+$("leave-game").onclick = goHome;
+$("pause-dialog").addEventListener("cancel", function(e){ e.preventDefault(); resumeGame(); });
+document.addEventListener("visibilitychange", function(){ if (document.hidden) pauseGame(); });
 function start(){
+	resetPause();
 	$("panel").classList.add("hide");
 	buildBoard();
 	playing = true;
-	t0 = Date.now();
+	runStarted = Date.now();
+	runId = HouseRuns.newId("mm");
+	t0 = runStarted;
 	if (tickT) clearInterval(tickT);
 	tickT = setInterval(function(){
-		if (!playing) return;
+		if (!playing || paused) return;
 		var el = Date.now() - t0;
 		$("t-time").textContent = fmt(el);
 		if (el >= 180000) finish();
@@ -262,12 +303,13 @@ function start(){
 }
 $("board").addEventListener("pointerdown", function(e){
 	var t = e.target.closest ? e.target.closest(".card") : null;
-	if (t && !t.classList.contains("lock")) { e.preventDefault(); flip(+t.dataset.i); }
+	if (t && !paused && !t.classList.contains("lock")) { e.preventDefault(); flip(+t.dataset.i); }
 });
 document.addEventListener("keydown", function(e){
-	if (e.key === "Escape"){ try { parent.postMessage("zhouse-back", "*"); } catch (err) {} return; }
+	if (e.key === "Escape"){ if (paused) { resumeGame(); return; } try { parent.postMessage("zhouse-back", "*"); } catch (err) {} return; }
+	if ((e.key === "p" || e.key === "P") && !e.repeat) { e.preventDefault(); paused ? resumeGame() : pauseGame(); return; }
 	if ($("panel") && !$("panel").classList.contains("hide")) return;
-	if (!playing) return;
+	if (!playing || paused) return;
 	var k = e.key;
 	if (k === "ArrowLeft" || k === "ArrowUp" || k === "ArrowRight" || k === "ArrowDown" || k === "Enter" || k === " ") e.preventDefault();
 	else return;

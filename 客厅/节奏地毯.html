@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>节奏地毯 · 小Z 的小家</title>
+<title>节奏地毯 · Z 的小家</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
@@ -76,6 +76,13 @@ transition: transform .06s, filter .06s; user-select: none; -webkit-user-select:
 .pop { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 900;
 font-size: 15px; letter-spacing: .2em; pointer-events: none; z-index: 4;
 animation: popup .5s ease-out forwards; white-space: nowrap; }
+#pause-dialog{margin:auto;max-width:calc(100vw - 32px);width:360px;border:1px solid #aa884b;border-radius:16px;padding:28px 24px;color:#f5e6ca;background:#29231f;text-align:center;box-shadow:0 20px 80px #0009}
+#pause-dialog::backdrop{background:#080b13bc;backdrop-filter:blur(3px)}
+#pause-dialog h2{font-size:24px;margin-bottom:12px}#pause-dialog p{line-height:1.8;font-size:14px;margin-bottom:14px}
+#pause-dialog button{display:block;margin:10px auto 0;width:100%;padding:12px;border-radius:8px;border:1px solid #b58c45;font:inherit;cursor:pointer;background:#d6a14c;color:#211a10}
+#pause-dialog #leave-game{background:transparent;color:#e9d9b9}
+#pause-toggle{margin-left:10px;border:1.5px solid #8a7458;background:none;color:#cdb98e;border-radius:8px;font:inherit;font-size:13px;padding:3px 10px;cursor:pointer}
+body.paused .pop{animation-play-state:paused}
 .pop.p { color: var(--gold-2); } .pop.g { color: #9ecbff; } .pop.m { color: #8a8474; }
 @keyframes popup { 0% { opacity: 0; transform: translate(-50%, 6px); } 18% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -34px); } }
 #veil {
@@ -105,7 +112,7 @@ text-shadow: 0 6px 30px rgba(240,196,106,.5); pointer-events: none; }
 <body>
 <div class="topbar">
 <button class="back" id="bk">← 小家</button>
-<h1>节奏地毯</h1>
+<h1>节奏地毯</h1><button id="pause-toggle" type="button" aria-controls="pause-dialog" aria-expanded="false">暂停 · P</button>
 <span class="sub">客厅 · 四键</span>
 </div>
 <div class="hud">
@@ -118,6 +125,7 @@ text-shadow: 0 6px 30px rgba(240,196,106,.5); pointer-events: none; }
 <div class="judgebar"></div>
 </div>
 <div id="count3"></div>
+<dialog id="pause-dialog" aria-labelledby="pause-title"><h2 id="pause-title">曲子歇一拍</h2><p>音符悬在半空，拍子替你留着。<br>离开不会记录这局成绩。</p><button type="button" id="resume-game" autofocus>继续弹奏</button><button type="button" id="leave-game">离开本局，回小家</button></dialog>
 <div id="veil">
 <h2 id="vh">挂毯卷开</h2>
 <div class="desc" id="vd">音符顺毯纹落下，落到底边那一刻按键。<br>电脑用 D F J K，指尖直接点下面四块键垫。<br>Perfect ±75 毫秒 · Good ±160 毫秒 · 一曲约四十五秒。</div>
@@ -132,6 +140,7 @@ text-shadow: 0 6px 30px rgba(240,196,106,.5); pointer-events: none; }
 <button class="key k2" data-k="2">J<small>得</small></button>
 <button class="key k3" data-k="3">K<small>劲</small></button>
 </div>
+<script src="../储藏室/结算队列.js"></script>
 <script>
 "use strict";
 /* 谱面：拍.轨 空格分隔；BPM 104，72 拍一曲 */
@@ -146,7 +155,7 @@ const BEAT = 60000 / 104, LEAD = 1500, TOTAL_BEATS = 74;
 const PENTA = [523.25, 587.33, 659.25, 783.99];  /* C5 D5 E5 G5，四轨一音 */
 var ac = null, sc = 0, combo = 0, maxCombo = 0, nP = 0, nG = 0, nM = 0;
 var notes = [], startT = 0, playing = false, spawnIv = 0, sweepIv = 0, metIv = 0;
-var lanes = document.querySelectorAll(".lane"), fieldH = 0;
+var lanes = document.querySelectorAll(".lane"), fieldH = 0, runId = "", runStarted = 0;
 function loadBest() { try { return parseInt(localStorage.getItem("rg_best"), 10) || 0; } catch (e) { return 0; } }
 function showBest() { const b = loadBest(); document.getElementById("vb").textContent = b ? "地毯最佳 " + b : "还没开过张"; }
 function tone(f, t0, dur, vol, type) {
@@ -194,8 +203,73 @@ el.style.transform = "translateY(" + (fieldH - 34) + "px)";
 requestAnimationFrame(() => requestAnimationFrame(go));
 setTimeout(go, 34);
 }
+var paused = false, pausedAt = 0;
+function goHome(){ try { if (window.parent && window.parent !== window) { window.parent.postMessage("zhouse-back", "*"); return; } } catch (e) {} location.href = "../我的家.html"; }
+function freezeNotes(on) { // 下落靠 transition：暂停记下当前矩阵，恢复按剩余时长续落
+for (const n of notes) {
+if (n.done || !n.el || !n.el.parentNode) continue;
+if (on) {
+const cs = getComputedStyle(n.el).transform;
+n.el.style.transition = "none";
+n.el.style.transform = cs === "none" ? "" : cs;
+} else {
+const left = Math.max(60, n.hitAt - Date.now());
+n.el.style.transition = "transform " + left + "ms linear";
+void n.el.offsetWidth;
+n.el.style.transform = "translateY(" + (fieldH - 34) + "px)";
+}
+}
+}
+function pauseGame() {
+if (paused || !playing) return;
+paused = true; pausedAt = Date.now();
+clearInterval(spawnIv); clearInterval(sweepIv); clearInterval(metIv);
+freezeNotes(true);
+document.body.classList.add("paused");
+document.getElementById("pause-toggle").setAttribute("aria-expanded", "true");
+document.getElementById("pause-dialog").showModal();
+}
+function resumeGame() {
+if (!paused || document.hidden) return;
+paused = false;
+const shift = Date.now() - pausedAt;
+startT += shift; // 拍点整体后移，歇多久补多久
+for (const n of notes) n.hitAt += shift;
+freezeNotes(false);
+let idx = 0;
+while (idx < notes.length && notes[idx].el) idx++; // 已落/已判的不补
+spawnIv = setInterval(() => {
+const now = Date.now();
+while (idx < notes.length && notes[idx].hitAt - LEAD - 60 <= now) { spawnNote(notes[idx]); idx++; }
+}, 30);
+sweepIv = setInterval(sweep, 50);
+let beatN = Math.max(0, Math.floor((Date.now() - startT - LEAD) / BEAT) + 1);
+metIv = setInterval(() => {
+if (!ac) return;
+const now = Date.now(), next = startT + LEAD + beatN * BEAT;
+if (next > now + 120) return;
+const t0 = Math.max(ac.currentTime, ac.currentTime + (next - now) / 1000);
+noise(t0, 0.05, beatN % 2 ? 0.02 : 0.035, 6000, 8000);
+if (beatN % 2 === 0) tone(98, t0, 0.12, 0.1, "sine");
+beatN++;
+if (beatN > TOTAL_BEATS) clearInterval(metIv);
+}, 60);
+document.body.classList.remove("paused");
+document.getElementById("pause-toggle").setAttribute("aria-expanded", "false");
+document.getElementById("pause-dialog").close();
+}
+function resetPause() {
+paused = false; document.getElementById("pause-dialog").close();
+document.body.classList.remove("paused");
+document.getElementById("pause-toggle").setAttribute("aria-expanded", "false");
+}
+document.getElementById("pause-toggle").onclick = function () { paused ? resumeGame() : pauseGame(); };
+document.getElementById("resume-game").onclick = resumeGame;
+document.getElementById("leave-game").onclick = goHome;
+document.getElementById("pause-dialog").addEventListener("cancel", function (e) { e.preventDefault(); resumeGame(); });
+document.addEventListener("visibilitychange", function () { if (document.hidden) pauseGame(); });
 function judge(t) {
-if (!playing) return;
+if (!playing || paused) return;
 const now = Date.now();
 let best = null, bd = 1e9;
 for (const n of notes) {
@@ -229,18 +303,21 @@ updHud();
 if (playing && now > startT + LEAD + TOTAL_BEATS * BEAT + 600) finish();
 }
 function finish() {
+if (!playing) return;
+resetPause();
 playing = false;
 clearInterval(spawnIv); clearInterval(sweepIv); clearInterval(metIv);
 const tot = nP + nG + nM, acc = tot ? (nP + nG * 0.6) / tot : 0;
 const RANK = acc >= 0.84 && sc >= 17000 ? "S" : acc >= 0.69 && sc >= 14000 ? "A" : sc >= 10000 ? "B" : "C";
 const prev = loadBest();
 if (sc > prev) { try { localStorage.setItem("rg_best", String(sc)); } catch (e) {} }
+HouseRuns.enqueue("rg", sc, runId, 1, runStarted);
 const v = document.getElementById("veil");
 document.getElementById("vh").textContent = "一曲终了 · " + RANK;
 document.getElementById("vd").innerHTML = "分数 <b>" + sc + "</b>" + (sc > prev ? " · 新纪录" : " · 最佳 " + Math.max(prev, sc)) +
 "<br>最大连击 " + maxCombo + " · 精度 " + Math.round(acc * 100) + "%<br>Perfect " + nP + " · Good " + nG + " · Miss " + nM;
 document.getElementById("vr").style.display = "flex";
-document.getElementById("vr").innerHTML = "<span>金杯线 <b>14000</b></span><span>回忆线 <b>9000</b></span>";
+document.getElementById("vr").innerHTML = "<span>金杯线 <b>14000</b></span><span>回忆线 <b>7500</b></span>";
 document.getElementById("go").textContent = "再 来";
 v.classList.remove("hide");
 showBest();
@@ -250,12 +327,15 @@ if (RANK === "S") [659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, t0 
 }
 }
 function start() {
+resetPause();
 if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (C) ac = new C(); }
 if (ac && ac.state === "suspended") ac.resume();
 document.getElementById("veil").classList.add("hide");
 document.getElementById("vr").style.display = "none";
 lanes.forEach(l => { while (l.firstChild && l.firstChild.classList && l.firstChild.classList.contains("note")) l.removeChild(l.firstChild); while (l.firstChild && l.firstChild.classList && l.firstChild.classList.contains("pop")) l.removeChild(l.firstChild); });
 sc = 0; combo = 0; maxCombo = 0; nP = 0; nG = 0; nM = 0;
+runStarted = Date.now();
+runId = HouseRuns.newId("rg");
 updHud();
 fieldH = lanes[0].getBoundingClientRect().height;
 notes = CHART.map(n => ({ b: n.b, t: n.t, hitAt: 0, done: false, el: null }));
@@ -308,6 +388,7 @@ k.addEventListener("pointercancel", up);
 });
 document.addEventListener("keydown", e => {
 if (e.repeat) return;
+if (e.key === "p" || e.key === "P") { e.preventDefault(); paused ? resumeGame() : pauseGame(); return; }
 const map = { d: 0, f: 1, j: 2, k: 3, D: 0, F: 1, J: 2, K: 3 };
 if (e.key in map) {
 e.preventDefault();

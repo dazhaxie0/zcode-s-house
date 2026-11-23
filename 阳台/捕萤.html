@@ -45,6 +45,11 @@ animation: popup .8s ease-out forwards; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
 .pop.cm { color: #ffd68c; font-size: 20px; }
 @keyframes popup { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-46px); opacity: 0; } }
 #hud { position: absolute; top: 0; left: 0; right: 0; z-index: 20; display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
+#pause-dialog{margin:auto;max-width:calc(100vw - 32px);width:360px;border:1px solid #aa884b;border-radius:16px;padding:28px 24px;color:#f5e6ca;background:#29231f;text-align:center;box-shadow:0 20px 80px #0009}
+#pause-dialog::backdrop{background:#080b13bc;backdrop-filter:blur(3px)}
+#pause-dialog h2{font-size:24px;margin-bottom:12px}#pause-dialog p{line-height:1.8;font-size:14px;margin-bottom:14px}
+#pause-dialog button{display:block;margin:10px auto 0;width:100%;padding:12px;border-radius:8px;border:1px solid #b58c45;font:inherit;cursor:pointer;background:#d6a14c;color:#211a10}
+#pause-dialog #leave-game{background:transparent;color:#e9d9b9}
 #jar { position: relative; width: 44px; height: 56px; flex: none; }
 #jar .inglow { position: absolute; left: 50%; bottom: 7px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%;
 background: radial-gradient(circle, rgba(255,233,168,.85), rgba(255,233,168,0) 70%); transition: .3s; }
@@ -89,8 +94,11 @@ border-radius: 999px; padding: 10px 30px; font-size: 15px; font-family: inherit;
 <div><div id="score">0</div><div id="combo"></div></div>
 <div id="timer">60.0</div>
 </div>
+<button id="pause-toggle" type="button" aria-controls="pause-dialog" aria-expanded="false" style="position:absolute;top:10px;right:14px;z-index:21;border:1px solid #9ecbff55;background:#141c2ecc;color:#cfe3f5;border-radius:8px;font:inherit;font-size:13px;padding:4px 12px;cursor:pointer">暂停 · P</button>
 <button id="home">← 小家</button>
+<dialog id="pause-dialog" aria-labelledby="pause-title"><h2 id="pause-title">萤火歇翅</h2><p>灯不灭，计时停了。<br>离开不会记录这局成绩。</p><button type="button" id="resume-game" autofocus>继续捕萤</button><button type="button" id="leave-game">离开本局，回小家</button></dialog>
 <div id="board"><div class="panel" id="panel"></div></div>
+<script src="../储藏室/结算队列.js"></script>
 <script>
 "use strict";
 /* ═══ 阳台 · 捕萤：夏夜六十秒，灯下收萤 ═══
@@ -99,6 +107,7 @@ border-radius: 999px; padding: 10px 30px; font-size: 15px; font-family: inherit;
 var $ = function (s) { return document.querySelector(s); };
 var field = $("#field"), board = $("#board"), panel = $("#panel");
 var DUR = 60000, playing = false, score = 0, caught = 0, combo = 0, comboAt = 0;
+var runId = "", runStarted = 0;
 var t0 = 0, spawnT = null, tickT = null, chirpT = null, flies = [];
 var KIND = {
 gold: { s: 5, sz: 13, cc: "#ffd68c", cg: "rgba(255,214,140,.55)", w: .08, dur: 4.2 },
@@ -167,7 +176,7 @@ if (r < KIND.gold.w + KIND.blue.w) return "blue";
 return "yell";
 }
 function spawn() {
-if (!playing) return;
+if (!playing || paused) return;
 var el = Math.random();
 var rush = Date.now() - t0 > DUR * 0.45; // 后半夜，萤更急
 var maxN = rush ? 8 : 6;
@@ -191,7 +200,7 @@ var life = rush ? 3600 + Math.random() * 2400 : 5200 + Math.random() * 3000;
 var gone = setTimeout(function () { away(f); }, life);
 f.addEventListener("pointerdown", function (ev) {
 ev.stopPropagation();
-if (!playing || f.dataset.x) return;
+if (!playing || paused || f.dataset.x) return;
 f.dataset.x = "1";
 clearTimeout(gone);
 grab(f, kind, ev.clientX, ev.clientY);
@@ -270,10 +279,44 @@ t.textContent = (left / 1000).toFixed(1);
 t.classList.toggle("hurry", left < 10000);
 if (left <= 0) end();
 }
+var paused = false, pausedAt = 0;
+function goHome(){ try { if (parent && parent !== window) { parent.postMessage("zhouse-back", "*"); return; } } catch (e) {} location.href = "../我的家.html"; }
+function pauseGame(){
+	if (paused || !playing) return;
+	paused = true; pausedAt = Date.now();
+	clearInterval(spawnT); clearInterval(tickT); clearInterval(chirpT);
+	document.body.classList.add("paused");
+	document.getElementById("pause-toggle").setAttribute("aria-expanded", "true");
+	document.getElementById("pause-dialog").showModal();
+}
+function resumeGame(){
+	if (!paused || document.hidden) return;
+	paused = false;
+	t0 += Date.now() - pausedAt; // 停多久补多久
+	spawnT = setInterval(spawn, 760);
+	tickT = setInterval(tick, 120);
+	chirpT = setInterval(function () { if (Math.random() < 0.7) chirp(); }, 3400);
+	document.body.classList.remove("paused");
+	document.getElementById("pause-toggle").setAttribute("aria-expanded", "false");
+	document.getElementById("pause-dialog").close();
+}
+function resetPause(){
+	paused = false; document.getElementById("pause-dialog").close();
+	document.body.classList.remove("paused");
+	document.getElementById("pause-toggle").setAttribute("aria-expanded", "false");
+}
+document.getElementById("pause-toggle").onclick = function(){ paused ? resumeGame() : pauseGame(); };
+document.getElementById("resume-game").onclick = resumeGame;
+document.getElementById("leave-game").onclick = goHome;
+document.getElementById("pause-dialog").addEventListener("cancel", function(e){ e.preventDefault(); resumeGame(); });
+document.addEventListener("visibilitychange", function(){ if (document.hidden) pauseGame(); });
+document.addEventListener("keydown", function(e){ if ((e.key === "p" || e.key === "P") && !e.repeat) { e.preventDefault(); paused ? resumeGame() : pauseGame(); } });
 function start() {
+resetPause();
 audio();
 board.style.display = "none";
 playing = true; score = 0; caught = 0; combo = 0;
+runStarted = Date.now(); runId = "fy" + runStarted.toString(36) + Math.random().toString(36).slice(2, 8);
 $("#score").textContent = "0"; $("#combo").textContent = "";
 $("#jar").style.filter = "";
 flies.forEach(function (f) { f.remove(); }); flies = [];
@@ -284,7 +327,8 @@ chirpT = setInterval(function () { if (Math.random() < 0.7) chirp(); }, 3400);
 spawn(); spawn();
 }
 function end() {
-playing = false;
+if (!playing || paused) return;
+playing = false; resetPause();
 clearInterval(spawnT); clearInterval(tickT); clearInterval(chirpT);
 flies.forEach(function (f) { f.classList.add("away"); });
 setTimeout(function () { flies.forEach(function (f) { f.remove(); }); flies = []; }, 600);
@@ -293,6 +337,7 @@ var best = 0;
 try { best = parseInt(localStorage.getItem("fy_best") || "0", 10) || 0; } catch (e) {}
 var isNew = score > best;
 if (isNew) { try { localStorage.setItem("fy_best", String(score)); } catch (e) {} }
+HouseRuns.enqueue("fy", score, runId, 1, runStarted);
 var g = score >= 40 ? "S · 满罐而归" : score >= 28 ? "A · 夜色管够" : score >= 18 ? "B · 掌心微光" : "C · 萤火点点";
 panel.innerHTML = "<h1>夜 收 了</h1><div class='sub'>阳台 · 捕萤</div>" +
 "<div class='rows'><span class='big'>" + score + "</span> 光<br>" +

@@ -49,6 +49,7 @@ animation: none; transform: scale(1.15); }
 border: 1.5px solid rgba(255,233,168,.9); animation: ringp 1s ease-out infinite; }
 @keyframes ringp { from { transform: scale(.55); opacity: .95; } to { transform: scale(1.5); opacity: 0; } }
 .star.bad { animation: shakeX .3s; }
+.no-shake .star.bad { animation: none; }
 .star.bad i { background: #ff8a7a; }
 @keyframes shakeX { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .pop { position: absolute; z-index: 30; font-size: 16px; font-weight: 700; pointer-events: none;
@@ -117,8 +118,12 @@ cursor: pointer; margin: 0 6px; transition: .15s; }
 <button id="home">← 小家</button>
 <div id="namecard"><h2></h2><p></p></div>
 <div id="board"><div class="panel" id="panel"></div></div>
+<script src="../储藏室/结算队列.js"></script>
 <script>
 "use strict";
+/* 震动默认关：主屋「设置 · 震动效果」打开后才走抖动动画 */
+try { if (localStorage.getItem("zhouse_shake") !== "1") document.documentElement.classList.add("no-shake"); }
+catch (e) { document.documentElement.classList.add("no-shake"); }
 /* ═══ 阳台 · 星图：一夜连四座真星座 ═══
    星形按真实相对坐标布；演示三秒后凭记忆依序连星。
    全 DOM+CSS 动画，计时认 Date.now 差值，后台慢下来也不丢账。 */
@@ -138,6 +143,7 @@ tone: [[0.34,0.16,"red"],[0.68,0.76,"blue"]] }
 ];
 var LIM = function (n) { return 12 + n * 2.2; };   // 每座限时：演示结束才起表
 var playing = false, ci = 0, score = 0, got = 0, misses = 0, hintUsed = 0;
+var runId = "", runStarted = 0;
 var stars = [], idx = 0, deadline = 0, limit = 0, tickT = null, locked = true;
 /* ── 布景 ── */
 (function night() {
@@ -281,6 +287,7 @@ setTimeout(function () { p.remove(); }, 820);
 }
 /* 一座收尾：成 / 散 */
 function finishC(ok) {
+if (locked || !playing) return;
 clearInterval(tickT);
 locked = true;
 if (stars[idx]) stars[idx].el.classList.remove("now");
@@ -292,7 +299,6 @@ bonus = left * 15 + (misses === 0 ? 250 : 0);
 score += bonus; $("#score").textContent = score;
 stars.forEach(function (s) { s.el.classList.add("lit"); });
 sDone();
-msgs.push("剩余 " + left + " 秒 ×15" + (misses === 0 ? " · 一笔没错 +250" : ""));
 } else {
 sFail();
 svg.querySelectorAll("line").forEach(function (l) { l.classList.add("out"); });
@@ -329,16 +335,19 @@ function nightStart() {
 audio();
 board.style.display = "none";
 playing = true; score = 0; got = 0;
+runStarted = Date.now(); runId = "sg" + runStarted.toString(36) + Math.random().toString(36).slice(2, 8);
 $("#score").textContent = "0";
 setup(0);
 }
 function nightEnd() {
+if (!playing) return;
 playing = false;
 sEnd();
 var best = 0;
 try { best = parseInt(localStorage.getItem("sg_best") || "0", 10) || 0; } catch (e) {}
 var isNew = score > best;
 if (isNew) { try { localStorage.setItem("sg_best", String(score)); } catch (e) {} }
+HouseRuns.enqueue("sg", score, runId, got === 4 ? 1 : 0, runStarted);
 var g = got === 4 && misses === 0 ? "S · 满天星斗" : got === 4 ? "A · 一夜四座" : got >= 2 ? "B · 认得半空" : "C · 星光可鉴";
 panel.innerHTML = "<h1>夜 图 收 了</h1><div class='sub'>阳台 · 观星</div>" +
 "<div class='rows'><span class='big'>" + score + "</span> 分<br>" +

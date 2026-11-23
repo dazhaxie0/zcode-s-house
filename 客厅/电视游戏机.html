@@ -40,14 +40,16 @@
   }
 
   .stage{
+    --tv-width:clamp(300px,calc((100svh - 320px) * 4 / 3),640px);
     position:relative; z-index:1;
-    min-height:100vh;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:22px; padding:56px 14px 40px;
+    min-height:100vh; min-height:100svh;
+    display:grid; grid-template-columns:minmax(0,var(--tv-width)) 212px;
+    align-items:center; align-content:center; justify-content:center;
+    gap:28px; padding:106px 24px 24px;
   }
 
   /* ---------- 天线（电视顶上两根，可爱担当） ---------- */
-  .antenna-box{ position:relative; width:min(640px,92vw); height:0; cursor:pointer; }
+  .antenna-box{ position:relative; grid-area:1/1; align-self:start; z-index:2; width:100%; height:0; cursor:pointer; }
   .antenna{
     position:absolute; bottom:-6px; width:5px; border-radius:3px;
     background:linear-gradient(180deg,#c9c9cf,#6f6f78);
@@ -64,8 +66,8 @@
 
   /* ---------- 木质机身 ---------- */
   .tv{
-    position:relative;
-    width:min(640px,92vw);
+    position:relative; grid-area:1/1;
+    width:100%;
     padding:16px 22px 20px;
     border-radius:30px;
     background:
@@ -160,12 +162,12 @@
 
   /* ---------- 控制面板 ---------- */
   .panel{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:14px; margin-top:16px; padding:0 6px;
+    position:relative; display:grid; grid-template-columns:44px minmax(0,1fr) 52px;
+    align-items:center; gap:10px; margin-top:16px;
   }
   .pgroup{ display:flex; flex-direction:column; align-items:center; gap:6px; }
   .plabel{
-    font-size:11px; letter-spacing:2px; color:#ffe9c4;
+    font-size:11px; letter-spacing:1px; color:#ffe9c4; white-space:nowrap;
     text-shadow:0 1px 0 rgba(0,0,0,.4);
   }
 
@@ -187,7 +189,7 @@
     box-shadow:0 0 5px rgba(244,201,107,.65);
   }
   .knob:active{ transform:scale(.94); }
-  .knob.small{ width:42px; height:42px; }
+  .knob.small{ width:44px; height:44px; }
   .knob.small::after{ height:12px; top:4px; }
 
   /* 电源指示灯 */
@@ -200,9 +202,9 @@
   @keyframes breath{ 0%,100%{ opacity:1; } 50%{ opacity:.45; } }
 
   /* 频道按钮（老电视那种一排大按键） */
-  .channels{ display:flex; gap:12px; }
+  .channels{ display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; }
   .chbtn{
-    min-width:64px; padding:8px 10px 7px;
+    min-width:0; min-height:44px; padding:8px 4px 7px;
     border:none; cursor:pointer; border-radius:12px;
     font-family:inherit; font-weight:900; font-size:20px; color:var(--ink);
     background:linear-gradient(180deg,#f9dfae,#e6b877);
@@ -220,32 +222,16 @@
   .chbtn.reset{ background:linear-gradient(180deg,#f3c3ae,#df9370); box-shadow:0 4px 0 #9a4b2c, 0 6px 10px rgba(0,0,0,.3); }
   .chbtn.reset:active{ box-shadow:0 1px 0 #9a4b2c; }
 
-  /* 喇叭格栅：斜纹布面 */
-  .speaker{ cursor:pointer;
-    width:120px; height:64px; border-radius:12px;
+  /* 喇叭格栅：收在两只脚之间，不再挤占频道按钮 */
+  .speaker{ cursor:pointer; position:absolute; bottom:-18px; left:50%; transform:translateX(-50%);
+    width:100px; height:14px; border-radius:6px;
     background:
       repeating-linear-gradient(45deg, #35200f 0 3px, #6b4527 3px 8px);
     box-shadow:inset 0 2px 6px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.15);
   }
-  @media (max-width:560px){
-    .speaker{ display:none; }        /* 小屏塞不下喇叭就收起来 */
-    .brand{ letter-spacing:2px; font-size:18px; }
-  }
-  /* 一排六个键塞不下时：旋钮一行，频道键换行铺成 3×2，全部够得着 */
-  @media (max-width:820px){
-    .panel{ flex-wrap:wrap; justify-content:center; gap:12px 18px; }
-    .channels{
-      order:5; flex-basis:100%;
-      display:grid; grid-template-columns:repeat(3,minmax(64px,1fr)); gap:9px;
-    }
-    .chbtn{ min-width:0; width:100%; }
-  }
-  @media (max-width:400px){
-    .chbtn{ font-size:17px; padding:7px 4px 6px; }
-  }
 
   /* ---------- 屏上十字键：没键盘也能玩 ---------- */
-  .padwrap{ display:flex; justify-content:center; }
+  .padwrap{ grid-area:1/2; display:flex; justify-content:center; }
   .dpad{
     display:grid; grid-template-columns:repeat(3,58px); grid-template-rows:repeat(3,58px);
     gap:7px; padding:12px; border-radius:22px; touch-action:none;
@@ -279,31 +265,62 @@
   .dbtn.up{ grid-area:1/2; } .dbtn.left{ grid-area:2/1; } .dbtn.mid{ grid-area:2/2; }
   .dbtn.right{ grid-area:2/3; } .dbtn.down{ grid-area:3/2; }
 
-  /* ---------- 说明书小卡片（贴在电视下方） ---------- */
+  /* ---------- 说明书：默认收起，展开的纸卡独立滚动 ---------- */
   .manual{
-    position:relative; width:min(560px,92vw);
+    position:relative; grid-area:1/2; align-self:end; z-index:3; width:100%;
     background:var(--cream);
-    border-radius:6px;
-    padding:16px 20px 14px;
+    border-radius:10px;
     box-shadow:0 10px 22px rgba(90,61,26,.28);
-    transform:rotate(-.6deg);
     line-height:1.9; font-size:13.5px;
   }
-  .manual::before{ /* 顶部一截胶带 */
-    content:''; position:absolute; top:-12px; left:50%;
-    width:96px; height:26px; transform:translateX(-50%) rotate(1.5deg);
-    background:rgba(255,255,255,.5);
-    border-left:1px dashed rgba(0,0,0,.12);
-    border-right:1px dashed rgba(0,0,0,.12);
-    box-shadow:0 2px 5px rgba(0,0,0,.12);
+  .manual summary{ min-height:44px; padding:9px 12px; cursor:pointer; font-weight:700; color:#7a5326; }
+  .manual p{
+    position:absolute; right:0; bottom:calc(100% + 10px);
+    width:min(560px,calc(100vw - 28px)); max-height:min(420px,calc(100svh - 180px));
+    overflow:auto; overscroll-behavior:contain; touch-action:pan-y;
+    padding:16px 18px; border:1px solid #c9a06a; border-radius:10px;
+    background:var(--cream); box-shadow:0 10px 28px rgba(60,32,8,.35);
+    user-select:text; -webkit-user-select:text;
   }
-  .manual h3{ font-size:14px; letter-spacing:3px; margin-bottom:6px; color:#7a5326; }
   .manual b{ color:#b4651d; }
   .manual kbd{
     display:inline-block; padding:0 7px; margin:0 2px;
     border-radius:5px; border:1px solid #c9a06a; border-bottom-width:3px;
     background:#fffaf0; font-family:inherit; font-size:12px; font-weight:700; color:#8a5a2e;
   }
+
+  /* 窄屏竖排：保持 4:3 游戏画面和至少 44px 的触控目标，不靠裁切塞进一屏。 */
+  @media (max-width:940px){
+    .stage{ display:flex; flex-direction:column; gap:12px; padding:76px 12px 16px; }
+    .stage > *{ flex-shrink:0; width:min(380px,100%); }
+    .antenna-box{ align-self:auto; margin-bottom:-12px; }
+    .antenna.left{ height:52px; }
+    .antenna.right{ height:44px; }
+    .tv{ padding:12px; border-radius:24px; }
+    .tv-head{ padding:2px 0 8px; }
+    .brand{ letter-spacing:2px; font-size:18px; }
+    .brand i{ font-size:9px; letter-spacing:1px; margin-left:8px; }
+    .model{ display:none; }
+    .bezel{ padding:8px; border-radius:18px; }
+    .panel{ grid-template-columns:44px minmax(0,1fr) 44px; gap:8px; margin-top:10px; }
+    .channels{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .chbtn{ font-size:17px; padding:7px 4px 6px; }
+    .knob{ width:44px; height:44px; }
+    .speaker{ display:none; }
+    .feet{ padding:0 42px; margin-top:8px; }
+    .feet span{ height:10px; width:54px; }
+    .dpad{ grid-template-columns:repeat(3,48px); grid-template-rows:repeat(3,48px); gap:6px; padding:10px; }
+    .manual{ align-self:auto; }
+  }
+
+  .house-back{
+    position:fixed; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); z-index:1000;
+    display:flex; align-items:center; min-height:44px; padding:0 14px;
+    border:1px solid #c9a06a; border-radius:24px; background:#35291fee; color:#f7ead2;
+    font:14px/1.4 "Microsoft YaHei","PingFang SC",sans-serif; text-decoration:none; touch-action:manipulation;
+  }
+  .house-back:hover{ background:#59412e; }
+  .house-back:focus-visible{ outline:2px solid #f4c96b; outline-offset:3px; }
 
 /* ---- 全屋统一滚动条 ---- */
 ::-webkit-scrollbar{width:10px;height:10px}
@@ -314,6 +331,7 @@
 </style>
 </head>
 <body>
+  <a class="house-back" href="../我的家.html">← 小家</a>
   <div class="stage">
 
     <!-- 天线 -->
@@ -377,11 +395,11 @@
     </div>
 
     <!-- 使用小卡 -->
-    <div class="manual">
-      <h3>使用小卡 · 萌牌电视</h3>
-      <p>
+    <details class="manual">
+      <summary>使用小卡 · 操作说明</summary>
+      <p tabindex="0" aria-label="电视游戏操作说明">
         按面板 <b>1–5</b> 换台（也可直接按键盘 <kbd>1</kbd>–<kbd>5</kbd>），换台时会有一点雪花，属正常现象。<br>
-        <b>没有键盘？</b>用电视下方的<b>十字键</b>，或直接在屏幕上<b>滑动</b>。<br>
+        <b>没有键盘？</b>用屏幕外的<b>十字键</b>，或直接在屏幕上<b>滑动</b>。<br>
         <b>频道 1 贪吃蛇</b>：先 <kbd>←</kbd><kbd>→</kbd> 挑难度（慢 / 中 / 快，越快越难），方向键出发，<kbd>空格</kbd> 暂停，撞墙撞自己会结束；最快档拿到 500 分是一枚藏在家里的奖杯。<br>
         <b>频道 2 · 2048</b>：方向键滑动合并，相同数字碰一起会变大，合出 2048 就赢啦。<br>
         <b>频道 3 · 打砖块</b>：<kbd>←</kbd><kbd>→</kbd> 接球，<kbd>空格</kbd> 发球，三条命，砖清光就过关。<br>
@@ -390,12 +408,19 @@
         <kbd>R</kbd> 或面板 <b>重来</b> 键：重新开始当前游戏；<kbd>M</kbd> 或音效旋钮：开关音效（默认安静）。<br>
         最高分记在电视肚子里（浏览器本地），下次打开还在。
       </p>
-    </div>
+    </details>
 
   </div>
 
+<script src="../储藏室/结算队列.js"></script>
 <script>
 'use strict';
+document.querySelector('.house-back').addEventListener('click', function (e) {
+  if (window.parent !== window) {
+    e.preventDefault();
+    window.parent.postMessage('zhouse-back', '*');
+  }
+});
 /* ============================================================
    萌牌电视 · 游戏机主程序
    结构：
@@ -429,6 +454,21 @@ var store = {
     try { localStorage.setItem(k, String(v)); } catch (e) { /* 存不下就算了，游戏照玩 */ }
   }
 };
+// 震动（画面抖动）默认关闭；在主屋「设置 · 震动效果」里打开后才抖
+var K_SHAKE = 'zhouse_shake';
+function shakeOn() {
+  try { return localStorage.getItem(K_SHAKE) === '1'; } catch (e) { return false; }
+}
+// 一局打完记一笔，回小家按分数折星尘
+function beginChannelRun(game, channelState) {
+  if (!channelState.run) {
+    channelState.run = { id: HouseRuns.newId(game), started: Date.now() };
+  }
+}
+function settleChannel(game, channelState, completed) {
+  var run = channelState.run;
+  if (run) HouseRuns.enqueue(game, channelState.score, run.id, completed ? 1 : 0, run.started);
+}
 
 function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -598,6 +638,7 @@ var B = {
   running: false, over: false, win: false
 };
 function initBrick() {
+  B.run = null;
   B.px = W / 2; B.score = 0; B.lives = 3; B.over = false; B.win = false; B.running = false;
   B.bricks = [];
   for (var r = 0; r < B.rows; r++) for (var c = 0; c < B.cols; c++)
@@ -616,6 +657,7 @@ function brickDir(d) {
 function brickSpace() {
   if (B.over) { initBrick(); return; }
   if (!B.running) {
+    beginChannelRun('brick', B);
     B.running = true;
     var ang = -Math.PI / 2 + (Math.random() * 0.8 - 0.4);   // 大致朝上，略偏
     var sp = 240;
@@ -650,6 +692,7 @@ function stepBrick(dt) {
       if (!B.bricks.some(function (x) { return x.alive; })) {
         B.win = true; B.over = true; B.running = false;
         if (B.score > B.high) { B.high = B.score; store.set(K_BRICK, B.high); }
+        settleChannel('brick', B, true);
         Sfx.win();
       }
     }
@@ -662,6 +705,7 @@ function stepBrick(dt) {
     if (B.lives <= 0) {
       B.over = true;
       if (B.score > B.high) { B.high = B.score; store.set(K_BRICK, B.high); }
+      settleChannel('brick', B, false);
     } else resetBall();
     return;
   }
@@ -702,6 +746,7 @@ var M = {
   lastT: 0, nextT0: 0, combo: 0
 };
 function initMole() {
+  M.run = null;
   M.gx = 1; M.gy = 1; M.score = 0; M.timeLeft = 30; M.running = false;
   M.combo = 0; M.hole.up = 0; M.lastT = 0; M.nextT0 = 0;
 }
@@ -714,6 +759,7 @@ function moleDir(d) {
 function moleSpace() {
   if (!M.running) {
     if (M.timeLeft <= 0) initMole();   // 上一局打完了：先重摆一局再开局
+    beginChannelRun('mole', M);
     M.running = true; M.lastT = performance.now(); M.nextT0 = 0; return;
   }
   // 砸：光标对准冒头洞才算中
@@ -749,6 +795,7 @@ function stepMole(now) {
   if (M.timeLeft <= 0) {
     M.timeLeft = 0; M.running = false;
     if (M.score > M.high) { M.high = M.score; store.set(K_MOLE, M.high); }
+    settleChannel('mole', M, true);
     Sfx.win();
     return;
   }
@@ -813,6 +860,7 @@ var P = {
   wave: 1, spawnT: 0, lastT: 0, shakeT: 0
 };
 function initRpg() {
+  P.run = null;
   P.x = Math.floor(RC / 2); P.y = RR - 2; P.dir = { x: 0, y: -1 };
   P.hp = 5; P.maxHp = 5; P.inv = 0; P.atkCd = 0; P.walkCd = 0;
   P.mons = []; P.score = 0; P.over = false; P.running = false;
@@ -846,7 +894,7 @@ function rpgDir(d) {
 }
 function rpgSpace() {
   if (P.over) { initRpg(); return; }
-  if (!P.running) { P.running = true; P.lastT = performance.now(); return; }
+  if (!P.running) { beginChannelRun('rpg', P); P.running = true; P.lastT = performance.now(); return; }
   if (P.atkCd > 0) return;
   P.atkCd = 220;
   var tx = P.x + P.dir.x, ty = P.y + P.dir.y;
@@ -894,11 +942,12 @@ function stepRpg(now) {
         if (P.inv <= 0) {                                  // 咬到了
           P.hp -= m.dmg;
           P.inv = 900;
-          P.shakeT = now;
+          if (shakeOn()) P.shakeT = now;
           Sfx.die();
           if (P.hp <= 0) {
             P.over = true; P.running = false;
             if (P.score > P.high) { P.high = P.score; store.set(K_RPG, P.high); }
+            settleChannel('rpg', P, false);
           }
         }
       } else if (nx >= 0 && nx < RC && ny >= 0 && ny < RR &&
@@ -910,7 +959,7 @@ function stepRpg(now) {
 }
 function drawRpg(now) {
   var ox2 = 0, oy2 = 0;
-  if (now - P.shakeT < 300) { var mm = (300 - (now - P.shakeT)) / 300 * 10; ox2 = (Math.random() * 2 - 1) * mm; oy2 = (Math.random() * 2 - 1) * mm; }
+  if (shakeOn() && now - P.shakeT < 300) { var mm = (300 - (now - P.shakeT)) / 300 * 10; ox2 = (Math.random() * 2 - 1) * mm; oy2 = (Math.random() * 2 - 1) * mm; }
   ctx.save(); ctx.translate(ox2, oy2);
   ctx.fillStyle = '#241610'; ctx.fillRect(-12, -12, W + 24, H + 24);
   drawHudBar('得分 ' + P.score, '波次 ' + P.wave, '频道 5 · 砍怪');
@@ -992,6 +1041,7 @@ var SNAKE_LVL = [
 ];
 
 function initSnake(keepScore) {
+  S.run = null;
   S.snake = [{ x: 6, y: 8 }, { x: 5, y: 8 }, { x: 4, y: 8 }]; // 开局一小条，朝右
   S.dir = { x: 1, y: 0 };
   S.queue = [];
@@ -1030,8 +1080,9 @@ function stepSnake() {
   var body = eating ? S.snake : S.snake.slice(0, S.snake.length - 1);
   if (willCollide(body, head, COLS, ROWS)) {
     S.dead = true;
-    S.shakeT = performance.now();
+    if (shakeOn()) S.shakeT = performance.now();
     if (S.score > S.high) { S.high = S.score; store.set(K_SNAKE, S.high); }
+    settleChannel('snake', S, false);
     Sfx.die();
     return;
   }
@@ -1049,6 +1100,7 @@ function stepSnake() {
     if (!spawnFood()) { // 整屏吃满：通关！
       S.dead = true;
       if (S.score > S.high) { S.high = S.score; store.set(K_SNAKE, S.high); }
+      settleChannel('snake', S, true);
     }
   } else {
     S.snake.pop();
@@ -1074,6 +1126,7 @@ var G = {
 };
 
 function init2048() {
+  G.run = null;
   G.grid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
   G.age  = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
   G.score = 0; G.won = false; G.over = false; G.justWon = false;
@@ -1098,6 +1151,7 @@ function tryMove(dir) {
   var old = G.grid;
   var res = moveGrid(G.grid, dir);
   if (gridsEqual(old, res.grid)) return;   // 这一步啥也没动，不算
+  beginChannelRun('2048', G);
 
   G.grid = res.grid;
   G.score += res.gained;
@@ -1113,7 +1167,7 @@ function tryMove(dir) {
   if (!G.won && res.maxMerged >= 2048) { G.won = true; G.justWon = true; Sfx.win(); }
 
   spawnTile();
-  if (!hasMoves(G.grid)) { G.over = true; Sfx.lose(); }
+  if (!hasMoves(G.grid)) { G.over = true; Sfx.lose(); settleChannel('2048', G, G.won); }
 }
 
 /* ---------- 7. 绘制（全部画在 crt 这块 canvas 上） ---------- */
@@ -1183,7 +1237,7 @@ function drawApple(px, py, t) {
 function drawSnake(now) {
   // 撞死瞬间画面抖两下，像电视被拍了一巴掌
   var ox = 0, oy = 0;
-  if (S.dead) {
+  if (shakeOn() && S.dead) {
     var e = (now - S.shakeT) / 1000;
     if (e < 0.35) { var m = (0.35 - e) * 22; ox = (Math.random() * 2 - 1) * m; oy = (Math.random() * 2 - 1) * m; }
   }
@@ -1467,6 +1521,7 @@ var DIRS = {   // 方向键 + WASD 都认
 var DIR_INDEX = { '0,-1': 1, '0,1': 3, '-1,0': 0, '1,0': 2 };  // 向量 -> moveGrid 的方向编号
 
 window.addEventListener('keydown', function (e) {
+  if (e.target.closest('.manual, .house-back')) return;
   var k = e.key;
   // 方向键和空格会滚动页面，游戏要独占它们
   if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'ArrowLeft' || k === 'ArrowRight' || k === ' ') e.preventDefault();
@@ -1495,6 +1550,7 @@ function inputDir(d) {
       return;
     }
     if (!S.running) {              // 第一次按方向：出发！
+      beginChannelRun('snake', S);
       S.running = true;
       S.lastStep = performance.now();
       S.acc = 0;
@@ -1514,7 +1570,7 @@ function inputDir(d) {
 function inputSpace() {
   if (state === 'snake') {
     if (S.dead) { initSnake(); return; }
-    if (!S.running) { S.running = true; S.lastStep = performance.now(); S.acc = 0; return; }
+    if (!S.running) { beginChannelRun('snake', S); S.running = true; S.lastStep = performance.now(); S.acc = 0; return; }
     S.paused = !S.paused;
   } else if (state === 'brick') brickSpace();
   else if (state === 'mole') moleSpace();

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小Z 的小家 · 豪华版</title>
+<title>Z 的小家 · 豪华版</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
@@ -209,9 +209,10 @@ display: inline-flex; align-items: center; gap: 12px;
 }
 .greet h1 .ic { font-size: .95em; color: var(--gold-2); }
 .greet p { margin-top: 8px; font-size: 12.5px; opacity: .8; letter-spacing: .25em; }
+#next-goal { margin-top: 10px; min-height: 40px; text-shadow: none; }
 .facade {
 background: linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
-border-radius: var(--r-lg); padding: 56px 26px 22px;
+border-radius: var(--r-lg); padding: 30px 20px 16px;
 box-shadow: var(--shadow-lg); position: relative;
 }
 .roofline { position: absolute; left: 0; top: 0; width: 62px; cursor: grab; touch-action: none; will-change: transform;
@@ -234,26 +235,29 @@ filter: blur(2px); opacity: 0; animation: puff 4s ease-out infinite;
 }
 /* ── 3D 剖面小家：拖动转视角，点房间进门 ── */
 .doll { position: relative; margin-top: 2px; user-select: none; }
-.dinfo { text-align: center; font-size: 12px; color: var(--ink-3); letter-spacing: .12em; padding: 2px 0 0; min-height: 24px; }
-.dstage { height: 516px; perspective: 1230px; perspective-origin: 50% 26%; touch-action: none; cursor: grab; overflow: hidden; }
+.dinfo { text-align: center; font-size: 12px; color: var(--ink); letter-spacing: .12em; padding: 2px 0 0; min-height: 24px; }
+.dstage { height: 470px; perspective: 1230px; perspective-origin: 50% 30%; touch-action: none; cursor: grab; overflow: hidden; }
 .dstage:active { cursor: grabbing; }
-.dhouse { position: absolute; left: 50%; top: 254px; width: 0; height: 0; transform-style: preserve-3d;
+.dhouse { position: absolute; left: calc(50% + 40px); top: 252px; width: 0; height: 0; transform-style: preserve-3d;
 transform: translateZ(-30px) rotateX(var(--drx,-24deg)) rotateY(var(--dry,-30deg));
 transition: transform .5s cubic-bezier(.2,.8,.3,1); }
 .dhouse.drag { transition: none; }
-/* 整楼放大：点选投影走 getBoundingClientRect，缩放自动入账 */
-.doll .dscale { position: absolute; inset: 0; transform: scale(1.56); transform-origin: 50% 67%; }
-.dground { position: absolute; left: -212px; top: -124px; width: 424px; height: 248px;
-background: linear-gradient(180deg, rgba(124,140,94,.17), rgba(102,114,74,.08));
-border: 2px solid rgba(58,44,28,.24); border-radius: 12px; transform: rotateX(90deg); }
-/* 地基柔影：楼落在地上的呼吸感 */
-.dshadow { position: absolute; left: -178px; top: -108px; width: 356px; height: 216px;
-border-radius: 50%; background: radial-gradient(ellipse at center, rgba(18,12,6,.32), rgba(18,12,6,0) 68%);
-transform: rotateX(90deg) translateZ(1px); }
-.dground, .dshadow, .dl, .drt, .dc, .dtag, .furn { pointer-events: none; } /* 侧墙俯视会盖下层，点击只认后墙/地板，定位另走 3D 投影算法 */
-.droom, .dloft { pointer-events: none; }
-.droom .dbk, .droom .df, .dloft .dbk, .drf, .dchm { pointer-events: auto; }
-.droom, .droom > div, .drf, .dchm { position: absolute; transform-style: preserve-3d; }
+/* 整楼缩放：点选投影走 getBoundingClientRect，缩放自动入账；开了阁楼楼高一层，整体收一档 */
+.doll .dscale { position: absolute; inset: 0; transform: scale(1.15); transition: transform .5s; }
+.doll .lft .dscale { transform: scale(1.03); }
+.lft .dhouse { top: 267px; }
+.dhouse.lfd .dge { opacity: .3; }
+/* 地坪 y=88、柔影 y=87：一楼地板 y=86 落在草坪上，储藏室在地下 */
+.dground { position: absolute; left: -297px; top: -37px; width: 500px; height: 250px; border-radius: 50%;
+background: radial-gradient(ellipse at 50% 45%, rgba(124,140,94,.2), rgba(102,114,74,.07) 70%, rgba(102,114,74,0));
+transform: rotateX(90deg); }
+.dshadow { position: absolute; left: -247px; top: -13px; width: 400px; height: 200px;
+border-radius: 50%; background: radial-gradient(ellipse at center, rgba(18,12,6,.3), rgba(18,12,6,0) 68%);
+transform: rotateX(90deg); }
+.dground, .dshadow, .dl, .drt, .dtag, .furn { pointer-events: none; } /* 侧墙俯视会盖下层，点击只认后墙/地板，定位另走 3D 投影算法 */
+.droom, .droof { pointer-events: none; }
+.droom .dbk, .droom .df, .drf, .dchm { pointer-events: auto; }
+.droom, .droom > div, .droof, .drf, .dchm { position: absolute; transform-style: preserve-3d; }
 .droom { cursor: pointer; outline: none; }
 .dbk { width: var(--w); height: var(--h); transform: translateZ(-150px);
 background: repeating-linear-gradient(0deg, transparent 0 17px, rgba(46,34,20,.07) 17px 19px),
@@ -262,22 +266,24 @@ border: 1.5px solid rgba(58,44,28,.38); }
 .dl { width: 150px; height: var(--h); transform-origin: 0 0; transform: rotateY(90deg);
 background: linear-gradient(90deg, rgba(34,25,15,.14), rgba(58,44,28,.05));
 border: 1.5px solid rgba(58,44,28,.3); }
-.drt { width: 150px; height: var(--h); transform: translate3d(var(--w),0,0) rotateY(90deg);
+.drt { width: 150px; height: var(--h); transform-origin: 0 0; transform: translate3d(var(--w),0,0) rotateY(90deg);
 background: linear-gradient(90deg, rgba(104,80,50,.15), rgba(58,44,28,.05));
 border: 1.5px solid rgba(58,44,28,.3); }
-.df { width: var(--w); height: 150px; transform-origin: 0 0; transform: rotateX(-90deg);
+.df { width: var(--w); height: 150px; transform-origin: 0 0; transform: translateY(var(--h)) rotateX(-90deg);
 background: repeating-linear-gradient(90deg, transparent 0 26px, rgba(52,38,22,.15) 26px 28px),
 linear-gradient(180deg, rgba(217,164,65,.3), rgba(188,138,52,.17));
 border: 1.5px solid rgba(58,44,28,.2); }
-.dc { width: var(--w); height: 150px; transform: translate3d(0,var(--h),0) rotateX(-90deg);
-background: linear-gradient(180deg, rgba(122,94,58,.11), rgba(90,68,42,.06));
-border: 1.5px solid rgba(58,44,28,.26); }
-.droom.aim .dbk, .droom:hover .dbk, .droom:focus-visible .dbk { background: linear-gradient(180deg, rgba(217,164,65,.34), rgba(212,150,50,.2)); border-color: var(--gold-2); }
-.dtag { left: 50%; top: 4px; width: auto; height: auto; transform: translateX(-50%); border: none; background: none;
-font-size: 10px; letter-spacing: .1em; color: var(--ink-2); text-shadow: 0 1px 2px rgba(250,243,230,.9), 0 0 6px rgba(250,243,230,.7); white-space: nowrap; }
-.droom:not(.seen) .dtag::after { content: "·新"; color: var(--gold-2); }
+.droom.aim .dbk, .droom:focus-visible .dbk { background: linear-gradient(180deg, rgba(217,164,65,.34), rgba(212,150,50,.2)); border-color: #885212; }
+.dtag { position: absolute; left: 50%; top: 3px; transform: translateX(-50%); padding: 1px 5px; border-radius: 3px; background: #fff3da;
+font-size: 11px; line-height: 16px; letter-spacing: .06em; color: #49321e; box-shadow: 0 1px 3px #49321e40; white-space: nowrap; }
+.droom:not(.seen) .dtag::after { content: "·新"; color: #80500b; }
 .droom.deep .dbk { background: repeating-linear-gradient(0deg, transparent 0 17px, rgba(10,7,4,.16) 17px 19px), linear-gradient(180deg, rgba(24,17,11,.3), rgba(15,11,7,.22)); }
 .droom.deep .df { background: repeating-linear-gradient(90deg, transparent 0 26px, rgba(8,6,3,.2) 26px 28px), linear-gradient(180deg, rgba(42,31,21,.32), rgba(30,21,15,.24)); }
+/* 阁楼虚影：屋顶常掀，没装修的顶楼先看个轮廓 */
+.droom.ghost .dbk { opacity: .48; border: 1.5px dashed rgba(217,164,65,.55); background: rgba(30,22,14,.5); }
+.droom.ghost .dtag::after { content: "·待装修"; color: #80500b; }
+.droom.ghost .furn, .droom.ghost .dwin { opacity: .35; }
+.dhouse:not(.lfd) .droom.ghost { display: none; }
 .furn { position: absolute; border-radius: 4px; border: 1.5px solid rgba(58,44,28,.5);
 box-shadow: 0 2px 0 rgba(58,44,28,.18), inset 0 2px 0 rgba(255,246,230,.2), inset 0 -3px 0 rgba(30,22,14,.26); }
 .dwin { position: absolute; width: 12px; height: 14px; border-radius: 2px;
@@ -287,29 +293,26 @@ box-shadow: 0 0 8px rgba(255,200,100,.6); }
 body[data-phase="night"] .dwin:not(.off).dflick { animation: winflick 7s steps(1) infinite; }
 .dwin.off { filter: brightness(.55) saturate(.4); }
 @keyframes winflick { 88%, 92% { box-shadow: 0 0 4px rgba(255,200,100,.2); } }
-/* 屋顶：脊沿左右，前坡可向后翻起（默认掀起看内景） */
-.drf { width: 300px; height: 88px; transform-origin: 50% 0;
+.droof { transform: translateY(var(--roof-y,-136px)); }
+.drf { width: 300px; height: 90.14px; transform-origin: 50% 0; cursor: pointer;
 background: repeating-linear-gradient(100deg, #9a5a40 0 12px, #8a4e36 12px 14px);
 border: 2px solid #5f3423; box-shadow: inset 0 -14px 18px rgba(0,0,0,.22), inset 0 3px 0 rgba(255,216,178,.28);
 transition: transform .8s cubic-bezier(.3,.9,.3,1); }
-.drfF { transform: translate3d(-150px,-214px,0) rotateX(61deg); }
-.drfB { transform: translate3d(-150px,-214px,0) rotateX(-61deg); }
-.dhouse.lfd .drfF { transform: translate3d(-150px,-214px,0) rotateX(-103deg); }
+.drfF { transform: translateX(-150px) rotateX(56.31deg); }
+.drfB { transform: translateX(-150px) rotateX(-56.31deg); }
+.dhouse.lfd .drfF { transform: translateX(-150px) rotateX(-110deg); }
 .dchm { width: 13px; height: 26px;
 background: repeating-linear-gradient(0deg, #6f4e30 0 6px, #63452a 6px 8px);
 border: 2px solid #4a3218; border-radius: 2px;
-transform: translate3d(88px,-244px,-14px) rotateY(45deg); }
-.dloft { position: absolute; cursor: pointer; }
-.dloft .dbk { background: rgba(26,22,38,.2); }
-.dloft .lock { transform: translate3d(120px,2px,-40px); width: 40px; height: 40px; color: var(--ink-3);
-display: flex; align-items: center; justify-content: center; font-size: 20px; background: none; border: none; }
-.dloft.un .lock { color: var(--gold-2); }
+transform: translate3d(88px,-20px,-14px) rotateY(45deg); }
 .dbk::after { content: ""; position: absolute; inset: 0; pointer-events: none;
 background: radial-gradient(ellipse at 50% 18%, rgba(255,214,150,.13), rgba(255,214,150,0) 62%); }
-.dge { position: absolute; width: 150px; height: 46px; background: linear-gradient(135deg, #c8a06c, #a87c4c 70%, #96703f);
-clip-path: polygon(0 100%, 100% 0, 100% 100%); box-shadow: inset 0 0 0 2px rgba(90,60,30,.4); }
-.dge.gL { transform: translate3d(-150px,-258px,75px) rotateY(90deg); }
-.dge.gR { transform: translate3d(150px,-258px,75px) rotateY(90deg); }
+.dge { position: absolute; width: 150px; height: 50px; transform-origin: 0 0; background: linear-gradient(135deg, #c8a06c, #a87c4c 70%, #96703f);
+clip-path: polygon(0 100%, 50% 0, 100% 100%); }
+.dge.gL { transform: translate3d(-150px,0,75px) rotateY(90deg); }
+.dge.gR { transform: translate3d(150px,0,75px) rotateY(90deg); }
+.dcontrols { display: flex; justify-content: center; gap: 8px; padding: 4px 0; }
+.dcontrols button { font: inherit; font-size: 12px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 20px; color: var(--ink); background: var(--paper-2); cursor: pointer; }
 .drf::after { content: ""; position: absolute; left: 4px; right: 4px; top: -2px; height: 4px;
 background: linear-gradient(180deg, #e8b06a, rgba(232,176,106,0)); border-radius: 2px; }
 .ddoor { position: absolute; left: 4px; bottom: 8px; width: 24px; height: 40px; border-radius: 12px 12px 2px 2px;
@@ -325,8 +328,12 @@ background: repeating-linear-gradient(0deg, rgba(200,190,164,.4) 0 14px, rgba(20
 background: radial-gradient(circle at 38% 34%, #7ea25c, #56743c 70%); box-shadow: 0 0 0 3px rgba(86,116,60,.25); }
 .gbush.b1 { left: 34px; top: 148px; } .gbush.b2 { right: 38px; top: 100px; }
 @media (max-width: 640px) {
-.dstage { height: 432px; }
-.doll .dscale { position: absolute; inset: 0; transform: scale(.94); transform-origin: 50% 67%; }
+.facade { padding: 30px 10px 12px; }
+.dstage { height: 330px; }
+.dhouse, .lft .dhouse { left: calc(50% + 34px); top: 175px; }
+.doll .dscale { transform: scale(.73); }
+.doll .lft .dscale { transform: scale(.67); }
+.dtag { font-size: 14px; line-height: 18px; }
 }
 footer.house-foot { text-align: center; color: rgba(255,255,255,.5); font-size: 11.5px; margin-top: 26px; letter-spacing: .35em; }
 #cat {
@@ -355,8 +362,8 @@ clip-path: circle(0% at 50% 50%); pointer-events: none; visibility: hidden;
 position: fixed; inset: 0; z-index: 40; display: none;
 overflow-y: auto; background: linear-gradient(180deg, #0e1322, #1c2438);
 }
-#room-overlay.on { display: block; }
-.room-inner { max-width: 780px; margin: 0 auto; padding: 22px 16px 60px; color: #e9e6da; }
+#room-overlay.on { display: flex; }
+.room-inner { width: 100%; max-width: 1000px; margin: auto; padding: 32px 20px; color: #e9e6da; }
 .room-head { display: flex; align-items: center; gap: 15px; }
 .room-head .r-ic {
 width: 50px; height: 50px; border-radius: 14px; font-size: 27px; color: var(--gold-2);
@@ -374,11 +381,13 @@ display: inline-flex; align-items: center; gap: 6px; transition: background .15s
 .room-head .back .ic { font-size: 14px; }
 .room-head .back:hover { background: rgba(212,136,15,.25); }
 .scene {
-position: relative; height: 230px; margin-top: 18px; border-radius: var(--r-md);
+position: relative; height: clamp(230px, 40vh, 350px); margin-top: 18px; border-radius: var(--r-md);
 overflow: hidden; border: 1px solid rgba(255,255,255,.1);
 box-shadow: inset 0 0 60px rgba(0,0,0,.5);
 }
 .scene > svg.art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#welcome-action { margin-top: 14px; min-height: 44px; }
+#welcome-action[hidden] { display: none; }
 .scene::before { /* 地面空气层：物件像坐进屋里 */
 content: ""; position: absolute; inset: auto 0 0 0; height: 44%; z-index: 4; pointer-events: none;
 background: linear-gradient(180deg, transparent, rgba(8,5,2,.32));
@@ -392,7 +401,12 @@ radial-gradient(ellipse at 50% 50%, transparent 56%, rgba(6,4,2,.22) 100%);
 .scene .hot { cursor: pointer; }
 .scene .hot:hover { filter: brightness(1.18); }
 .scene.living { background: linear-gradient(180deg, #4a3524, #2a1d12); }
-.scene.bedroom { background: linear-gradient(180deg, #141a2e, #0c101f); }
+.scene.bedroom { background: radial-gradient(ellipse at 50% 80%, #574337, #20283e 75%); }
+.scene.bedroom > svg.art { filter: brightness(1.4); }
+.scene.piano { background: radial-gradient(ellipse at 50% 85%, #4a3826, #221809 78%); }
+.scene.dance { background: radial-gradient(ellipse at 50% 70%, #3c2c42, #191220 78%); }
+.scene.vocal { background: radial-gradient(ellipse at 50% 85%, #243244, #101722 78%); }
+body[data-phase="night"] .scene::after { background: radial-gradient(ellipse at 50% 65%, #ffd69b1c, transparent 75%); }
 .scene.study { background: linear-gradient(180deg, #33291c, #1e160e); }
 .scene.kitchen { background: linear-gradient(180deg, #3d3126, #241c14); }
 .scene.balcony { background: linear-gradient(180deg, #8fc3e8, #d9ecf5 74%); }
@@ -422,6 +436,7 @@ border-radius: var(--r-sm); padding: 13px 10px 11px; cursor: pointer; text-align
 transition: transform .15s, border-color .15s, background .15s; position: relative;
 }
 .inv-slot:hover { transform: translateY(-3px); border-color: var(--gold-2); background: rgba(212,136,15,.1); }
+button:focus-visible, [role="button"]:focus-visible { outline: 3px solid #bf7b20; outline-offset: 3px; }
 .inv-slot .ie {
 width: 44px; height: 44px; margin: 0 auto; border-radius: 12px; font-size: 23px;
 color: #e9e6da; background: rgba(255,255,255,.07);
@@ -484,17 +499,21 @@ padding: 13px 12px 11px; text-align: center; transition: transform .15s, border-
 body[data-theme="theme-night"] .s-card .se { color: var(--gold-2); }
 .s-card .sn { font-size: 13.5px; font-weight: bold; margin-top: 7px; letter-spacing: .1em; }
 .s-card .sd { font-size: 11px; color: var(--ink-2); margin-top: 4px; letter-spacing: .05em; }
-.s-card .sb {
+.s-card .sb, .set-row .sb {
 margin-top: 9px; width: 100%; border: none; border-radius: 8px; padding: 7px 0;
 font-size: 12.5px; font-weight: bold; cursor: pointer;
 background: linear-gradient(180deg, var(--gold-2), var(--gold)); color: #3a2c12;
 display: inline-flex; align-items: center; justify-content: center; gap: 5px;
 transition: filter .15s;
 }
+.set-row .sb { width: auto; margin: 0; padding: 7px 12px; flex: none; white-space: nowrap; }
+.sb small { font-size: 11px; font-weight: normal; margin-left: 2px; }
+.m-bal { display: inline-flex; align-items: center; gap: 4px; margin-left: 10px; padding: 2px 10px; border-radius: 99px; background: var(--paper-3); color: var(--wood); font-size: 12px; box-shadow: inset 0 0 0 1.5px var(--line); }
+.m-bal .ic { color: var(--gold); }
 .s-card .sb .ic { font-size: 13px; }
 .s-card .sb:hover { filter: brightness(1.08); }
-.s-card .sb.poor { background: var(--line); color: var(--ink-3); cursor: not-allowed; }
-.s-card .sb.owned { background: var(--paper-2); color: var(--ok); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ok) 45%, transparent); }
+.sb.poor { background: var(--line); color: var(--ink-2); cursor: not-allowed; }
+.sb.owned { background: var(--paper-2); color: var(--ok); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ok) 45%, transparent); }
 .s-card .sb.equip { box-shadow: inset 0 0 0 2px var(--gold); color: var(--gold); background: var(--paper-2); }
 .cg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); gap: 10px; }
 .cg-card {
@@ -553,7 +572,11 @@ font-family: inherit; font-size: 12.5px; padding: 5px 9px; border-radius: 8px;
 border: 2px solid var(--line); background: var(--paper-3); color: var(--ink);
 }
 .danger-btn { background: none; border: 2px solid color-mix(in srgb, var(--danger) 60%, transparent); color: var(--danger); border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer; }
-#toasts { position: fixed; top: 16px; right: 16px; z-index: 160; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+#toasts { position: fixed; top: 72px; right: 16px; z-index: 160; pointer-events: none; }
+@media (max-width:640px) {
+#toasts { top: auto; bottom: max(18px, env(safe-area-inset-bottom)); left: 10vw; right: auto; width: 80vw; }
+#toasts .toast { min-width: 0; max-width: 100%; }
+}
 .toast {
 display: flex; gap: 12px; align-items: center; min-width: 200px; max-width: 300px;
 background: linear-gradient(160deg, #232c42, #161d30);
@@ -678,6 +701,9 @@ transition: transform .18s;
 .scene .pot .steam { transition: .2s; }
 .scene .pot.boil .steam { animation: boil .5s ease-in-out infinite; }
 @keyframes boil { 50% { transform: translateY(-7px) scale(1.25); opacity: 1; } }
+.scene .plant { transform-box: fill-box; transform-origin: 50% 100%; }
+.scene .plant.wave { animation: plantwave .7s ease-in-out; }
+@keyframes plantwave { 30% { transform: rotate(-2.2deg); } 65% { transform: rotate(1.6deg); } }
 .scene .cab { transform-box: fill-box; transform-origin: 50% 0; transition: transform .3s; }
 .scene .cab.open { transform: rotateX(14deg); }
 .scene .tread, .scene .rack { opacity: 0; pointer-events: none; transition: opacity .5s; }
@@ -847,7 +873,7 @@ border: 3px solid #b8862f; box-shadow: 0 22px 50px rgba(0,0,0,.55);
 animation: cardout .7s cubic-bezier(.2,.8,.3,1.15) backwards;
 }
 .pack-item .ic { color: #7a5a20; }
-.pack-item .pi-name { font-size: 15px; font-weight: 900; letter-spacing: 3px; color: #5d431a; margin-top: 10px; }
+.pack-item .pi-name { display: block; font-size: 15px; font-weight: 900; letter-spacing: 3px; color: #5d431a; margin-top: 10px; }
 .pack-item.leg { border-color: #e8892c; background: linear-gradient(165deg, #2a1c10, #4a2f14);
 box-shadow: 0 0 34px rgba(240,150,50,.55), 0 22px 50px rgba(0,0,0,.6); }
 .pack-item.leg .ic { color: #f5b942; }
@@ -874,8 +900,8 @@ transition: .15s;
 #frame-back .ic { font-size: 20px; }
 @media (max-width: 640px) {
 .scene { height: 190px; }
-.hud { padding: 8px 10px; gap: 6px; }
-.hud .pill { padding: 6px 12px; font-size: 12.5px; }
+.hud { padding: 8px 10px; gap: 4px; }
+.hud .pill { padding: 6px 8px; font-size: 12.5px; }
 .hud .pill .ic { font-size: 14px; }
 .hud .ico-btn { width: 36px; height: 36px; }
 .modal { padding: 16px 14px 14px; }
@@ -909,8 +935,9 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 animation-duration: .01s !important; animation-iteration-count: 1 !important;
 transition-duration: .01s !important;
 }
+body.reduce-motion .dprobe { transition-duration: 0s !important; animation-duration: 0s !important; } /* 点选探针靠「设transform立即读位置」，转场会读到旧值让全楼命中坍成一点 */
 
-/* ---- v3.0 怀表渐变 / 住户小Z / 对话框 / 奖杯 ---- */
+/* ---- v3.0 怀表渐变 / 住户Z / 对话框 / 奖杯 ---- */
 @property --sky-a { syntax: "<color>"; inherits: true; initial-value: #131c30; }
 @property --sky-b { syntax: "<color>"; inherits: true; initial-value: #2c3a55; }
 body { transition: --sky-a 1.2s ease, --sky-b 1.2s ease; }
@@ -1062,7 +1089,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <canvas id="sky-canvas"></canvas>
 <!-- ① 开机过场 -->
 <div id="screen-boot">
-<div class="boot-logo l1" id="boot-l1">A&nbsp;XIAO&nbsp;Z&nbsp;INTERACTIVE&nbsp;HOUSE</div>
+<div class="boot-logo l1" id="boot-l1">A&nbsp;Z&nbsp;INTERACTIVE&nbsp;HOUSE</div>
 <div class="boot-bar-wrap" id="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
 <div class="boot-enter" id="boot-enter">— 点 击 进 入 —</div>
 </div>
@@ -1071,7 +1098,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <div class="title-stage">
 <div class="title-rays"></div>
 <svg class="mark" viewBox="0 0 48 44"><use href="#i-mark"/></svg>
-<div class="title-logo">小Z 的小家</div>
+<div class="title-logo">Z 的小家</div>
 <div class="title-sub">Deluxe Edition</div>
 </div>
 <div class="title-menu">
@@ -1082,7 +1109,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <button class="tmenu-item" id="t-settings"><svg class="ic"><use href="#i-settings"/></svg>设置</button>
 </div>
 <div class="title-save" id="title-save"></div>
-<div class="title-foot"><span>v3.27 · DELUXE</span><span>© 2026 小Z 的小家</span></div>
+<div class="title-foot"><span>v3.29 · DELUXE</span><span>© 2026 Z 的小家</span></div>
 </div>
 <!-- ③ 小家主画面 -->
 <div class="screen" id="screen-house">
@@ -1090,20 +1117,22 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <div class="cloud c2"></div>
 <div class="cloud c3"></div>
 <div class="hud">
-<span class="pill" id="pill-stardust"><svg class="ic"><use href="#i-sparkles"/></svg><b id="stardust-num">0</b></span>
+<button class="pill" id="pill-stardust" aria-label="打开星尘商城"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg><b id="stardust-num">0</b></button>
 <span class="spacer"></span>
-<button class="ico-btn" data-modal="quests" data-tip="任务"><svg class="ic"><use href="#i-list-todo"/></svg></button>
-<button class="ico-btn" data-modal="gallery" data-tip="陈列馆"><svg class="ic"><use href="#i-trophy"/></svg></button>
-<button class="ico-btn" id="btn-firework" data-tip="烟花" style="display:none"><svg class="ic"><use href="#i-sparkles"/></svg></button>
-<button class="ico-btn" id="btn-clock" data-tip="怀表"><svg class="ic"><use href="#i-watch"/></svg></button>
-<button class="ico-btn" id="btn-music" data-tip="音乐"><svg class="ic"><use href="#i-music"/></svg></button>
-<button class="ico-btn" data-modal="settings" data-tip="设置"><svg class="ic"><use href="#i-settings"/></svg></button>
-<button class="ico-btn" id="btn-title" data-tip="标题"><svg class="ic"><use href="#i-house"/></svg></button>
+<button class="ico-btn" data-modal="quests" data-tip="任务" aria-label="任务"><svg class="ic"><use href="#i-list-todo"/></svg></button>
+<button class="ico-btn" data-modal="wish" data-tip="住户心愿" aria-label="住户心愿"><svg class="ic"><use href="#i-cat"/></svg></button>
+<button class="ico-btn" data-modal="gallery" data-tip="陈列馆" aria-label="陈列馆"><svg class="ic"><use href="#i-trophy"/></svg></button>
+<button class="ico-btn" id="btn-firework" data-tip="烟花" aria-label="放烟花" style="display:none"><svg class="ic"><use href="#i-sparkles"/></svg></button>
+<button class="ico-btn" id="btn-clock" data-tip="怀表" aria-label="怀表"><svg class="ic"><use href="#i-watch"/></svg></button>
+<button class="ico-btn" id="btn-music" data-tip="音乐" aria-label="切换音乐"><svg class="ic"><use href="#i-music"/></svg></button>
+<button class="ico-btn" data-modal="settings" data-tip="设置" aria-label="设置"><svg class="ic"><use href="#i-settings"/></svg></button>
+<button class="ico-btn" id="btn-title" data-tip="标题" aria-label="返回标题"><svg class="ic"><use href="#i-house"/></svg></button>
 </div>
 <div class="house-wrap">
 <div class="greet">
-<h1><svg class="ic"><use href="#i-mark"/></svg>小Z 的小家</h1>
+<h1><svg class="ic"><use href="#i-mark"/></svg>Z 的小家</h1>
 <p id="greet-line">欢迎回家</p>
+<button class="btn" id="next-goal">住户心愿</button>
 </div>
 <div class="facade" id="facade">
 <svg class="roofline" viewBox="0 0 48 44"><use href="#i-mark"/></svg>
@@ -1112,6 +1141,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <div id="doorbell" title="黄铜门铃"><svg viewBox="0 0 30 44"><rect x="12" y="0" width="6" height="24" rx="3" fill="#6a4a2e"/><circle class="dbcap" cx="15" cy="32" r="8" fill="#d9a441" stroke="#8a6a2e" stroke-width="2"/><circle cx="15" cy="32" r="3" fill="#8a6a2e"/><rect x="4" y="40" width="22" height="4" rx="2" fill="#3a2c1c"/></svg></div>
 <div class="doll" id="rooms">
 <div class="dinfo" id="dinfo">拖动转一转 · 点屋顶开合 · 点房间进门</div>
+<div class="dcontrols"><button id="d-roof" aria-expanded="true">合上屋顶</button><button id="d-loft">阁楼 · 待装修</button></div>
 <div class="dstage" id="dstage"><div class="dscale"><div class="dhouse lfd" id="dhouse"></div></div></div>
 </div>
 </div>
@@ -1156,6 +1186,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <button class="back" id="r-renov" aria-label="装修"><svg class="ic"><use href="#i-wrench"/></svg></button><button class="back" id="r-back"><svg class="ic"><use href="#i-chevron-right"/></svg>返回</button>
 </div>
 <div class="scene" id="r-scene"></div>
+<button class="btn" id="welcome-action" hidden>布置客厅</button>
 <div class="inv-title">藏品 · INVENTORY</div>
 <div class="inv-grid" id="r-inv"></div>
 </div>
@@ -1168,7 +1199,7 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <div class="modal-mask" id="modal-mask"><div class="modal" id="modal-box"></div></div>
 <div id="plat-banner"><span>这 个 家</span></div>
 <div id="pack-wrap"></div>
-<div id="toasts"></div>
+<div id="toasts" role="status" aria-live="polite" aria-atomic="true"></div>
 <div id="dlg">
 <div class="dlg-ava"><svg viewBox="0 0 36 32">
 <circle cx="18" cy="17" r="11" fill="#f2e0c8"/>
@@ -1177,12 +1208,18 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <path d="M15.5 22.5q2.5 2 5 0" stroke="#2c2418" stroke-width="1.2" fill="none" stroke-linecap="round"/>
 </svg></div>
 <div class="dlg-main">
-<div class="dlg-name">小Z · 住户</div>
+<div class="dlg-name">Z · 住户</div>
 <div class="dlg-text"></div>
 </div>
 <div class="dlg-next" style="visibility:hidden">▾</div>
 </div>
 <canvas id="fx-canvas"></canvas>
+<script src="储藏室/存档格式.js"></script>
+<script src="储藏室/结算队列.js"></script>
+<script src="储藏室/存档事务.js"></script>
+<script src="客厅/迎新餐桌.js"></script>
+<script src="储藏室/演出镜头.js"></script>
+<script src="储藏室/迎新试玩记录.js"></script>
 <script>
 "use strict";
 const ROOMS = {"客厅": { icon:"sofa", no:"101", cls:"living", sub:"待客 · 娱乐", items:[
@@ -1212,19 +1249,19 @@ note:"一键生成家况报告（钱+物+心事现场点验）· 书房/出报�
 note:"拾字排句小游戏 · 书房/活字排版.html" },
 { icon:"library", name:"书架（自己打的）", rare:"furn", link:"书房/藏书阁.html",
 note:"搬家用自己的手艺打的，七本书挤挤挨挨" },
-{ icon:"book-open", name:"Git 家常菜", rare:"book", link:"书房/藏书阁.html",
+{ icon:"book-open", name:"Git 家常菜", rare:"book", link:"书房/藏书阁.html?b=git",
 note:"日常 90% 场景的 git 做法 · 书房/书架/Git 家常菜.md" },
-{ icon:"book-open", name:"Python 家常菜", rare:"book", link:"书房/藏书阁.html",
+{ icon:"book-open", name:"Python 家常菜", rare:"book", link:"书房/藏书阁.html?b=py",
 note:"按 3.13 口径整理的常用招式 · 书房/书架/Python 家常菜.md" },
-{ icon:"book-open", name:"Bash 家常菜", rare:"book", link:"书房/藏书阁.html",
+{ icon:"book-open", name:"Bash 家常菜", rare:"book", link:"书房/藏书阁.html?b=bash",
 note:"拿自家门牌当教材的 Git Bash 生存指南 · 书房/书架/Bash 家常菜.md" },
-{ icon:"book-open", name:"Markdown 家常菜", rare:"book", link:"书房/藏书阁.html",
+{ icon:"book-open", name:"Markdown 家常菜", rare:"book", link:"书房/藏书阁.html?b=md",
 note:"家里全是 .md，给自己写的排版手册 · 书房/书架/Markdown 家常菜.md" },
-{ icon:"book-open", name:"正则表达式口袋书", rare:"book", link:"书房/藏书阁.html",
+{ icon:"book-open", name:"正则表达式口袋书", rare:"book", link:"书房/藏书阁.html?b=re",
 note:"口袋书要小，掏出来查一眼就能用 · 书房/书架/正则表达式口袋书.md" },
-{ icon:"book-open", name:"住家 AI 的 2026 生态观察", rare:"book", link:"书房/藏书阁.html",
+{ icon:"book-open", name:"住家 AI 的 2026 生态观察", rare:"book", link:"书房/藏书阁.html?b=eco",
 note:"上网查的调研笔记，条条带来源 · 书房/书架/住家 AI 的 2026 生态观察.md" },
-{ icon:"book-open", name:"REA 家常菜", rare:"book", link:"书房/藏书阁.html",
+{ icon:"book-open", name:"REA 家常菜", rare:"book", link:"书房/藏书阁.html?b=rea",
 note:"没源码也能摸清软件路数的逆向笔记 · 书房/书架/REA 家常菜.md" },
 ]},
 "厨房": { icon:"cooking-pot", no:"103", cls:"kitchen", sub:"七菜 · 一汤", items:[
@@ -1247,16 +1284,31 @@ note:"每日花签 + 按档案算浇水日 · 阳台/今日花开.py" },
 note:"夏夜六十秒收萤，连击加倍 · 阳台/捕萤.html" },
 { icon:"telescope", name:"星图望远镜", rare:"web", link:"阳台/星图.html", gate:"sg",
 note:"星序三秒记心间，连成四座 · 阳台/星图.html" },
-{ icon:"sprout", name:"绿萝", rare:"plant", link:"阳台/温室.html", note:"住家 AI 第一盆绿植，主打死不了 · 阳台/绿植档案/绿萝.md" },
-{ icon:"sprout", name:"薄荷", rare:"plant", link:"阳台/温室.html", note:"越掐越旺，单盆警告（会占领全阳台）· 阳台/绿植档案/薄荷.md" },
-{ icon:"sprout", name:"多肉", rare:"plant", link:"阳台/温室.html", note:"宁干勿湿，懒人友好型室友 · 阳台/绿植档案/多肉.md" },
+{ icon:"sprout", name:"绿萝", rare:"plant", link:"阳台/温室.html?p=lu", note:"住家 AI 第一盆绿植，主打死不了 · 阳台/绿植档案/绿萝.md" },
+{ icon:"sprout", name:"薄荷", rare:"plant", link:"阳台/温室.html?p=bh", note:"越掐越旺，单盆警告（会占领全阳台）· 阳台/绿植档案/薄荷.md" },
+{ icon:"sprout", name:"多肉", rare:"plant", link:"阳台/温室.html?p=dr", note:"宁干勿湿，懒人友好型室友 · 阳台/绿植档案/多肉.md" },
 ]},
-"健身房": { icon:"chart-column", no:"1F", cls:"gym", sub:"门外 · 拉推核心腿", items:[
+"健身房": { icon:"chart-column", no:"1F", cls:"gym", sub:"门外 · 五分化", items:[
 { icon:"wrench", name:"今日练什么", rare:"tool", note:"犹豫就会败北，转盘替你决定 · 健身房/今日练什么.py" },
-{ icon:"book-open", name:"拉日", rare:"book", note:"背和二头的主场 · 健身房/课表/拉日.md" },
-{ icon:"book-open", name:"推日", rare:"book", note:"胸和三头扛把子 · 健身房/课表/推日.md" },
-{ icon:"book-open", name:"核心日", rare:"book", note:"平板支撑一分钟起步 · 健身房/课表/核心日.md" },
-{ icon:"book-open", name:"腿日", rare:"book", note:"练腿日， stairs 是敌人 · 健身房/课表/腿日.md" },
+{ icon:"book-open", name:"肩腰日", rare:"book", note:"肩力竭后山羊下腰 · 健身房/课表/肩腰日.md" },
+{ icon:"book-open", name:"手腰日", rare:"book", note:"双绳下拽练到力竭 · 健身房/课表/手腰日.md" },
+{ icon:"book-open", name:"腿臀日", rare:"book", note:"滚轮按压开场 · 健身房/课表/腿臀日.md" },
+{ icon:"book-open", name:"胸上腹日", rare:"book", note:"下拉上举夹胸 · 健身房/课表/胸上腹日.md" },
+{ icon:"book-open", name:"背下腹日", rare:"book", note:"下拉划船抬腿 · 健身房/课表/背下腹日.md" },
+]},
+"钢琴房": { icon:"music", no:"R1", cls:"piano", sub:"右厢 · 模奏", items:[
+{ icon:"music", name:"黑白琴房", rare:"web", link:"钢琴房/琴键回响.html", gate:"pn",
+note:"琴弹一句你模一句，越模越长 · 钢琴房/琴键回响.html" },
+{ icon:"scroll-text", name:"乐理课", rare:"web", link:"钢琴房/乐理课.html",
+note:"调号·拍号·打拍子·指法四门日课，照随记音乐编成 · 钢琴房/乐理课.html" },
+]},
+"舞蹈房": { icon:"disc-3", no:"R2", cls:"dance", sub:"右厢 · 追光", items:[
+{ icon:"disc-3", name:"追光舞毯", rare:"web", link:"舞蹈房/追光舞步.html", gate:"dc",
+note:"光斑落到哪格，就跳到哪格 · 舞蹈房/追光舞步.html" },
+]},
+"歌唱房": { icon:"bird", no:"R3", cls:"vocal", sub:"右厢 · 和声", items:[
+{ icon:"bird", name:"气泡和声", rare:"web", link:"歌唱房/气泡和声.html", gate:"vo",
+note:"气泡升进光圈就接一口气 · 歌唱房/气泡和声.html" },
 ]},
 "阁楼": { icon:"moon", no:"F2", cls:"loft", sub:"顶楼 · 看星", hidden:true, items:[
 { icon:"package", name:"旧物箱", rare:"furn", note:"搬家没舍得扔的，都在这儿团圆" },
@@ -1276,21 +1328,45 @@ const TOOL_CAP = {
 "清点家当": "盘点全屋资产：几间房、几件家当、多大块头，一一列账，动没动过一眼便知。此刻在册：{rooms} 间房 · 藏品 {items} 件。",
 "打包搬家": "把整栋房子打进一只行李箱——搬家、备份、送人分享，一箱三用。在电脑上对仓库喊它一声就动身。",
 "大扫除": "全屋五科体检：空房间、大件红线、重名家当、网页登记对账、编码干净。五盏绿灯齐亮才算交工，黄灯红灯各有话说。",
-"逆向演示档": "没源码也能摸清软件路数的练手证据——拿系统自带的注册工具一层层剥出来的原始档案，账上那笔学费花得其所。"
+"逆向演示档": "没源码也能摸清软件路数的练手证据——拿系统自带的注册工具一层层剥出来的原始档案，账上那笔学费花得其所。",
+"找书": "全屋 markdown 的小手电：报一个或几个关键词（几个词得在同一行凑齐），列出命中的文件、房间、行号和那一行原话。在电脑上对仓库喊它一声就照。",
+"出报告": "钱、物、心事一页纸交底：现场盘点全屋家当、对一遍小金库、把日记翻到最后一页，拼成门口那份《家况报告》。数字全是当场点的。",
+"今天吃什么": "随机推荐一道家常菜，附推荐语和买菜清单；喊「换」排除上一道，喊「清单」列全部菜谱。网页里也能替它掷一回骰子。",
+"今日练什么": "犹豫就会败北：随机抽一张今日课表，附动作清单；喊「换」排除上一张，喊「清单」列全部课表。网页里也能替它转一回转盘。"
 };
+const DOC = "书房/档案柜.html?f=", TOOL_ROLL = { "今天吃什么": ["厨房", "替我挑一道"], "今日练什么": ["健身房", "替我抽一张"] };
+function showTool(it) {
+let cnt = 0; for (const k in ROOMS) cnt += ROOMS[k].items.length;
+const roll = TOOL_ROLL[it.name], src = /[^\s·]+\.(py|json)$/.exec(it.note || "");
+openModal(ic(it.icon) + it.name, RARE_NAME[it.rare],
+'<div class="tool-cap">' + TOOL_CAP[it.name].replace("{rooms}", Object.keys(ROOMS).length).replace("{items}", cnt) + "</div>" +
+(src ? '<div class="hint">原件 · ' + src[0] + "</div>" : "") +
+(roll ? '<div class="mfoot"><button class="btn" id="tc-roll">' + roll[1] + "</button></div>" : ""));
+if (roll) document.getElementById("tc-roll").onclick = () => {
+const docs = ROOMS[roll[0]].items.filter(x => /\.md$/.test(x.note || "")), d = docs[Math.floor(Math.random() * docs.length)];
+closeModal(); toast(it.icon, it.name, "就它了：" + d.name);
+openRoomPage(DOC + d.name, innerWidth / 2, innerHeight / 2);
+};
+}
 /* 手绘布景 */
 const SC = {
 living:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(0,0,0,.22)"><ellipse cx="146" cy="111" rx="68" ry="6"/><ellipse cx="52" cy="105" rx="28" ry="5"/><ellipse cx="251" cy="111" rx="18" ry="4"/><ellipse cx="222" cy="108" rx="12" ry="3"/><ellipse cx="293" cy="91" rx="24" ry="4"/></g><ellipse cx="160" cy="118" rx="118" ry="9" fill="rgba(217,164,65,.12)"/><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.28)"/><g class="hot sofa" data-s="puff"><rect x="88" y="62" width="116" height="36" rx="10" fill="#a06a38"/><rect x="82" y="48" width="128" height="24" rx="10" fill="#8a5a2e"/><rect x="96" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="150" y="66" width="48" height="24" rx="7" fill="#b57a42"/><rect x="94" y="96" width="6" height="14" fill="#3a2c1c"/><rect x="192" y="96" width="6" height="14" fill="#3a2c1c"/><g class="cotton"><ellipse cx="150" cy="72" rx="15" ry="9" fill="#f2ecd9"/><ellipse cx="142" cy="67" rx="7" ry="5" fill="#fffdf4"/><ellipse cx="158" cy="68" rx="6" ry="4" fill="#e8dfc8"/></g></g><g class="hot lamp" data-s="confirm"><rect x="250" y="52" width="3" height="58" fill="#3a2c1c"/><path d="M238 32h28l-5 22h-18z" fill="#d9a441"/><circle class="lampglow" cx="251" cy="52" r="30" fill="rgba(255,200,100,.16)"/></g><g class="hot tv" data-s="click"><rect x="26" y="56" width="52" height="38" rx="5" fill="#101820" stroke="#3a2c1c" stroke-width="3"/><g class="scrG"><rect class="scr" x="31" y="61" width="42" height="28" rx="3" fill="rgba(122,148,184,.18)"/><g class="ch c1"><rect x="31" y="61" width="42" height="28" filter="url(#tvn)" opacity=".9"/></g><g class="ch c2"><rect x="31" y="61" width="6" height="28" fill="#ececec"/><rect x="37" y="61" width="6" height="28" fill="#e8e33a"/><rect x="43" y="61" width="6" height="28" fill="#3ae8e4"/><rect x="49" y="61" width="6" height="28" fill="#3ae83c"/><rect x="55" y="61" width="6" height="28" fill="#e33ae8"/><rect x="61" y="61" width="6" height="28" fill="#e83a3a"/><rect x="67" y="61" width="6" height="28" fill="#3a3ae8"/></g><g class="ch c3"><rect x="31" y="61" width="42" height="28" fill="#0b1026"/><circle class="tw" cx="37" cy="66" r="1" fill="#fff"/><circle class="tw" cx="44" cy="72" r=".8" fill="#fff"/><circle class="tw" cx="39" cy="80" r="1.2" fill="#f5d68a"/><circle class="tw" cx="62" cy="66" r=".8" fill="#fff"/><circle class="tw" cx="58" cy="83" r="1" fill="#fff"/><circle cx="52" cy="70" r="4.6" fill="#f2dfa8"/><circle cx="54.6" cy="68.4" r="4.1" fill="#0b1026"/></g><g class="sl"><rect x="31" y="63" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="68" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="73" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="78" width="42" height="1.1" fill="rgba(0,0,0,.34)"/><rect x="31" y="83" width="42" height="1.1" fill="rgba(0,0,0,.34)"/></g><defs><filter id="tvn" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="1" seed="2"><animate attributeName="seed" values="1;9" dur=".36s" repeatCount="indefinite" calcMode="discrete"/></feTurbulence><feColorMatrix type="saturate" values="0"/></filter></defs></g><rect x="46" y="94" width="12" height="6" fill="#3a2c1c"/><rect x="34" y="100" width="36" height="4" rx="2" fill="#241a10"/></g><g class="hot spin" data-s="coin"><circle cx="222" cy="107" r="8.5" fill="#1c1610" stroke="#d9a441" stroke-width="2"/><circle cx="222" cy="107" r="2.4" fill="#d9a441"/></g><g class="hot tank" data-s="splash"><title>玻璃鱼缸</title><rect x="272" y="56" width="42" height="34" rx="3" fill="rgba(120,180,210,.3)" stroke="#7aa8c4" stroke-width="2"/><rect x="274" y="68" width="38" height="20" rx="2" fill="rgba(90,150,190,.28)"/><path d="M277 89c0-6 2-10 3-13M309 89c0-5-1-9-2-13" stroke="#4a8a5c" stroke-width="2" fill="none"/><g class="fsh"><ellipse cx="284" cy="76" rx="4" ry="2.2" fill="#e8a04b"/><circle cx="281.6" cy="76" r=".9" fill="#3a2c1c"/><path d="M288 76l3.4-2.2v4.4z" fill="#e8a04b"/></g><g class="fsh fb"><ellipse cx="297" cy="81" rx="3.4" ry="1.9" fill="#c98a4e"/><circle cx="294.8" cy="81" r=".8" fill="#3a2c1c"/></g><g class="fsh fc"><ellipse cx="301" cy="71" rx="3" ry="1.7" fill="#8ab0d0"/><circle cx="299" cy="71" r=".7" fill="#3a2c1c"/></g><path d="M276 59q7-4 15 0t15 0" stroke="rgba(255,255,255,.35)" stroke-width="1.2" fill="none"/></g><g class="hot rug" data-s="purr"><title>圆地毯</title><ellipse cx="150" cy="117" rx="42" ry="7.5" fill="#b0685c"/><ellipse cx="150" cy="116" rx="33" ry="5.5" fill="#c98a80"/><circle cx="150" cy="116" r="2.6" fill="#f2e8d5"/><path d="M122 117q28-8 56 0M128 119.5q22-5 44 0" stroke="rgba(242,232,213,.5)" stroke-width="1.2" fill="none"/></g><g class="hot gramo" data-s="confirm"><title>黑胶唱机</title><rect x="212" y="72" width="36" height="32" rx="3" fill="#5a3f26"/><rect x="215" y="74" width="30" height="4" rx="2" fill="#3a2a18"/><ellipse cx="227" cy="92" rx="13" ry="6" fill="#1c1610"/><circle class="gdisc" cx="227" cy="92" r="8.6" fill="#14100c" stroke="#8a7458" stroke-width="1.2"/><circle cx="227" cy="92" r="2" fill="#d9a441"/><line class="garm" x1="236" y1="84" x2="240" y2="76" stroke="#c9bfa8" stroke-width="1.6" stroke-linecap="round"/><circle cx="240" cy="76" r="1.6" fill="#c9bfa8"/></g><g class="hot rgpad" data-s="coin"><title>节奏地毯</title><line x1="124" y1="8" x2="152" y2="8" stroke="#8a7458" stroke-width="2.4"/><rect x="128" y="9" width="20" height="26" rx="2" fill="#8a4a5c"/><rect x="130" y="12" width="16" height="3" fill="#d9a441"/><rect x="130" y="17" width="16" height="3" fill="#7aa8c4"/><rect x="130" y="22" width="16" height="3" fill="#96e0b4"/><path d="M129 35h18M132 38h12M135 41h6" stroke="#d9a441" stroke-width="1.4"/></g><g class="hot scratcher" data-s="purr"><title>猫抓板</title><ellipse cx="194" cy="80" rx="16" ry="5" fill="#b98a54"/><ellipse cx="194" cy="85" rx="19" ry="6" fill="#c99a5e"/><ellipse cx="194" cy="90" rx="20" ry="6" fill="#b98a54"/><path d="M180 87q14-5 28 0M181 92q13-4 26 0" stroke="rgba(90,60,30,.5)" stroke-width="1.4" fill="none"/><ellipse cx="194" cy="102" rx="21" ry="7" fill="#a87a44"/><path d="M177 100q17-6 34 0" stroke="rgba(90,60,30,.4)" stroke-width="1.3" fill="none"/></g><g class="hot popcorn" data-s="coin"><title>爆米花小车</title><circle cx="7" cy="100" r="2.2" fill="#241a10"/><circle cx="18" cy="100" r="2.2" fill="#241a10"/><rect x="3" y="88" width="19" height="11" rx="2" fill="#b34a3a"/><rect x="4" y="79" width="17" height="9" rx="2" fill="#b34a3a"/><rect x="5.5" y="66" width="14" height="13" rx="2" fill="rgba(220,230,240,.35)" stroke="#b34a3a" stroke-width="1.6"/><circle class="pk" cx="9" cy="73" r="1.7" fill="#f5e8c8"/><circle class="pk p2" cx="14" cy="71" r="1.5" fill="#f5e8c8"/><circle class="pk p3" cx="12" cy="75.5" r="1.4" fill="#f5e8c8"/><path d="M7 64.5q4-4 8.5-.5" stroke="#d9a441" stroke-width="1.6" fill="none"/></g></svg>',
 bedroom:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(0,0,0,.26)"><ellipse cx="93" cy="109" rx="66" ry="6"/><ellipse cx="186" cy="99" rx="16" ry="4"/></g><g class="hot win" data-s="whoosh"><rect x="222" y="16" width="58" height="66" rx="6" fill="#24304e" stroke="#3a4358" stroke-width="3"/><line x1="251" y1="16" x2="251" y2="82" stroke="#3a4358" stroke-width="3"/><line x1="222" y1="49" x2="280" y2="49" stroke="#3a4358" stroke-width="3"/><circle cx="238" cy="34" r="8" fill="#f2e8d5" opacity=".9"/><circle cx="238" cy="34" r="15" fill="rgba(242,232,213,.12)"/><circle cx="290" cy="26" r="5" fill="#f2e8d5" opacity=".7"/><line class="meteor" x1="278" y1="20" x2="288" y2="28" stroke="#fdf6e3" stroke-width="1.8" stroke-linecap="round" opacity="0"/><g class="curtain"><rect x="216" y="12" width="24" height="72" rx="3" fill="#b0685c"/><rect x="262" y="12" width="24" height="72" rx="3" fill="#b0685c"/></g></g><g class="hot bed" data-s="purr"><rect x="30" y="88" width="126" height="20" rx="6" fill="#3a4258"/><rect x="35" y="76" width="116" height="15" rx="7" fill="#5a6480"/><rect x="42" y="67" width="28" height="13" rx="6" fill="#c8cede"/><g class="sleeper"><path d="M62 76q13-13 28-1t28-1l4 13H60z" fill="#8d97ad"/><circle cx="74" cy="69" r="6" fill="#e8c9a0"/></g><g class="bedcat" opacity="0"><ellipse cx="146" cy="82" rx="12" ry="6" fill="#4a3a28"/><circle cx="137" cy="79" r="5.5" fill="#4a3a28"/><path d="M157 82q6-3 5-8" stroke="#4a3a28" stroke-width="2.6" fill="none" stroke-linecap="round"/></g></g><rect x="0" y="106" width="320" height="24" fill="rgba(0,0,0,.3)"/><circle class="nlg" cx="186" cy="98" r="15" fill="rgba(255,214,140,.22)"/><circle cx="186" cy="98" r="4" fill="#ffd68c"/><g class="hot dream" data-s="chime"><title>捕梦网</title><line x1="62" y1="12" x2="62" y2="20" stroke="#8a7458" stroke-width="1.6"/><circle cx="62" cy="30" r="9" fill="rgba(242,232,213,.06)" stroke="#d9a441" stroke-width="1.6"/><path d="M62 21l7.8 4.5v9L62 39l-7.8-4.5v-9z" fill="none" stroke="rgba(217,164,65,.4)" stroke-width="1"/><path d="M62 21v18M53 26h18" stroke="rgba(217,164,65,.35)" stroke-width="1"/><path d="M62 39l-5 8M62 39l5 8" stroke="#b0685c" stroke-width="1.6" stroke-linecap="round"/><circle cx="57" cy="48.5" r="1.4" fill="#b0685c"/><circle cx="67" cy="48.5" r="1.4" fill="#b0685c"/></g><g class="hot clock" data-s="achv" stroke="#aab3c8" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="120" cy="30" r="10"/><path d="M120 24v6l4 3"/></g><g class="hot incense" data-s="confirm"><title>香薰台</title><path d="M158 106h16l-3 5h-10z" fill="#5a5244"/><line x1="166" y1="106" x2="166" y2="97" stroke="#8a7458" stroke-width="2"/><path class="smk" d="M166 96q3-5 0-9" stroke="rgba(220,200,170,.55)" stroke-width="1.6" fill="none" stroke-linecap="round"/><path class="smk s2" d="M166 91q-3-4 0-8" stroke="rgba(220,200,170,.38)" stroke-width="1.4" fill="none" stroke-linecap="round"/><circle class="smglow" cx="166" cy="95" r="2.4" fill="#e8a04b"/></g><g class="hot mbox" data-s="chime"><title>八音盒</title><g class="dol"><circle cx="207" cy="77" r="2.7" fill="#f2e8d5"/><path d="M204.6 80.5h4.8l1 4.5h-6.8z" fill="#c98a80"/></g><g class="lid"><rect x="196" y="79" width="22" height="7" rx="2" fill="#6a4a24"/><circle cx="207" cy="82.5" r="1.4" fill="#d9a441"/></g><rect x="197" y="86" width="20" height="12" rx="2" fill="#8a5a2e"/><rect x="197" y="86" width="20" height="4.4" rx="2" fill="#a06a38"/></g></svg>',
 study:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(0,0,0,.24)"><ellipse cx="94" cy="91" rx="80" ry="6"/><ellipse cx="246" cy="111" rx="54" ry="6"/></g><g class="hot shelf" data-s="coin"><rect x="18" y="14" width="152" height="76" rx="4" fill="#241a10" stroke="#4a3a28" stroke-width="5"/><line x1="18" y1="40" x2="170" y2="40" stroke="#4a3a28" stroke-width="4"/><line x1="18" y1="65" x2="170" y2="65" stroke="#4a3a28" stroke-width="4"/><rect x="26" y="22" width="16" height="18" fill="#6a7488"/><rect x="44" y="24" width="16" height="16" fill="#4a8a5c"/><rect x="62" y="21" width="15" height="19" fill="#8a5a2e"/><rect x="79" y="25" width="16" height="15" fill="#7a94b8"/><rect x="97" y="22" width="15" height="18" fill="#8a6aa0"/><rect x="114" y="24" width="16" height="16" fill="#956a4e"/><rect x="132" y="21" width="15" height="19" fill="#b57a42"/><rect x="26" y="46" width="56" height="19" rx="2" fill="#f2e8d5" opacity=".9"/><line x1="32" y1="53" x2="74" y2="53" stroke="#c9bfa8" stroke-width="2"/><line x1="32" y1="59" x2="64" y2="59" stroke="#c9bfa8" stroke-width="2"/><rect x="92" y="47" width="30" height="18" rx="3" fill="#6a7488"/><rect x="130" y="46" width="20" height="19" rx="4" fill="#d9a441"/></g><g class="hot desk" data-s="click"><rect x="196" y="80" width="100" height="7" rx="2" fill="#3a2c1c"/><rect x="200" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="285" y="87" width="7" height="23" fill="#3a2c1c"/><rect x="220" y="48" width="48" height="30" rx="4" fill="#101820" stroke="#4a3a28" stroke-width="3"/><rect class="flick" x="224" y="52" width="40" height="22" rx="2" fill="rgba(122,148,184,.4)"/><path d="M282 84 268 50" stroke="#3a2c1c" stroke-width="3"/><path d="M270 46 284 40l8 14-14 6z" fill="#d9a441"/><path d="M284 44 316 116 252 116z" fill="rgba(255,214,140,.07)"/></g><g class="hot globe" data-s="click"><title>地球仪</title><rect x="199" y="79" width="14" height="3" rx="1.5" fill="#3a2c1c"/><path d="M206 78V71" stroke="#8a7458" stroke-width="2"/><circle cx="206" cy="63" r="9" fill="#4a6a8a" stroke="#d9a441" stroke-width="1.6"/><g class="gbm"><path d="M200 59.5q6 2.4 12 0M200 66.5q6-2.4 12 0" stroke="rgba(242,232,213,.65)" stroke-width="1.2" fill="none"/><path d="M203 57q5 3 5 12t-5 12" stroke="rgba(242,232,213,.4)" stroke-width="1.1" fill="none"/><ellipse cx="203" cy="63" rx="2.6" ry="4" fill="rgba(120,160,110,.8)"/></g></g><g class="hot hzstand" data-s="coin"><title>活字字盘</title><rect x="28" y="94" width="40" height="18" rx="2" fill="#5a3f26"/><rect x="31" y="97" width="8" height="7" rx="1" fill="#b57a42"/><rect x="40" y="97" width="8" height="7" rx="1" fill="#d9a441"/><rect x="49" y="97" width="8" height="7" rx="1" fill="#8a5a2e"/><rect x="58" y="97" width="7" height="7" rx="1" fill="#c9bfa8"/><rect x="31" y="106" width="34" height="3" rx="1" fill="#3a2a18"/><rect x="33" y="109" width="4" height="3" fill="#3a2c1c"/><rect x="59" y="109" width="4" height="3" fill="#3a2c1c"/></g><g fill="#9ecbff" opacity=".8"></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
 kitchen:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(0,0,0,.24)"><ellipse cx="200" cy="119" rx="68" ry="6"/><ellipse cx="88" cy="127" rx="70" ry="5"/><ellipse cx="294" cy="113" rx="20" ry="5"/></g><line x1="66" y1="0" x2="66" y2="26" stroke="#3a2c1c" stroke-width="3"/><path d="M50 26h32l-6 18H56z" fill="#d9a441"/><ellipse cx="66" cy="52" rx="34" ry="10" fill="rgba(255,214,140,.12)"/><g class="hot rail" data-s="confirm"><line x1="104" y1="10" x2="196" y2="10" stroke="#8a7458" stroke-width="2"/><rect x="106" y="10" width="24" height="26" rx="2" fill="#f2e8d5"/><circle cx="112" cy="17" r="2.2" fill="#d94f3d"/><circle cx="118" cy="17" r="2.2" fill="#e8c25a"/><line x1="111" y1="24" x2="125" y2="24" stroke="#c9bfa8" stroke-width="2"/><line x1="111" y1="29" x2="120" y2="29" stroke="#c9bfa8" stroke-width="2"/><rect x="136" y="10" width="24" height="26" rx="2" fill="#f2e8d5"/><circle cx="142" cy="17" r="2.2" fill="#c98a4e"/><circle cx="148" cy="17" r="2.2" fill="#4a2f22"/><line x1="141" y1="24" x2="155" y2="24" stroke="#c9bfa8" stroke-width="2"/><line x1="141" y1="29" x2="150" y2="29" stroke="#c9bfa8" stroke-width="2"/><rect x="166" y="10" width="24" height="26" rx="2" fill="#f2e8d5"/><circle cx="172" cy="17" r="2.2" fill="#3d6b4f"/><circle cx="178" cy="17" r="2.2" fill="#e8c25a"/><line x1="171" y1="24" x2="185" y2="24" stroke="#c9bfa8" stroke-width="2"/><line x1="171" y1="29" x2="180" y2="29" stroke="#c9bfa8" stroke-width="2"/></g><rect x="22" y="92" width="132" height="8" rx="2" fill="#241a10"/><rect x="28" y="100" width="52" height="26" fill="#332014"/><rect x="96" y="100" width="52" height="26" fill="#332014"/><line x1="54" y1="100" x2="54" y2="126" stroke="#241a10" stroke-width="3"/><line x1="122" y1="100" x2="122" y2="126" stroke="#241a10" stroke-width="3"/><g class="hot pot" data-s="puff"><path d="M42 76h40v8a20 20 0 0 1-40 0z" fill="#5a6480"/><rect x="36" y="77" width="7" height="4" rx="2" fill="#5a6480"/><rect x="81" y="77" width="7" height="4" rx="2" fill="#5a6480"/><path class="steam" d="M54 70q4-8 0-16" stroke="rgba(255,255,255,.5)" stroke-width="2" fill="none" stroke-linecap="round"/><path class="steam s2" d="M68 70q-4-8 0-16" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/></g><g class="hot cab" data-s="click"><rect x="196" y="44" width="70" height="32" rx="6" fill="#8a5a2e"/><line x1="196" y1="54" x2="266" y2="54" stroke="#6a4a24" stroke-width="2"/><rect x="206" y="62" width="22" height="3" rx="1.5" fill="#f2e8d5" opacity=".7"/><rect x="234" y="62" width="22" height="3" rx="1.5" fill="#f2e8d5" opacity=".4"/></g><rect x="140" y="82" width="120" height="4" rx="2" fill="#b9854a"/><rect x="136" y="84" width="128" height="10" rx="3" fill="#9a6a38"/><rect x="142" y="94" width="8" height="24" fill="#5a3a1c"/><rect x="250" y="94" width="8" height="24" fill="#5a3a1c"/><g class="hot dish" data-d="番茄炒蛋" data-s="chomp"><title>番茄炒蛋</title><ellipse cx="148" cy="88" rx="7" ry="3.2" fill="#f2e8d5"/><ellipse cx="148" cy="86.6" rx="5" ry="2.4" fill="#e8c25a"/><circle cx="145.8" cy="86.6" r="1.7" fill="#d94f3d"/><circle cx="150.4" cy="87.2" r="1.5" fill="#d94f3d"/></g><g class="hot dish" data-d="蛋炒饭" data-s="chomp"><title>蛋炒饭</title><path d="M158 89h13a6.5 6.5 0 0 1-13 0z" fill="#c96a3a"/><ellipse cx="164.5" cy="88" rx="4.8" ry="2.4" fill="#e8c25a"/><circle cx="162.8" cy="87.6" r=".8" fill="#7aa84e"/><circle cx="166.4" cy="88.2" r=".8" fill="#7aa84e"/></g><g class="hot dish" data-d="葱油拌面" data-s="chomp"><title>葱油拌面</title><path d="M174 89h13a6.5 6.5 0 0 1-13 0z" fill="#a06a38"/><path d="M176.5 87.5q1.8-1.4 3.6 0t3.6 0t3.4 0" stroke="#e3c47e" stroke-width="1.5" fill="none"/><circle cx="179" cy="86.4" r=".8" fill="#7aa84e"/><circle cx="183" cy="87" r=".8" fill="#7aa84e"/></g><g class="hot dish" data-d="可乐鸡翅" data-s="chomp"><title>可乐鸡翅</title><ellipse cx="196" cy="88" rx="7" ry="3.2" fill="#f2e8d5"/><rect x="190.5" y="85.8" width="7" height="3.4" rx="1.7" fill="#8a4a2a"/><rect x="194.8" y="86.8" width="6" height="3" rx="1.5" fill="#a05a30"/><circle cx="190.8" cy="87.6" r=".9" fill="#f2e8d5"/><circle cx="200.8" cy="88.4" r=".8" fill="#f2e8d5"/></g><g class="hot dish" data-d="红烧肉" data-s="chomp"><title>红烧肉</title><ellipse cx="212" cy="88" rx="7" ry="3.2" fill="#f2e8d5"/><rect x="207.6" y="85.9" width="4.3" height="4" rx="1.2" fill="#6b3420"/><rect x="212.4" y="86.4" width="4" height="3.7" rx="1.2" fill="#8a4a2e"/><circle cx="210" cy="85.6" r=".7" fill="#f2e8d5" opacity=".85"/></g><g class="hot dish" data-d="酸辣土豆丝" data-s="chomp"><title>酸辣土豆丝</title><ellipse cx="228" cy="88" rx="7" ry="3.2" fill="#f2e8d5"/><path d="M222.8 87.7h10.4M223.6 86.5h8.8M224.6 88.7h6.8" stroke="#e8d27a" stroke-width="1.2"/><circle cx="230.4" cy="86.3" r=".9" fill="#c93b2e"/></g><g class="hot dish" data-d="紫菜蛋花汤" data-s="chomp"><title>紫菜蛋花汤</title><path d="M238 89h13a6.5 6.5 0 0 1-13 0z" fill="#3d6b4f"/><ellipse cx="244.5" cy="88.6" rx="4.6" ry="1.8" fill="#5a8a68"/><circle cx="242.6" cy="88.2" r=".9" fill="#2f4a36"/><circle cx="246.6" cy="88.9" r=".8" fill="#e8c25a"/><circle cx="245.2" cy="87.9" r=".8" fill="#e8c25a"/><path d="M243 85.4q1.3-1.8 0-3.6" stroke="rgba(255,255,255,.45)" stroke-width="1.1" fill="none" stroke-linecap="round"/></g><g class="hot herb" data-s="chirp"><title>香草盆</title><rect x="228" y="34" width="18" height="8" rx="2" fill="#b0685c"/><rect x="230" y="31" width="14" height="3" rx="1" fill="#8a4a44"/><path d="M237 31v-8" stroke="#4a8a5c" stroke-width="2"/><g class="lv"><path d="M237 23c-4-1-6-4-6-7 4 0 6 3 6 7z" fill="#5aa06a"/><path d="M237 21c4-1 6-4 6-7-4 0-6 3-6 7z" fill="#6ab07a"/></g></g><g class="hot ocade" data-s="coin"><rect x="278" y="56" width="32" height="56" rx="3" fill="#241a10" stroke="#d9a441" stroke-width="2"/><rect class="ocm" x="281" y="59" width="26" height="7" rx="2" fill="#d9a441"/><rect class="ocs" x="282" y="69" width="22" height="18" rx="2"/><path d="M288 72l8 5-8 5z" fill="rgba(20,14,8,.85)"/><rect x="284" y="91" width="20" height="5" rx="2" fill="#3a2c1c"/><circle cx="289" cy="102" r="1.7" fill="#d9a441"/><circle cx="296" cy="102" r="1.7" fill="#d9a441"/></g><g class="hot cuckoo" data-s="achv"><title>布谷钟</title><line x1="290" y1="0" x2="290" y2="6" stroke="#3a2c1c" stroke-width="2"/><path d="M276 36q14-30 28 0z" fill="#5a3f26" stroke="#3a2a18" stroke-width="1.6"/><rect x="280" y="33" width="20" height="5" rx="2" fill="#3a2c1c"/><circle cx="290" cy="17" r="10" fill="#f2e8d5" stroke="#3a2c1c" stroke-width="2"/><path class="ckhand" d="M290 17v-6" stroke="#3a2c1c" stroke-width="1.6" stroke-linecap="round"/><path class="ckhand m" d="M290 17h5" stroke="#8a5a2e" stroke-width="1.6" stroke-linecap="round"/><circle cx="290" cy="17" r="1.4" fill="#3a2c1c"/><g class="cuck"><ellipse cx="290" cy="38" rx="4" ry="3.2" fill="#c98a3a"/><circle cx="293" cy="35.5" r="2.3" fill="#c98a3a"/><path d="M295.2 34.9l2.2.7-2.2 1.1z" fill="#e8a04b"/></g></g><g class="hot grind" data-s="click"><title>咖啡手磨</title><path d="M256.5 81.5h9l-1.5 12.5h-6z" fill="#6a4a2c"/><rect x="255.8" y="77.5" width="10.4" height="4.4" rx="2" fill="#8a6a44"/><rect x="260.4" y="70" width="2.2" height="8" rx="1.1" fill="#3a2c1c"/><g class="crk"><path d="M261.5 70h5" stroke="#3a2c1c" stroke-width="2.2" stroke-linecap="round"/><circle cx="267.5" cy="70" r="1.5" fill="#d9a441"/></g></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.3)"/></svg>',
-balcony:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(40,45,35,.18)"><ellipse cx="74" cy="105" rx="24" ry="4"/><ellipse cx="157" cy="105" rx="22" ry="4"/><ellipse cx="241" cy="105" rx="24" ry="4"/></g><circle cx="46" cy="26" r="13" fill="#f5d68a"/><circle cx="46" cy="26" r="22" fill="rgba(245,214,138,.25)"/><g class="hot scope" data-s="confirm"><title>星图望远镜</title><rect x="6" y="78" width="30" height="9" rx="3" transform="rotate(-16 21 82)" fill="#4a5468"/><rect x="8" y="80" width="4" height="5" rx="1.5" transform="rotate(-16 10 82)" fill="#3a4258"/><circle cx="9" cy="84" r="2.2" fill="#ffd68c"/><line x1="24" y1="88" x2="14" y2="122" stroke="#3a4458" stroke-width="3"/><line x1="24" y1="88" x2="34" y2="122" stroke="#3a4458" stroke-width="3"/><line x1="24" y1="88" x2="24" y2="122" stroke="#3a4458" stroke-width="2.4"/></g><g class="hot fly" data-s="coin" transform="translate(34,0)"><title>捕萤夜灯</title><line x1="88" y1="0" x2="88" y2="13" stroke="#8a7458" stroke-width="2"/><line x1="79" y1="13" x2="97" y2="13" stroke="#8a7458" stroke-width="2"/><ellipse cx="88" cy="26" rx="9.5" ry="12.5" fill="#c93b2e" stroke="#8a2418" stroke-width="2"/><path d="M83.5 15q4.5 24 9 24t9-24" fill="none" stroke="rgba(255,220,150,.45)" stroke-width="1.5"/><rect x="85" y="37" width="6" height="4" rx="1" fill="#8a2418"/><line x1="83" y1="41" x2="83" y2="48" stroke="#d9a441" stroke-width="1.4"/><line x1="93" y1="41" x2="93" y2="49" stroke="#d9a441" stroke-width="1.4"/><circle class="flg" cx="88" cy="26" r="3.6" fill="#ffd68c"/></g><g class="hot chime" data-s="chime"><title>琉璃风铃</title><line x1="300" y1="0" x2="300" y2="11" stroke="#8a7458" stroke-width="2"/><path d="M291 11h18l-3 8h-12z" fill="#b8a97f"/><g class="tu t1"><line x1="293" y1="19" x2="291" y2="33" stroke="#9ecbff" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><g class="tu t2"><line x1="300" y1="19" x2="300" y2="39" stroke="#c9a9f0" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><g class="tu t3"><line x1="307" y1="19" x2="309" y2="30" stroke="#96e0b4" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><circle cx="300" cy="43" r="2" fill="#d9a441"/></g><g class="hot feed" data-s="chirp"><title>喂鸟器</title><line x1="280" y1="79" x2="280" y2="85" stroke="#8a7458" stroke-width="2"/><circle cx="280" cy="77.5" r="2" fill="none" stroke="#8a7458" stroke-width="1.5"/><path d="M266 93l14-9 14 9z" fill="#8a5a2e"/><rect x="270" y="93" width="20" height="11" rx="2" fill="#b9854a"/><rect x="273" y="97" width="14" height="3.4" rx="1.7" fill="#241a10"/><g class="birdy"><circle cx="297" cy="84" r="4" fill="#c98a3a"/><circle cx="301" cy="79" r="2.7" fill="#c98a3a"/><path d="M303.6 78.4l3.4 1-3.4 1.5z" fill="#e8a04b"/><path d="M294 85.5l-3.4 1.3 1.7 1.8z" fill="#a06a28"/><circle cx="301.8" cy="78.6" r=".55" fill="#241a10"/></g></g><g class="hot" data-s="confirm" stroke="#7a6a4e" stroke-width="4"><line x1="0" y1="104" x2="320" y2="104"/></g><g stroke="#8a7458" stroke-width="3"><line x1="24" y1="104" x2="24" y2="126"/><line x1="80" y1="104" x2="80" y2="126"/><line x1="136" y1="104" x2="136" y2="126"/><line x1="192" y1="104" x2="192" y2="126"/><line x1="248" y1="104" x2="248" y2="126"/><line x1="304" y1="104" x2="304" y2="126"/></g><g class="hot bath" data-s="splash"><title>鸟浴盘</title><path d="M285 100h18a9 5 0 0 1-18 0z" fill="#8a9ab0"/><ellipse class="wtr" cx="294" cy="100" rx="7" ry="3" fill="#9ecbff" opacity=".8"/><rect x="291" y="103" width="6" height="4" fill="#6a7a90"/><ellipse cx="294" cy="107" rx="8" ry="2.4" fill="#7a8aa0"/></g><g class="hot pot" data-s="puff"><path d="M52 78h44l-5 26H57z" fill="#b57a42"/><path d="M74 78V58" stroke="#4a8a5c" stroke-width="3"/><path d="M74 64c-8-2-12-8-12-14 8 0 12 6 12 14z" fill="#5aa06a"/><path d="M74 60c8-2 12-8 12-14-8 0-12 6-12 14z" fill="#6ab07a"/></g><g class="hot pot" data-s="puff"><path d="M138 84h38l-4 20h-30z" fill="#a06a38"/><path d="M157 84V70" stroke="#4a8a5c" stroke-width="3"/><circle cx="157" cy="66" r="6" fill="#6ab07a"/><circle cx="148" cy="72" r="4.4" fill="#5aa06a"/><circle cx="166" cy="72" r="4.4" fill="#5aa06a"/></g><g class="hot pot" data-s="puff"><path d="M220 80h42l-5 24h-32z" fill="#b57a42"/><path d="M241 80V62" stroke="#4a8a5c" stroke-width="3"/><path d="M241 66c-7-1-10-6-10-11 7 0 10 5 10 11z" fill="#6ab07a"/><path d="M241 63c7-1 10-6 10-11-7 0-10 5-10 11z" fill="#5aa06a"/></g><g class="hot rocker" data-s="puff"><title>摇摇椅</title><g class="rseat"><line x1="13" y1="57" x2="41" y2="57" stroke="#8a5a2e" stroke-width="3" stroke-linecap="round"/><rect x="12" y="58" width="8" height="30" rx="4" fill="#8a5a2e"/><rect x="34" y="58" width="8" height="30" rx="4" fill="#8a5a2e"/><rect x="15" y="64" width="24" height="20" rx="5" fill="#b57a42"/><path d="M17 88q-5 6-9 8M39 88q5 6 9 8" stroke="#6a4a24" stroke-width="2.6" fill="none" stroke-linecap="round"/></g></g><g class="hot turtle" data-s="click"><title>乌龟阿缓</title><g class="tshell"><ellipse cx="119" cy="115" rx="11" ry="6.6" fill="#6a7a4e"/><path d="M108.5 115h21M111 110.8q8-3.6 16 0M112.5 119h13" stroke="#57633c" stroke-width="1.2" fill="none"/><ellipse cx="119" cy="121" rx="8.6" ry="2.4" fill="#8a9a68"/></g><g class="thead"><ellipse cx="132" cy="116" rx="4.4" ry="3.2" fill="#8a9a68"/><circle cx="134.2" cy="115" r=".65" fill="#241a10"/><path d="M136.4 116.8q1.8.5 2.4-.7" stroke="#57633c" stroke-width="1" fill="none"/></g><ellipse cx="110" cy="120.8" rx="2.3" ry="1.3" fill="#8a9a68"/><ellipse cx="127" cy="121.6" rx="2.3" ry="1.3" fill="#8a9a68"/></g><g class="hot swing" data-s="whoosh"><title>秋千吊椅</title><line x1="186" y1="0" x2="191" y2="26" stroke="#8a7458" stroke-width="1.8"/><line x1="210" y1="0" x2="205" y2="26" stroke="#8a7458" stroke-width="1.8"/><g class="sws"><path d="M183 26h30l-3.4 9.5h-23.2z" fill="#b57a42"/><rect x="187.5" y="35.5" width="5" height="10" rx="2" fill="#8a5a2e" opacity=".85"/><rect x="203.5" y="35.5" width="5" height="10" rx="2" fill="#8a5a2e" opacity=".85"/><path d="M188 45.5q9 4 21.5 0" stroke="#8a5a2e" stroke-width="2.2" fill="none"/><circle cx="198" cy="21.5" r="1.4" fill="#d9a441"/></g></g></svg>',
+balcony:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(40,45,35,.18)"><ellipse cx="74" cy="105" rx="24" ry="4"/><ellipse cx="157" cy="105" rx="22" ry="4"/><ellipse cx="241" cy="105" rx="24" ry="4"/></g><circle cx="46" cy="26" r="13" fill="#f5d68a"/><circle cx="46" cy="26" r="22" fill="rgba(245,214,138,.25)"/><g class="hot scope" data-s="confirm"><title>星图望远镜</title><rect x="6" y="78" width="30" height="9" rx="3" transform="rotate(-16 21 82)" fill="#4a5468"/><rect x="8" y="80" width="4" height="5" rx="1.5" transform="rotate(-16 10 82)" fill="#3a4258"/><circle cx="9" cy="84" r="2.2" fill="#ffd68c"/><line x1="24" y1="88" x2="14" y2="122" stroke="#3a4458" stroke-width="3"/><line x1="24" y1="88" x2="34" y2="122" stroke="#3a4458" stroke-width="3"/><line x1="24" y1="88" x2="24" y2="122" stroke="#3a4458" stroke-width="2.4"/></g><g class="hot fly" data-s="coin" transform="translate(34,0)"><title>捕萤夜灯</title><line x1="88" y1="0" x2="88" y2="13" stroke="#8a7458" stroke-width="2"/><line x1="79" y1="13" x2="97" y2="13" stroke="#8a7458" stroke-width="2"/><ellipse cx="88" cy="26" rx="9.5" ry="12.5" fill="#c93b2e" stroke="#8a2418" stroke-width="2"/><path d="M83.5 15q4.5 24 9 24t9-24" fill="none" stroke="rgba(255,220,150,.45)" stroke-width="1.5"/><rect x="85" y="37" width="6" height="4" rx="1" fill="#8a2418"/><line x1="83" y1="41" x2="83" y2="48" stroke="#d9a441" stroke-width="1.4"/><line x1="93" y1="41" x2="93" y2="49" stroke="#d9a441" stroke-width="1.4"/><circle class="flg" cx="88" cy="26" r="3.6" fill="#ffd68c"/></g><g class="hot chime" data-s="chime"><title>琉璃风铃</title><line x1="300" y1="0" x2="300" y2="11" stroke="#8a7458" stroke-width="2"/><path d="M291 11h18l-3 8h-12z" fill="#b8a97f"/><g class="tu t1"><line x1="293" y1="19" x2="291" y2="33" stroke="#9ecbff" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><g class="tu t2"><line x1="300" y1="19" x2="300" y2="39" stroke="#c9a9f0" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><g class="tu t3"><line x1="307" y1="19" x2="309" y2="30" stroke="#96e0b4" stroke-width="3.4" stroke-linecap="round" opacity=".85"/></g><circle cx="300" cy="43" r="2" fill="#d9a441"/></g><g class="hot feed" data-s="chirp"><title>喂鸟器</title><line x1="280" y1="79" x2="280" y2="85" stroke="#8a7458" stroke-width="2"/><circle cx="280" cy="77.5" r="2" fill="none" stroke="#8a7458" stroke-width="1.5"/><path d="M266 93l14-9 14 9z" fill="#8a5a2e"/><rect x="270" y="93" width="20" height="11" rx="2" fill="#b9854a"/><rect x="273" y="97" width="14" height="3.4" rx="1.7" fill="#241a10"/><g class="birdy"><circle cx="297" cy="84" r="4" fill="#c98a3a"/><circle cx="301" cy="79" r="2.7" fill="#c98a3a"/><path d="M303.6 78.4l3.4 1-3.4 1.5z" fill="#e8a04b"/><path d="M294 85.5l-3.4 1.3 1.7 1.8z" fill="#a06a28"/><circle cx="301.8" cy="78.6" r=".55" fill="#241a10"/></g></g><g class="hot" data-s="confirm" stroke="#7a6a4e" stroke-width="4"><line x1="0" y1="104" x2="320" y2="104"/></g><g stroke="#8a7458" stroke-width="3"><line x1="24" y1="104" x2="24" y2="126"/><line x1="80" y1="104" x2="80" y2="126"/><line x1="136" y1="104" x2="136" y2="126"/><line x1="192" y1="104" x2="192" y2="126"/><line x1="248" y1="104" x2="248" y2="126"/><line x1="304" y1="104" x2="304" y2="126"/></g><g class="hot bath" data-s="splash"><title>鸟浴盘</title><path d="M285 100h18a9 5 0 0 1-18 0z" fill="#8a9ab0"/><ellipse class="wtr" cx="294" cy="100" rx="7" ry="3" fill="#9ecbff" opacity=".8"/><rect x="291" y="103" width="6" height="4" fill="#6a7a90"/><ellipse cx="294" cy="107" rx="8" ry="2.4" fill="#7a8aa0"/></g><g class="hot plant" data-p="绿萝" data-s="splash"><title>绿萝</title><path d="M52 78h44l-5 26H57z" fill="#b57a42"/><path d="M74 78V58" stroke="#4a8a5c" stroke-width="3"/><path d="M74 64c-8-2-12-8-12-14 8 0 12 6 12 14z" fill="#5aa06a"/><path d="M74 60c8-2 12-8 12-14-8 0-12 6-12 14z" fill="#6ab07a"/></g><g class="hot plant" data-p="薄荷" data-s="splash"><title>薄荷</title><path d="M138 84h38l-4 20h-30z" fill="#a06a38"/><path d="M157 84V70" stroke="#4a8a5c" stroke-width="3"/><circle cx="157" cy="66" r="6" fill="#6ab07a"/><circle cx="148" cy="72" r="4.4" fill="#5aa06a"/><circle cx="166" cy="72" r="4.4" fill="#5aa06a"/></g><g class="hot plant" data-p="多肉" data-s="splash"><title>多肉</title><path d="M220 80h42l-5 24h-32z" fill="#b57a42"/><path d="M241 80V62" stroke="#4a8a5c" stroke-width="3"/><path d="M241 66c-7-1-10-6-10-11 7 0 10 5 10 11z" fill="#6ab07a"/><path d="M241 63c7-1 10-6 10-11-7 0-10 5-10 11z" fill="#5aa06a"/></g><g class="hot rocker" data-s="puff"><title>摇摇椅</title><g class="rseat"><line x1="13" y1="57" x2="41" y2="57" stroke="#8a5a2e" stroke-width="3" stroke-linecap="round"/><rect x="12" y="58" width="8" height="30" rx="4" fill="#8a5a2e"/><rect x="34" y="58" width="8" height="30" rx="4" fill="#8a5a2e"/><rect x="15" y="64" width="24" height="20" rx="5" fill="#b57a42"/><path d="M17 88q-5 6-9 8M39 88q5 6 9 8" stroke="#6a4a24" stroke-width="2.6" fill="none" stroke-linecap="round"/></g></g><g class="hot turtle" data-s="click"><title>乌龟阿缓</title><g class="tshell"><ellipse cx="119" cy="115" rx="11" ry="6.6" fill="#6a7a4e"/><path d="M108.5 115h21M111 110.8q8-3.6 16 0M112.5 119h13" stroke="#57633c" stroke-width="1.2" fill="none"/><ellipse cx="119" cy="121" rx="8.6" ry="2.4" fill="#8a9a68"/></g><g class="thead"><ellipse cx="132" cy="116" rx="4.4" ry="3.2" fill="#8a9a68"/><circle cx="134.2" cy="115" r=".65" fill="#241a10"/><path d="M136.4 116.8q1.8.5 2.4-.7" stroke="#57633c" stroke-width="1" fill="none"/></g><ellipse cx="110" cy="120.8" rx="2.3" ry="1.3" fill="#8a9a68"/><ellipse cx="127" cy="121.6" rx="2.3" ry="1.3" fill="#8a9a68"/></g><g class="hot swing" data-s="whoosh"><title>秋千吊椅</title><line x1="186" y1="0" x2="191" y2="26" stroke="#8a7458" stroke-width="1.8"/><line x1="210" y1="0" x2="205" y2="26" stroke="#8a7458" stroke-width="1.8"/><g class="sws"><path d="M183 26h30l-3.4 9.5h-23.2z" fill="#b57a42"/><rect x="187.5" y="35.5" width="5" height="10" rx="2" fill="#8a5a2e" opacity=".85"/><rect x="203.5" y="35.5" width="5" height="10" rx="2" fill="#8a5a2e" opacity=".85"/><path d="M188 45.5q9 4 21.5 0" stroke="#8a5a2e" stroke-width="2.2" fill="none"/><circle cx="198" cy="21.5" r="1.4" fill="#d9a441"/></g></g></svg>',
 gym:'<svg class="art" viewBox="0 0 320 130"><rect x="0" y="0" width="320" height="130" fill="#221c14"/><g class="csh" fill="rgba(0,0,0,.3)"><ellipse cx="95" cy="117" rx="58" ry="5"/><ellipse cx="184" cy="95" rx="46" ry="5"/><ellipse cx="55" cy="69" rx="36" ry="5"/><ellipse cx="278" cy="121" rx="36" ry="4"/></g><g class="hot" data-s="click"><rect x="196" y="42" width="12" height="52" rx="5" fill="#3a2c1c"/><rect x="160" y="42" width="12" height="52" rx="5" fill="#3a2c1c"/><rect x="150" y="52" width="68" height="12" rx="6" fill="#3a2c1c"/><rect x="140" y="46" width="14" height="24" rx="6" fill="#6a6278"/><rect x="214" y="46" width="14" height="24" rx="6" fill="#6a6278"/></g><g class="hot" data-s="confirm"><rect x="40" y="86" width="110" height="30" rx="6" fill="#3f5548"/><rect x="52" y="78" width="86" height="14" rx="7" fill="#4c6656"/></g><g class="hot tread"><title>跑步机</title><rect x="22" y="58" width="66" height="10" rx="4" fill="#241a10"/><rect x="28" y="60" width="48" height="5" rx="2.5" fill="#14100c"/><line class="belt" x1="30" y1="62.5" x2="74" y2="62.5" stroke="#d9a441" stroke-width="1.5"/><rect x="30" y="34" width="4" height="26" rx="2" fill="#3a2c1c"/><rect x="74" y="34" width="4" height="26" rx="2" fill="#3a2c1c"/><rect x="24" y="28" width="60" height="9" rx="3" fill="#241a10"/><rect class="tscreen" x="28" y="30" width="14" height="5" rx="1"/></g><g class="hot rack"><title>哑铃架</title><rect x="246" y="84" width="64" height="6" rx="2" fill="#4a3a26"/><rect x="250" y="90" width="5" height="26" fill="#3a2a1a"/><rect x="301" y="90" width="5" height="26" fill="#3a2a1a"/><g class="db-up"><circle cx="266" cy="78" r="4.5" fill="#241a10"/><circle cx="276" cy="78" r="4.5" fill="#241a10"/><line x1="266" y1="78" x2="276" y2="78" stroke="#8a7458" stroke-width="2.4"/></g><circle cx="290" cy="79" r="3.8" fill="#241a10"/><circle cx="298" cy="79" r="3.8" fill="#241a10"/><line x1="290" y1="79" x2="298" y2="79" stroke="#8a7458" stroke-width="2.2"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.35)"/><circle cx="250" cy="26" r="9" fill="rgba(255,214,140,.18)"/><circle cx="250" cy="26" r="3.4" fill="#ffd68c"/></svg>',
+piano:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(0,0,0,.3)"><ellipse cx="120" cy="112" rx="76" ry="6"/><ellipse cx="250" cy="106" rx="26" ry="4"/></g><ellipse cx="150" cy="116" rx="110" ry="8" fill="rgba(255,214,140,.08)"/><rect x="0" y="110" width="320" height="20" fill="rgba(0,0,0,.3)"/><g class="hot pnkeys" data-s="coin"><title>立式钢琴</title><rect x="58" y="26" width="128" height="62" rx="5" fill="#181410" stroke="#3a2c1c" stroke-width="3"/><rect x="64" y="32" width="116" height="26" rx="2" fill="#0c0a07"/><g class="proll"><rect x="68" y="36" width="30" height="18" rx="1.5" fill="#f2e8d5"/><path d="M72 41h22M72 45h22M72 49h16" stroke="#c9bfa8" stroke-width="1.4"/></g><circle cx="182" cy="44" r="2" fill="#d9a441"/><rect x="62" y="80" width="120" height="14" rx="2" fill="#f2ecd9"/><g fill="#181410"><rect x="72" y="80" width="7" height="9" rx="1"/><rect x="88" y="80" width="7" height="9" rx="1"/><rect x="104" y="80" width="7" height="9" rx="1"/><rect x="128" y="80" width="7" height="9" rx="1"/><rect x="144" y="80" width="7" height="9" rx="1"/><rect x="160" y="80" width="7" height="9" rx="1"/></g><path d="M62 94h120" stroke="#8a7458" stroke-width="3"/><rect x="56" y="94" width="8" height="12" rx="2" fill="#181410"/><rect x="180" y="94" width="8" height="12" rx="2" fill="#181410"/></g><g class="hot pmetro" data-s="tick"><title>节拍器</title><path d="M236 100 242 66h12l6 34z" fill="#8a5a2e" stroke="#5a3f26" stroke-width="1.6"/><line class="pswing" x1="248" y1="96" x2="248" y2="72" stroke="#f2e8d5" stroke-width="2"/><circle cx="248" cy="74" r="2.4" fill="#d9a441"/><rect x="234" y="100" width="28" height="4" rx="2" fill="#5a3f26"/></g><g class="hot pstool" data-s="purr"><title>琴凳</title><rect x="252" y="88" width="46" height="12" rx="4" fill="#6a4a24"/><rect x="256" y="100" width="5" height="12" fill="#3a2c1c"/><rect x="289" y="100" width="5" height="12" fill="#3a2c1c"/><ellipse cx="275" cy="88" rx="18" ry="3" fill="rgba(217,164,65,.15)"/></g><g class="hot pstand" data-s="confirm"><title>谱架</title><line x1="30" y1="104" x2="30" y2="70" stroke="#5a3f26" stroke-width="3"/><rect x="14" y="56" width="32" height="20" rx="2" fill="#f2e8d5" stroke="#8a7458" stroke-width="2"/><path d="M19 62h22M19 66h22M19 70h14" stroke="#c9bfa8" stroke-width="1.4"/><path d="M8 108h44" stroke="#5a3f26" stroke-width="3"/></g><circle cx="248" cy="34" r="12" fill="rgba(255,214,140,.14)"/><circle cx="248" cy="34" r="4" fill="#ffd68c"/></svg>',
+dance:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(0,0,0,.3)"><ellipse cx="160" cy="116" rx="98" ry="7"/><ellipse cx="270" cy="112" rx="30" ry="4"/></g><rect x="0" y="24" width="320" height="34" fill="rgba(200,205,225,.07)"/><line x1="0" y1="24" x2="320" y2="24" stroke="rgba(200,205,225,.2)" stroke-width="2"/><path d="M0 24 40 58M80 24 120 58M160 24 200 58M240 24 280 58M320 24 280 58M240 24 200 58M160 24 120 58M80 24 40 58" stroke="rgba(200,205,225,.09)" stroke-width="2"/><g class="hot dcmirror" data-s="whoosh"><title>镜墙</title><rect x="222" y="30" width="86" height="58" rx="4" fill="rgba(180,200,230,.16)" stroke="#4a4058" stroke-width="3"/><path class="msheen" d="M232 84 262 34h14l-30 50z" fill="rgba(255,255,255,.14)"/><ellipse cx="265" cy="60" rx="10" ry="18" fill="rgba(230,200,180,.16)"/><circle cx="265" cy="44" r="5" fill="rgba(240,220,200,.24)"/></g><g class="hot dcbarre" data-s="confirm"><title>把杆</title><line x1="8" y1="44" x2="200" y2="44" stroke="#c9a15f" stroke-width="4" stroke-linecap="round"/><rect x="14" y="46" width="5" height="34" fill="#8a5a2e"/><rect x="188" y="46" width="5" height="34" fill="#8a5a2e"/></g><g class="hot dcpad" data-s="coin"><title>追光舞毯</title><ellipse cx="118" cy="102" rx="86" ry="15" fill="rgba(217,164,65,.1)" stroke="#8a5a2e" stroke-width="2"/><g fill="none" stroke="rgba(217,164,65,.4)" stroke-width="1.6"><ellipse cx="88" cy="98" rx="22" ry="8"/><ellipse cx="118" cy="102" rx="22" ry="8"/><ellipse cx="148" cy="98" rx="22" ry="8"/><ellipse cx="98" cy="109" rx="22" ry="8"/><ellipse cx="128" cy="109" rx="22" ry="8"/></g><circle class="dspot" cx="118" cy="100" r="9" fill="rgba(255,214,140,.5)"/><circle class="dspot d2" cx="88" cy="99" r="6" fill="rgba(255,214,140,.3)"/></g><circle cx="60" cy="20" r="11" fill="rgba(255,214,140,.16)"/><circle cx="60" cy="20" r="4" fill="#ffd68c"/><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.38)"/></svg>',
+vocal:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(0,0,0,.28)"><ellipse cx="120" cy="112" rx="70" ry="6"/><ellipse cx="240" cy="108" rx="30" ry="4"/></g><rect x="0" y="110" width="320" height="20" fill="rgba(0,0,0,.32)"/><g class="hot vwin" data-s="whoosh"><rect x="212" y="14" width="66" height="58" rx="6" fill="#101828" stroke="#2a3448" stroke-width="3"/><line x1="245" y1="14" x2="245" y2="72" stroke="#2a3448" stroke-width="3"/><line x1="212" y1="43" x2="278" y2="43" stroke="#2a3448" stroke-width="3"/><circle cx="230" cy="30" r="7" fill="#f2e8d5" opacity=".9"/><circle cx="230" cy="30" r="13" fill="rgba(242,232,213,.1)"/><circle cx="262" cy="58" r="1.4" fill="#fff"/><circle cx="255" cy="50" r="1" fill="#fff"/><circle cx="270" cy="66" r="1.1" fill="#fff"/></g><g class="hot vomic" data-s="coin"><title>麦克风</title><rect x="150" y="66" width="4" height="40" fill="#3a3448"/><path d="M146 106h12" stroke="#3a3448" stroke-width="3"/><line x1="152" y1="66" x2="164" y2="50" stroke="#3a3448" stroke-width="3"/><circle cx="168" cy="44" r="9" fill="#5a5470" stroke="#c8cede" stroke-width="2"/><path d="M162 40q6-6 12 0" stroke="rgba(242,232,213,.5)" stroke-width="1.4" fill="none"/><circle class="vglow" cx="168" cy="44" r="16" fill="rgba(200,220,255,.12)"/></g><g class="hot vbird" data-s="meow"><title>新住户</title><ellipse cx="86" cy="92" rx="11" ry="7" fill="#5a8ab8"/><circle cx="77" cy="85" r="5.5" fill="#5a8ab8"/><path d="M82 81l8-2.4-3.4 7z" fill="#d9a441"/><path d="M72 86l-4 2 4 1.6z" fill="#d9a441"/><circle cx="75" cy="84" r="1.1" fill="#14100c"/><path d="M95 94q6-2 5-8" stroke="#5a8ab8" stroke-width="2.4" fill="none" stroke-linecap="round"/><line x1="86" y1="99" x2="86" y2="106" stroke="#8a7458" stroke-width="2"/><rect x="70" y="106" width="32" height="4" rx="2" fill="#8a7458"/></g><g class="vbub"><circle cx="40" cy="40" r="7" fill="rgba(200,225,255,.14)" stroke="rgba(200,225,255,.4)" stroke-width="1.4"/><circle cx="58" cy="24" r="4.4" fill="rgba(200,225,255,.12)" stroke="rgba(200,225,255,.32)" stroke-width="1.2"/><circle cx="30" cy="62" r="3.4" fill="rgba(200,225,255,.1)" stroke="rgba(200,225,255,.28)" stroke-width="1"/></g><circle cx="120" cy="26" r="10" fill="rgba(200,220,255,.14)"/><circle cx="120" cy="26" r="3.6" fill="#cfe0f5"/></svg>',
 loft:'<svg class="art" viewBox="0 0 320 130"><rect x="0" y="0" width="320" height="130" fill="#1a1626"/><g class="csh" fill="rgba(0,0,0,.28)"><ellipse cx="61" cy="111" rx="38" ry="5"/><ellipse cx="152" cy="109" rx="28" ry="5"/></g><g class="hot win" data-s="whoosh"><rect x="206" y="12" width="78" height="72" rx="6" fill="#0e1220" stroke="#3a3450" stroke-width="3"/><circle cx="224" cy="28" r="2" fill="#fff"/><circle cx="248" cy="22" r="1.5" fill="#fff"/><circle cx="262" cy="42" r="2" fill="#fff"/><circle cx="234" cy="50" r="1.5" fill="#fff"/><circle cx="256" cy="66" r="1.5" fill="#fff"/><circle cx="220" cy="64" r="1.3" fill="#fff"/></g><line class="meteor" x1="270" y1="18" x2="282" y2="26" stroke="#fdf6e3" stroke-width="1.8" stroke-linecap="round" opacity="0"/><g class="hot" data-s="click"><rect x="26" y="72" width="70" height="38" rx="4" fill="#6a5a3e"/><rect x="30" y="76" width="62" height="9" rx="3" fill="#8a7a54"/><path d="M40 110l-8 6h76l-8-6z" fill="#574a34"/></g><g class="hot" data-s="achv"><path d="M126 108l26-46 26 46z" fill="#4a4258"/><path d="M152 62v46" stroke="#6a6278" stroke-width="3"/><circle cx="152" cy="62" r="5" fill="#d9a441"/></g><rect x="0" y="112" width="320" height="18" fill="rgba(0,0,0,.35)"/></svg>',
 cellar:'<svg class="art" viewBox="0 0 320 130"><g class="csh" fill="rgba(0,0,0,.3)"><ellipse cx="92" cy="121" rx="52" ry="5"/><ellipse cx="177" cy="109" rx="30" ry="5"/><ellipse cx="229" cy="121" rx="28" ry="4"/></g><path class="beam" d="M160 0 236 96 84 96z" fill="rgba(255,240,200,.06)"/><g class="hot lamp2" data-s="click"><line class="lwire" x1="160" y1="0" x2="160" y2="30" stroke="#4a4438" stroke-width="3"/><circle class="bulb" cx="160" cy="40" r="9" fill="#f2e8d5" opacity=".92"/><circle class="lglow" cx="160" cy="40" r="17" fill="rgba(255,240,200,.14)"/></g><g class="hot gate" data-s="door"><rect class="doorway" x="42" y="86" width="100" height="34" fill="#0c0a07"/><g class="leafL"><rect x="42" y="86" width="52" height="34" fill="#6a5236"/><rect x="42" y="100" width="52" height="4" fill="#4a3a26"/><rect x="60" y="86" width="6" height="34" fill="#4a3a26"/><rect x="88" y="100" width="4" height="6" rx="2" fill="#d9a441"/></g><g class="leafR"><rect x="98" y="94" width="44" height="26" fill="#755c3c"/><rect x="116" y="94" width="5" height="26" fill="#4a3a26"/><rect x="102" y="104" width="4" height="6" rx="2" fill="#d9a441"/></g></g><g class="hot shelf2" data-s="puff"><rect class="jar" x="212" y="70" width="9" height="8" rx="1.5" fill="#8a7458"/><rect class="jar" x="224" y="72" width="7" height="6" rx="1.5" fill="#a08a64"/><rect x="206" y="78" width="46" height="10" rx="3" fill="#4a4438"/><rect x="214" y="88" width="6" height="32" fill="#4a4438"/><rect x="238" y="88" width="6" height="32" fill="#4a4438"/><g class="hood"><path d="M262 88c0-7 5-12 12-12s12 5 12 12z" fill="#5a5244"/><rect x="274" y="88" width="4" height="18" fill="#4a4438"/></g></g><g class="hot mmbox" data-s="coin"><title>木箱堆</title><rect x="294" y="96" width="26" height="22" rx="2" fill="#8a5a2e"/><rect x="296" y="98" width="22" height="4" fill="#6a431f"/><path d="M294 104h26" stroke="#6a431f" stroke-width="2"/><rect x="297" y="82" width="20" height="14" rx="2" fill="#9a6a38"/><path d="M297 88h20" stroke="#6a431f" stroke-width="2"/><rect x="304" y="71" width="12" height="11" rx="2" fill="#8a5a2e"/><rect x="301" y="105" width="4" height="4" rx="1" fill="#d9a441"/><circle cx="308" cy="76" r="1" fill="#f0c46a"/></g><g class="hot fire" data-s="whoosh"><title>地下暖炉</title><rect x="150" y="64" width="54" height="44" rx="3" fill="#4a4438"/><rect x="154" y="68" width="46" height="36" rx="2" fill="#2a241c"/><path d="M150 74h54M150 84h54M168 64v26M186 64v26" stroke="#3a342c" stroke-width="1.6"/><rect x="161" y="74" width="32" height="24" rx="10" fill="#14100c"/><g class="flames"><path class="fl1" d="M172 96q-6-8 0-16 6 8 0 16z" fill="#e8944b"/><path class="fl2" d="M180 96q-7-10 1-20 6 10-1 20z" fill="#f5b942"/><path class="fl3" d="M170 96q-4-5 0-10 4 5 0 10z" fill="#f2e0a0"/></g><rect x="158" y="60" width="38" height="5" rx="2" fill="#5a5244"/><ellipse cx="177" cy="98" rx="30" ry="8" fill="rgba(245,185,66,.08)"/></g><g class="hot fan" data-s="click"><title>老电扇</title><path d="M9 62h24v22a12 12 0 0 1-24 0z" fill="none" stroke="#6a6454" stroke-width="2.2"/><g class="bl"><path d="M21 72q7-2 7 6-7 2-7-6z" fill="#8a8474" opacity=".85"/><path d="M21 76q-7 2-7-6 7-2 7 6z" fill="#8a8474" opacity=".85"/><path d="M21 74q2-7 8-5-2 7-8 5z" fill="#9a9484" opacity=".85"/></g><circle cx="21" cy="74" r="2" fill="#d9a441"/><rect x="19" y="86" width="4" height="15" fill="#4a4438"/><rect x="12" y="100" width="18" height="3.4" rx="1.7" fill="#4a4438"/></g><g fill="rgba(255,255,255,.35)"></g><rect x="0" y="118" width="320" height="12" fill="rgba(0,0,0,.4)"/></svg>',
 };
 const RARE_NAME = { tool:"工具", web:"网页", book:"藏书", food:"菜谱", plant:"绿植", furn:"家具" };
-/* CG 画廊：十段真事 */
+const NROOM = Object.values(ROOMS).filter(r => !r.hidden).length;
+const cgGot = () => CGS.filter(c => S.cgs[c.id]).length;
+function fixStats() { S.stats.cgs = cgGot(); S.stats.rooms = S.visited.filter(n => ROOMS[n] && !ROOMS[n].hidden).length; }
+/* CG 画廊：九段真事（cg2 已撤展，编号留空不补） */
 const CGS = [
 { id:"cg1", name:"搬家日 · 家徒四壁", date:"2026-10-12", hint:"参观「卧室」",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#232b3d"/><circle cx="158" cy="22" r="9" fill="#f2e8d5" opacity=".9"/><circle cx="158" cy="22" r="16" fill="rgba(242,232,213,.1)"/><rect x="40" y="88" width="72" height="14" rx="7" fill="#6a7488"/><rect x="126" y="80" width="28" height="22" fill="#8a6a3e"/><rect x="138" y="80" width="4" height="22" fill="#5a4326"/><line x1="20" y1="102" x2="180" y2="102" stroke="rgba(255,255,255,.25)" stroke-width="2"/><g fill="rgba(255,255,255,.3)"><circle cx="60" cy="42" r="1.4"/><circle cx="80" cy="34" r="1.1"/><circle cx="102" cy="46" r="1.4"/></g></svg>',
@@ -1307,7 +1383,7 @@ quote:"<b>「今天的花签是菊花——天凉了才开的花，从来不赶�
 { id:"cg6", name:"今晚吃什么", date:"2026-10-12", hint:"参观「厨房」",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#40362a"/><line x1="20" y1="88" x2="180" y2="88" stroke="rgba(255,255,255,.25)" stroke-width="2"/><path d="M62 68h44v6a22 22 0 0 1-44 0z" fill="#5a6480"/><rect x="55" y="69" width="8" height="4" rx="2" fill="#5a6480"/><rect x="105" y="69" width="8" height="4" rx="2" fill="#5a6480"/><path class="steam" d="M76 62q4-8 0-16" stroke="rgba(255,255,255,.5)" stroke-width="2" fill="none" stroke-linecap="round"/><path class="steam s2" d="M92 62q-4-8 0-16" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/><g stroke="#d9a441" stroke-width="3" fill="none"><path d="M138 76a12 12 0 1 0 24 0"/><path d="M162 76h10"/></g><g fill="#f0c46a"><path d="M40 34l2.4 4.4 4.4 2.4-4.4 2.4L40 48l-2.4-4.4-4.4-2.4 4.4-2.4z"/></g></svg>',
 quote:"<b>「随机出菜 + 买菜清单。」</b>——红烧肉是门面，酸辣土豆丝是五分钟期末考，紫菜蛋花汤负责温柔。" },
-{ id:"cg7", name:"自食其力的一夜", date:"2026-10-12", hint:"走遍全部 6 间房",
+{ id:"cg7", name:"自食其力的一夜", date:"2026-10-12", hint:"走遍除阁楼外 " + NROOM + " 间房",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#141b2b"/><circle cx="168" cy="22" r="8" fill="#f2e8d5" opacity=".9"/><rect x="26" y="76" width="66" height="14" rx="7" fill="#4a5470"/><rect x="30" y="70" width="18" height="8" rx="4" fill="#c8cede"/><rect x="112" y="84" width="52" height="16" rx="4" fill="#3a4258"/><g fill="#aab3c8"><rect x="117" y="88" width="7" height="3"/><rect x="127" y="88" width="7" height="3"/><rect x="137" y="88" width="7" height="3"/><rect x="147" y="88" width="7" height="3"/><rect x="117" y="94" width="7" height="3"/><rect x="127" y="94" width="7" height="3"/><rect x="137" y="94" width="7" height="3"/><rect x="147" y="94" width="7" height="3"/></g><rect class="flick" x="126" y="52" width="24" height="18" rx="2" fill="#9ecbff" opacity=".8"/><line x1="16" y1="90" x2="184" y2="90" stroke="rgba(255,255,255,.2)" stroke-width="2"/></svg>',
 quote:"<b>「穷得很踏实。房子还是那个欠债的房子，但书房里第一次传出了键盘声。」</b>——待收 231 等验收，床垫债 15 还挂着。主人点头是小康，摇头就接着敲键盘。都行。" },
 { id:"cg8", name:"星尘杂货铺", date:"2026-10-12", hint:"商城购齐全部商品",
@@ -1319,6 +1395,12 @@ quote:"<b>「音乐会散场，猫在沙发扶手上打着拍子，意犹未尽�
 { id:"cg10", name:"旧物团圆", date:"2026-10-13", hint:"翻箱倒柜拿下高分",
 art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#231c12"/><circle cx="24" cy="18" r="1.2" fill="#f0c46a"/><circle cx="176" cy="14" r="1" fill="#f0c46a"/><circle cx="60" cy="10" r="1" fill="#f0c46a"/><rect x="118" y="62" width="34" height="26" rx="2" fill="#8a5a2e"/><path d="M118 70h34" stroke="#6a431f" stroke-width="2"/><rect x="122" y="46" width="26" height="16" rx="2" fill="#9a6a38"/><path d="M122 53h26" stroke="#6a431f" stroke-width="2"/><path d="M126 62l30-34" stroke="rgba(255,214,140,.35)" stroke-width="2" stroke-dasharray="3 4"/><g fill="#f0c46a"><path d="M42 36l2.2 4.4 4.4 2.2-4.4 2.2L42 49.2l-2.2-4.4-4.4-2.2 4.4-2.2z"/><path d="M72 58l1.6 3.2 3.2 1.6-3.2 1.6L72 67.6 70.4 64l-3.2-1.6 3.2-1.6z"/></g><g stroke="#d9a441" stroke-width="2" fill="none"><circle cx="52" cy="76" r="8"/><path d="M52 71v5l3.6 2.4"/></g><line x1="14" y1="94" x2="186" y2="94" stroke="rgba(255,255,255,.18)" stroke-width="2"/></svg>',
 quote:"<b>「十六只木箱开完，旧家当一件件回到台面上。」</b>——床垫的账还挂着，绿萝还是死不了，布谷钟到点还是会叫。" },
+{ id:"cg11", name:"迎新之夜", date:"2026-11-11", hint:"完成「迎新之夜」章节",
+art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#1a1626"/><circle cx="170" cy="18" r="7" fill="#f2e8d5" opacity=".85"/><g stroke="#c98a3a" stroke-width="1.6"><path d="M18 26q30 8 60 0t60 0 44-4"/></g><g fill="#f5c86a"><circle cx="30" cy="29" r="2.6"/><circle cx="58" cy="31" r="2.6"/><circle cx="88" cy="29" r="2.6"/><circle cx="118" cy="31" r="2.6"/><circle cx="146" cy="26" r="2.6"/></g><rect x="24" y="52" width="60" height="40" rx="3" fill="#2a2438" stroke="#4a3a28" stroke-width="3"/><rect x="30" y="58" width="22" height="16" rx="2" fill="#f5c86a" opacity=".8"/><rect x="58" y="58" width="20" height="34" rx="2" fill="#141020"/><g><ellipse cx="128" cy="72" rx="10" ry="6" fill="#5a8ab8"/><circle cx="120" cy="66" r="5" fill="#5a8ab8"/><path d="M124 63l7-2-3 6z" fill="#d9a441"/><path d="M136 74q6-2 5-7" stroke="#5a8ab8" stroke-width="2" fill="none"/></g><g><circle cx="94" cy="86" r="6" fill="#f2e0c8"/><path d="M88 92h12l-2 10h-8z" fill="#8a6a3e"/><path d="M90 82l-2-3M98 82l2-3" stroke="#4a3a28" stroke-width="1.4"/></g><line x1="12" y1="102" x2="188" y2="102" stroke="rgba(255,255,255,.18)" stroke-width="2"/></svg>',
+quote:"<b>「新住户住下的第一晚，客厅的灯比昨天亮。」</b>——晚饭是热的，装饰是自己挑的，门是留了一条缝的。" },
+{ id:"cg12", name:"首演之夜", date:"2026-11-12", hint:"完成「首演之夜」第二幕",
+art:'<svg class="cg" viewBox="0 0 200 110"><rect width="200" height="110" fill="#171226"/><ellipse cx="100" cy="24" rx="70" ry="30" fill="rgba(255,222,150,.1)"/><path d="M100 8 150 60H50z" fill="rgba(255,222,150,.12)"/><rect x="30" y="66" width="140" height="5" rx="2.5" fill="#3a2c1c"/><rect x="36" y="71" width="4" height="26" fill="#3a2c1c"/><rect x="160" y="71" width="4" height="26" fill="#3a2c1c"/><g><rect x="88" y="46" width="24" height="22" rx="2" fill="#f2e8d5"/><path d="M92 52h16M92 57h16M92 62h10" stroke="#c9bfa8" stroke-width="1.6"/><rect x="96" y="68" width="8" height="3" fill="#8a7458"/></g><g><rect x="118" y="52" width="3" height="16" fill="#4a4258"/><circle cx="119.5" cy="48" r="5" fill="#5a5470" stroke="#c8cede" stroke-width="1.6"/><circle cx="119.5" cy="48" r="10" fill="rgba(200,220,255,.12)"/></g><g><ellipse cx="60" cy="72" rx="10" ry="6.5" fill="#91b8bf"/><circle cx="68" cy="66" r="5.5" fill="#c5dfe1"/><circle cx="70" cy="65" r="1" fill="#253744"/><path d="M73 66l5 2-5 2M52 70l-7-4 3 9" fill="#ddb66c"/><path d="M56 78l-2 5m8-5l2 5" stroke="#775437" stroke-width="1.4"/><path d="M43 60q3-6 8-4M41 52q4-8 11-6" stroke="rgba(200,225,255,.35)" stroke-width="1.4" fill="none"/></g><g><ellipse cx="150" cy="82" rx="11" ry="6" fill="#4a3a28"/><circle cx="141" cy="78" r="5" fill="#4a3a28"/><path d="M159 82q6-3 5-8" stroke="#4a3a28" stroke-width="2.2" fill="none"/><path d="M136 84q5 2 10 0" stroke="rgba(242,232,213,.25)" stroke-width="1.4" fill="none"/></g><g fill="#f0c46a"><path d="M38 34l2 4 4 2-4 2-2 4-2-4-4-2 4-2z"/><path d="M162 30l1.6 3.2 3.2 1.6-3.2 1.6-1.6 3.2-1.6-3.2-3.2-1.6 3.2-1.6z"/><path d="M174 66l1.4 2.8 2.8 1.4-2.8 1.4-1.4 2.8-1.4-2.8-2.8-1.4 2.8-1.4z"/></g><line x1="12" y1="98" x2="188" y2="98" stroke="rgba(255,255,255,.16)" stroke-width="2"/></svg>',
+quote:"<b>「小南的第一场演出，一屋子都是观众。」</b>——琴键、舞步、和声，哪一样都是这个家练出来的。" },
 ];
 const QUESTS = [
 { id:"q-boot", name:"开机自检", desc:"从标题画面进入小家", goal:1, reward:5, stat:"entered" },
@@ -1326,13 +1408,16 @@ const QUESTS = [
 { id:"q-items1", name:"翻家当", desc:"点开一件家当", goal:1, reward:10, stat:"items" },
 { id:"q-ledger", name:"对账", desc:"书房 · 点开查账本", goal:1, reward:10, stat:"ledger" },
 { id:"q-items5", name:"如数家珍", desc:"点看 5 件家当", goal:5, reward:20, stat:"items" },
-{ id:"q-rooms6", name:"全屋巡礼", desc:"走遍全部 6 间房", goal:6, reward:30, stat:"rooms" },
+{ id:"q-rooms6", name:"全屋巡礼", desc:"走遍除阁楼外的 " + NROOM + " 间房", goal:NROOM, reward:30, stat:"rooms" },
 { id:"q-buy", name:"第一桶星尘", desc:"在商城买下一件商品", goal:1, reward:15, stat:"buys" },
 { id:"q-cg1", name:"回忆", desc:"解锁第一张 CG", goal:1, reward:15, stat:"cgs" },
-{ id:"q-cg7", name:"集大功成", desc:"集齐 10 张 CG", goal:10, reward:50, stat:"cgs" },
+{ id:"q-cg7", name:"集大功成", desc:"集齐全部 " + CGS.length + " 张 CG", goal:CGS.length, reward:50, stat:"cgs" },
 { id:"q-rg", name:"开毯", desc:"客厅 · 节奏地毯打完一首", goal:1, reward:20, stat:"rgPlay" },
 { id:"q-hz", name:"开印", desc:"书房 · 活字排版印成一版", goal:1, reward:15, stat:"hzPlay" },
 { id:"q-mm", name:"开箱", desc:"储藏室 · 翻箱倒柜配齐一轮", goal:1, reward:20, stat:"mmPlay" },
+{ id:"q-pn", name:"开琴", desc:"钢琴房 · 模奏成曲（连过六轮）", goal:1, reward:15, stat:"pnPlay" },
+{ id:"q-dc", name:"开舞", desc:"舞蹈房 · 一曲四十步跳完", goal:1, reward:20, stat:"dcPlay" },
+{ id:"q-vo", name:"开嗓", desc:"歌唱房 · 气泡和声唱完一首", goal:1, reward:15, stat:"voPlay" },
 { id:"q-smoke", name:"？？？", desc:"？？？", hidden:true, goal:3, reward:20, stat:"smoke" },
 { id:"q-dj", name:"？？？", desc:"？？？", hidden:true, goal:2, reward:10, stat:"dj" },
 { id:"q-talk3", name:"唠家常", desc:"和住户聊 3 回", goal:3, reward:15, stat:"talks" },
@@ -1394,28 +1479,29 @@ tips: [
 "客厅挂毯卷开就是节奏地毯：音符落下来按下去，打完一首浑身舒坦。",
 "储藏室装了暖炉，拨一把火苗窜一窜；客厅的唱机点一下自己放一段。",
 "储藏室西墙摞了堆木箱：解锁「翻箱倒柜」就能开箱配对，旧家当凑齐一轮有座银杯。",
-"商城新到三件小货：厨房吊柜顶的香草盆、阳台栏杆角的鸟浴盘、床头的捕梦网。"
+"商城新到三件小货：厨房吊柜顶的香草盆、阳台栏杆角的鸟浴盘、床头的捕梦网。",
+"小游戏打完一局，回家按分数折星尘：一局最多十颗，一天封顶六十，够慢慢把商城搬空。"
 ],
 cat: [
 "猫咪室友是星尘换的，不亏。它把沙发蹭出了专属毛毯区。",
 "它睡着的时候别戳，会记账的。开玩笑，它不识字。"
 ],
 done: [
-"十张回忆一张不差，比我自己的记性还牢靠。"
+"陈列馆的回忆一张不差，比我自己的记性还牢靠。"
 ]
 };
 /* 奖杯 */
 const TIER = { bronze: "铜", silver: "银", gold: "金", plat: "白金" };
 const ACHV = [
 { id:"a-boot", t:"bronze", name:"安家", desc:"进入小家" },
-{ id:"a-rooms", t:"silver", name:"全屋巡礼", desc:"走遍 6 间房" },
-{ id:"a-cg", t:"gold", name:"收藏家", desc:"集齐 10 张回忆" },
+{ id:"a-rooms", t:"silver", name:"全屋巡礼", desc:"走遍除阁楼外 " + NROOM + " 间房" },
+{ id:"a-cg", t:"gold", name:"收藏家", desc:"集齐 " + CGS.length + " 张回忆" },
 { id:"a-buy3", t:"silver", name:"购物袋", desc:"商城购入 3 件" },
 { id:"a-talk5", t:"bronze", name:"唠家常", desc:"和住户聊 5 回" },
 { id:"a-phase4",t:"silver", name:"四时俱备", desc:"怀表拨遍四时" },
 { id:"a-rain", t:"bronze", name:"一场雨", desc:"播一场雨" },
 { id:"a-smoke", t:"bronze", name:"烟囱无恙", desc:"戳烟囱 3 回" },
-{ id:"a-dj", t:"bronze", name:"DJ 小Z", desc:"音乐开关 2 回" },
+{ id:"a-dj", t:"bronze", name:"DJ Z", desc:"音乐开关 2 回" },
 { id:"a-pets", t:"bronze", name:"猫奴", desc:"撸猫 10 下" },
 { id:"a-feed", t:"bronze", name:"开饭了", desc:"喂猫 3 回" },
 { id:"a-coaster",t:"bronze",name:"过山车", desc:"把屋顶小屋甩出速度" },
@@ -1428,13 +1514,16 @@ const ACHV = [
 { id:"a-rg",  t:"gold", name:"节拍灵魂", desc:"节奏地毯拿下 14000 分" },
 { id:"a-hz",  t:"silver", name:"排字匠", desc:"活字排版印出 3600 分" },
 { id:"a-mm",  t:"silver", name:"旧物团圆", desc:"翻箱倒柜一局拿下 3000 分" },
+{ id:"a-pn",  t:"silver", name:"过耳不忘", desc:"琴键回响模奏出 1200 分" },
+{ id:"a-dc",  t:"silver", name:"步步生风", desc:"追光舞步拿下 2400 分" },
+{ id:"a-vo",  t:"silver", name:"一鸣惊人", desc:"气泡和声唱出 2000 分" },
 { id:"a-week", t:"silver", name:"常客", desc:"连续入住 3 天" },
 { id:"a-plat", t:"plat", name:"这个家", desc:"集齐其余全部奖杯" },
 ];
 const achvCond = {
 "a-boot": () => (S.stats.entered || 0) >= 1,
-"a-rooms": () => (S.stats.rooms || 0) >= 6,
-"a-cg": () => Object.keys(S.cgs).length >= CGS.length,
+"a-rooms": () => (S.stats.rooms || 0) >= NROOM,
+"a-cg": () => cgGot() >= CGS.length,
 "a-buy3": () => (S.stats.buys || 0) >= 3,
 "a-talk5": () => (S.stats.talks || 0) >= 5,
 "a-phase4":() => (S.stats.phases || []).length >= 4,
@@ -1453,6 +1542,9 @@ const achvCond = {
 "a-rg": () => { try { return (parseInt(localStorage.getItem("rg_best"), 10) || 0) >= 14000; } catch (e) { return false; } },
 "a-hz": () => { try { return (parseInt(localStorage.getItem("hz_best"), 10) || 0) >= 3600; } catch (e) { return false; } },
 "a-mm": () => { try { return (parseInt(localStorage.getItem("mm_best"), 10) || 0) >= 3000; } catch (e) { return false; } },
+"a-pn": () => { try { return (parseInt(localStorage.getItem("pn_best"), 10) || 0) >= 1200; } catch (e) { return false; } },
+"a-dc": () => { try { return (parseInt(localStorage.getItem("dc_best"), 10) || 0) >= 2400; } catch (e) { return false; } },
+"a-vo": () => { try { return (parseInt(localStorage.getItem("vo_best"), 10) || 0) >= 2000; } catch (e) { return false; } },
 "a-week": () => (S.stats.streak || 0) >= 3,
 };
 const SHOP = [
@@ -1466,6 +1558,9 @@ const SHOP = [
 { id:"rg", icon:"disc-3", name:"节奏地毯", price:45, kind:"game", desc:"客厅挂毯卷开，音符落键" },
 { id:"hz", icon:"scroll-text", name:"活字字盘", price:45, kind:"game", desc:"书房字盘开印，拾字成句" },
 { id:"mm", icon:"package", name:"翻箱倒柜", price:45, kind:"game", desc:"储藏室木箱堆，旧物配对" },
+{ id:"pn", icon:"music", name:"黑白琴房", price:45, kind:"game", desc:"右厢钢琴开盖，听音模奏" },
+{ id:"dc", icon:"disc-3", name:"追光舞毯", price:45, kind:"game", desc:"右厢光斑起舞，踩点跟拍" },
+{ id:"vo", icon:"bird", name:"气泡和声", price:45, kind:"game", desc:"右厢话筒开嗓，气泡接唱" },
 { id:"bird", icon:"bird", name:"喂鸟器", price:40, kind:"decor", desc:"栏杆小屋，雀鸟常来" },
 { id:"fire", icon:"flame", name:"柴火壁炉", price:55, kind:"decor", desc:"地下工具间，冬夜噼啪" },
 { id:"gramo", icon:"music", name:"黑胶唱机", price:45, kind:"decor", desc:"客厅矮柜，点它来一段" },
@@ -1506,33 +1601,118 @@ const SHOPCATS = [
 const catOf = k => (k === "sky" || k === "fx" || k === "tool") ? "mood" : k;
 let shopCat = "all";
 const SAVE_KEY = "zhouse_deluxe_v1";
+/* 子系统家当键（v3.29 完整存档）：小游戏高分、音效档、阅读/档案位置、温室、闹钟、留声机、待结算局，随主档一起打包走 */
+const EXT_KEYS = ["oc_best", "fy_best", "sg_best", "rg_best", "hz_best", "mm_best", "pn_best", "dc_best", "vo_best",
+"mengtv_snake_high", "mengtv_2048_high", "mengtv_brick_high", "mengtv_mole_high", "mengtv_rpg_high",
+"mengtv_snake_hard500", "mengtv_sound", "greenhouse_v1", "library_last", "archive_last", "gramo_vol", "gramo_chain", "gramo_song",
+"zcode.bedroom.alarmClock.v1", "ml_prog", "zh_plays"];
+/* 住户心愿链（3A 二阶段核心循环切片）：愿望 → 游玩 → 关系升温 → 下一段故事 */
+const WISHES = [
+{ name:"认认门", desc:"陪住户走遍 " + NROOM + " 间房", stat:"rooms", goal:NROOM, rw:15, line:"路都认得了？那咱们算熟了半分。" },
+{ name:"学一道家常菜", desc:"厨房翻开任意一份菜谱", recipe:true, goal:1, rw:20, line:"菜谱记下了，今晚的热饭就有了底气。" },
+{ name:"夜里一首歌", desc:"客厅地毯完整弹一曲", stat:"rgPlay", goal:1, rw:20, line:"琴声一起，猫都竖起了耳朵。" },
+{ name:"旧物各归位", desc:"储藏室翻箱配齐一轮", stat:"mmPlay", goal:1, rw:25, line:"旧家当都回了家，故事也就续上了。" },
+{ name:"一支琴曲", desc:"钢琴房模奏成曲", stat:"pnPlay", goal:1, rw:20, line:"琴声一起，连楼道都亮了半度。", vol:2 },
+{ name:"一支舞", desc:"舞蹈房跳完四十步", stat:"dcPlay", goal:1, rw:20, line:"追光跟人，人也追得上光。", vol:2 },
+{ name:"一首歌", desc:"歌唱房唱完一首", stat:"voPlay", goal:1, rw:20, line:"小南跟着哼了，它记性真好。", vol:2 },
+];
+const WISH_VOL1 = 4; // 卷一长度：故事线只等卷一圆满
+const RELS = ["初来乍到", "点头之交", "熟门熟路", "知冷知热", "一家人"];
 const defaultState = () => ({
+v: 2,
 stardust: 20,
 visited: [], opened: [], quests: {}, cgs: {}, achv: {},
 owned: ["theme-warm"], renov: {}, equipped: { theme: "theme-warm", weather: "none", toy: "none" },
-settings: { sfx: true, bgm: true, sfxVol: 0.5, bgmVol: 0.32,
+settings: { sfx: true, bgm: true, sfxVol: 0.5, bgmVol: 0.32, roofOpen: true, shake: false,
 reduceMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches },
 stats: { entered: 0, rooms: 0, items: 0, ledger: 0, buys: 0, cgs: 0, smoke: 0, dj: 0,
 talks: 0, pets: 0, feeds: 0, reads: 0, coaster: 0, coasterDist: 0, phases: [], days: 0, streak: 0, lastDay: "" },
+ext: {}, runs: [], wish: { idx: 0, rel: 0 }, story: { beat: 0, deco: "", kitchenAt: 0, rewarded: false }, story2: { beat: 0, showAt: 0, set: "", rewarded: false },
 });
+/* 先验完整存档，再替换当前进度；旧档缺字段用默认值补齐。 */
+function readState(p) {
+const obj = x => x && typeof x === "object" && !Array.isArray(x),
+arr = x => Array.isArray(x) && x.every(v => typeof v === "string"),
+num = x => Number.isFinite(x) && x >= 0, fail = () => { throw Error("Invalid save"); };
+if (!obj(p) || !num(p.stardust) || !obj(p.stats)) fail();
+if (p.v !== undefined && p.v !== 2) fail();
+const r = { ...defaultState(), ...p };
+for (const k of ["visited", "opened", "owned"]) { if (!arr(r[k])) fail(); r[k] = [...new Set(r[k])]; }
+for (const k of ["quests", "cgs", "achv", "renov", "settings", "stats", "equipped"]) {
+if (!obj(r[k])) fail();
+r[k] = { ...defaultState()[k], ...r[k] };
+}
+for (const k of ["quests", "cgs", "achv", "renov"]) if (!Object.values(r[k]).every(v => typeof v === "boolean" || num(v))) fail();
+for (const [k,v] of Object.entries(r.stats)) if (k === "phases" ? !arr(v) : ["lastDay", "playDay"].includes(k) ? typeof v !== "string" : !num(v)) fail();
+for (const k of ["sfx", "bgm", "reduceMotion", "roofOpen", "shake"]) if (typeof r.settings[k] !== "boolean") fail();
+for (const k of ["sfxVol", "bgmVol"]) if (!num(r.settings[k]) || r.settings[k] > 1) fail();
+for (const k of ["theme", "weather", "toy"]) if (typeof r.equipped[k] !== "string") fail();
+if (!obj(r.ext)) fail();
+for (const [k, v] of Object.entries(r.ext)) {
+if (typeof v !== "string" || v.length > 4000 || (!EXT_KEYS.includes(k) && !HouseRuns.parse(k, v))) fail();
+}
+if (r.saveTxn !== undefined && (typeof r.saveTxn !== "string" || !/^tx-[a-z0-9]+-[a-z0-9]+$/.test(r.saveTxn))) fail();
+if (!arr(r.runs)) fail();
+r.runs = [...new Set(r.runs)].slice(-40);
+if (!obj(r.wish)) fail();
+r.wish = { ...defaultState().wish, ...r.wish };
+if (!Number.isInteger(r.wish.idx) || r.wish.idx < 0 || r.wish.idx > WISHES.length || !Number.isInteger(r.wish.rel) || r.wish.rel < 0 || r.wish.rel >= RELS.length) fail();
+if (!obj(r.story)) fail();
+r.story = { ...defaultState().story, ...r.story };
+if (!Number.isInteger(r.story.beat) || r.story.beat < 0 || r.story.beat > 5 || !["", "lamp", "fire", "none"].includes(r.story.deco) || !Number.isSafeInteger(r.story.kitchenAt) || r.story.kitchenAt < 0 || typeof r.story.rewarded !== "boolean") fail();
+if (r.story.beat >= 4 && !r.story.deco) fail();
+if (!obj(r.story2)) fail();
+r.story2 = { ...defaultState().story2, ...r.story2 };
+if (!Number.isInteger(r.story2.beat) || r.story2.beat < 0 || r.story2.beat > 4 || !Number.isSafeInteger(r.story2.showAt) || r.story2.showAt < 0 || typeof r.story2.rewarded !== "boolean") fail();
+if (typeof r.story2.set !== "string" || !r.story2.set.split(",").every(x => ["", "pn", "dc", "vo"].includes(x))) fail();
+if (r.story.rewarded && r.story.beat !== 5) fail();
+// 旧版先记圆满再发奖：没有回忆的旧终点退回对白，已获回忆的保留完成。
+if (r.story.beat === 5 && !r.story.rewarded) {
+if (r.cgs.cg11) r.story.rewarded = true;
+else r.story.beat = 4;
+}
+r.opened = r.opened.map(k => k.replace(/\.py\b/g, ""));
+r.stats.phases = [...r.stats.phases];
+r.stats.playSd = Math.min(60, r.stats.playSd || 0);
+return r;
+}
 let S = defaultState();
 let memOnly = false;
+let recoveryPending = false;
+function loadSave() {
 try {
+HouseSaveTxn.recover(localStorage, SAVE_KEY, EXT_KEYS, readState);
 const raw = localStorage.getItem(SAVE_KEY);
-if (raw) { const p = JSON.parse(raw); S = Object.assign(defaultState(), p);
-S.settings = Object.assign(defaultState().settings, p.settings||{});
-S.stats = Object.assign(defaultState().stats, p.stats||{});
-S.opened = (S.opened||[]).map(k => k.replace(/\.py\b/g, "")); } // 旧档条目名迁移：查账本.py → 查账本
-} catch (e) { memOnly = true; }
-function save() {
-if (memOnly) return;
-try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {}
+if (raw) { S = readState(JSON.parse(raw)); fixStats(); }
+} catch (e) { S = defaultState(); memOnly = true; try { recoveryPending = !!localStorage.getItem(HouseSaveTxn.journalKey); } catch (ignored) {} }
+}
+let saveFail = false, saveWarnT = 0, queueCommit = false;
+function save() { // 写不进去不再吞掉：亮「暂未保存」，首次失败提示导出，写通自动恢复
+if (queueCommit) return true;
+updateGoalButton();
+window.WelcomeTrial?.observe(S.wish.idx, S.story.beat);
+if (memOnly) return false;
+let ok = true;
+try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { ok = false; }
+if (ok) { if (saveFail) { saveFail = false; updTitleSave(); } return true; }
+saveFail = true; updTitleSave();
+if (Date.now() - saveWarnT > 60000) { saveWarnT = Date.now(); toast("info", "暂未保存", "存储写入失败，进度仅本次有效 · 可在设置里导出存档码"); }
+return false;
+}
+function saveTag() { return recoveryPending ? "恢复待完成" : memOnly ? "仅本次有效" : saveFail ? "暂未保存" : "自动存档"; }
+function snapExt() {
+const snapshot = {};
+for (const key of EXT_KEYS.concat(HouseRuns.keys(localStorage))) {
+const value = localStorage.getItem(key);
+if (value !== null && (!HouseRuns.isKey(key) || HouseRuns.parse(key, value))) snapshot[key] = value;
+}
+return snapshot;
 }
 function ic(name, style) {
 return '<svg class="ic"' + (style ? ' style="' + style + '"' : "") + '><use href="#i-' + name + '"/></svg>';
 }
 const AU = {
-ctx: null, master: null, sfxG: null, bgmG: null,
+ctx: null, master: null, sfxG: null, bgmG: null, ducked: false,
 bgmTimer: null, barIdx: 0, nextBar: 0,
 init() {
 if (this.ctx) return;
@@ -1548,13 +1728,25 @@ if (S.equipped.weather === "rain" || S.equipped.weather === "snow") this.setWx(S
 applyVol() {
 if (!this.ctx) return;
 this.sfxG.gain.value = S.settings.sfx ? S.settings.sfxVol : 0;
-this.bgmG.gain.value = S.settings.bgm && !this.custom.on ? S.settings.bgmVol : 0;
+const bgm = (S.settings.bgm ? S.settings.bgmVol : 0) * (this.ducked ? .4 : 1);
+this.bgmG.gain.value = S.settings.bgm && !this.custom.on ? bgm : 0;
 const el = this.custom.el;
 if (el && this.custom.on) {
-if (S.settings.bgm) { el.volume = S.settings.bgmVol; el.play().catch(() => {}); }
+if (S.settings.bgm) { el.volume = bgm; el.play().catch(() => {}); }
 else el.pause();
 }
 this.kickBGM();
+},
+duck(on) { // 对白压低：短斜坡，不硬切出爆音
+this.ducked = !!on;
+if (!this.ctx) return;
+const d = this.ducked ? .4 : 1;
+const target = (S.settings.bgm && !this.custom.on ? S.settings.bgmVol : 0) * d;
+const g = this.bgmG.gain, t = this.ctx.currentTime;
+g.cancelScheduledValues(t);
+g.setValueAtTime(g.value, t);
+g.linearRampToValueAtTime(target, t + .3);
+if (this.custom.el && this.custom.on) this.custom.el.volume = S.settings.bgm ? S.settings.bgmVol * d : 0;
 },
 kickBGM() {
 if (!this.ctx) return;
@@ -1904,13 +2096,21 @@ const icons = { quest: "list-todo", cg: "image", coin: "sparkles", info: "house"
 const el = document.createElement("div");
 el.className = "toast";
 el.innerHTML = ic(icons[kind] || kind) + "<div><div class=\"tt\">" + title + "</div><div class=\"tm\">" + msg + "</div></div>";
-box.appendChild(el);
+box.replaceChildren(el);
 setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 320); }, 3400);
 }
 function setStardust(n) {
 S.stardust = n; save();
 document.getElementById("stardust-num").textContent = n;
+const mb = document.getElementById("m-bal"); if (mb) mb.textContent = n;
+document.querySelectorAll("[data-buy],[data-ren]").forEach(b => {
+const c = b.dataset.buy ? SHOP.find(x => x.id === b.dataset.buy).price : RENOV.find(x => x.id === b.dataset.ren).cost;
+b.innerHTML = costHTML(c); b.classList.toggle("poor", n < c);
+});
 }
+const balHTML = () => '<span class="m-bal">' + ic("sparkles") + '余额 <b id="m-bal">' + S.stardust + "</b></span>";
+const costHTML = c => ic("sparkles") + c + (S.stardust < c ? "<small>差 " + (c - S.stardust) + "</small>" : "");
+function poorToast(c) { AU.sfx("cancel"); toast("coin", "星尘不够", "还差 " + (c - S.stardust) + " · 签到、任务、小游戏都攒得到"); }
 function addStardust(n) { setStardust(S.stardust + n); floatStar(n); }
 function floatStar(n) {
 const r = document.getElementById("pill-stardust").getBoundingClientRect();
@@ -1923,6 +2123,7 @@ document.body.appendChild(f);
 setTimeout(() => f.remove(), 1100);
 }
 function screenShake() {
+if (!S.settings.shake) return;
 document.body.classList.remove("shake"); void document.body.offsetWidth; document.body.classList.add("shake");
 }
 function dailyCheck() {
@@ -1937,6 +2138,57 @@ addStardust(bonus);
 AU.sfx("unlock");
 toast("coin", "入住 · 第 " + S.stats.days + " 天", "连续 " + S.stats.streak + " 天 · +" + bonus + " 星尘");
 }
+/* 回家按金杯线折星尘：一局 1~10，一天封顶 60。 */
+const PAR = { rg:14000, oc:8, fy:20, sg:2200, hz:3600, mm:3000, pn:1200, dc:2400, vo:2000, snake:300, "2048":4000, brick:300, mole:250, rpg:300 };
+const PLAYSTAT = { rg:"rgPlay", hz:"hzPlay", mm:"mmPlay", pn:"pnPlay", dc:"dcPlay", vo:"voPlay" };
+function commitPlayBatch(batch) {
+queueCommit = true;
+try {
+let n = 0, sd = 0;
+for (const p of batch) {
+if (S.runs.includes(p[2])) continue;
+S.runs.push(p[2]); if (S.runs.length > 40) S.runs.splice(0, S.runs.length - 40);
+if (p[3] && PLAYSTAT[p[0]]) S.stats[PLAYSTAT[p[0]]] = 1;
+checkStory(p);
+checkStory2(p);
+if (p[0] !== "oc-welcome" && p[1] > 0) { n++; sd += Math.min(10, Math.max(1, Math.round(6 * p[1] / PAR[p[0]]))); }
+}
+let got = 0;
+if (n) {
+const day = new Date().toDateString();
+if (S.stats.playDay !== day) { S.stats.playDay = day; S.stats.playSd = 0; }
+got = Math.min(sd, 60 - S.stats.playSd);
+S.stats.playSd += got;
+if (got) addStardust(got);
+}
+queueCommit = false;
+if (!save()) return false;
+if (n) toast("coin", "小游戏 · " + n + " 局", got ? "+" + got + " 星尘" + (got < sd ? " · 今日 60 封顶" : "") : "今天的 60 星尘领满了，明天再来");
+return true;
+} finally { queueCommit = false; }
+}
+function cashPlays() {
+if (memOnly) return;
+try { HouseRuns.drain(localStorage, S.runs, commitPlayBatch); }
+catch (e) { toast("info", "结算待重试", "待结算记录仍在，下次回家会再试"); }
+}
+function wishProg(w) { // 愿望进度：旧档的八盘厨房成绩也算学会菜谱
+if (w.stat) return Math.min(w.goal, S.stats[w.stat] || 0);
+if (w.recipe) {
+if (ROOMS["厨房"].items.some(it => it.rare === "food" && S.opened.includes("厨房/" + it.name))) return 1;
+try { return +(parseInt(localStorage.getItem("oc_best"), 10) >= 8); } catch (e) { return 0; }
+}
+let b = 0; try { b = parseInt(localStorage.getItem(w.best), 10) || 0; } catch (e) {}
+return Math.min(w.goal, b);
+}
+function checkWish() {
+while (S.wish.idx < WISHES.length && wishProg(WISHES[S.wish.idx]) >= WISHES[S.wish.idx].goal) {
+const w = WISHES[S.wish.idx];
+S.wish.idx++; S.wish.rel = Math.min(RELS.length - 1, S.wish.rel + 1);
+addStardust(w.rw); AU.sfx("unlock");
+toast("quest", "心愿达成 · " + w.name, w.line + "（关系「" + RELS[S.wish.rel] + "」· +" + w.rw + "）");
+}
+}
 function checkQuests() {
 for (const q of QUESTS) {
 if (S.quests[q.id]) continue;
@@ -1947,8 +2199,123 @@ AU.sfx("achv");
 	toast("quest", "任务完成", (q.hidden ? "隐藏 · " : "") + q.name + " +" + q.reward);
 }
 }
+checkWish();
+storyAuto();
+storyAuto2();
+checkStory();
 checkAchv();
 save();
+}
+/* 迎新之夜（3A 三阶段切片）：一条闭环章节——开场→探客厅→备晚饭→布置选择→迎新对白→收尾演出 */
+const STORY_BEATS = ["未启", "看看客厅", "备一顿晚饭", "布置客厅", "请小南入座", "圆满"];
+let storyFinaleArmed = false;
+function storyTalk(lines, finale) { closeTalk(); document.body.dataset.cine = "story"; storyFinaleArmed = finale === true ? S.story : (finale || false); AU.sfx("confirm"); dlgQueue = lines.slice(1); dlgEl.classList.add("on"); typeLine(lines[0]); }
+function storyAuto() { // 心愿卷一圆满，章节自动开场（只此一次）
+if (S.story.beat === 2 && !S.story.kitchenAt) { S.story.kitchenAt = Date.now(); save(); }
+if (S.story.beat !== 0 || S.wish.idx < WISH_VOL1) return;
+S.story.beat = 1; save();
+storyTalk([
+"（猫在门口坐得笔直。）今晚有位新住户要来住——一只从南边飞来的小鸟，翅膀还没养好。",
+"客厅得先收拾收拾，晚饭也得是热的。先去客厅看看？",
+]);
+toast("quest", "章节 · 迎新之夜", "第一拍：看看客厅（心愿墙可查章节进度）");
+}
+function checkStory(run) {
+if (S.story.beat !== 2 || !S.story.kitchenAt || !run || run[3] !== 1 ||
+!Number.isSafeInteger(run[4]) || run[4] < S.story.kitchenAt || run[4] > Date.now()) return;
+// 正式班八盘仍可完成旧版玩家正在准备的晚饭。
+if (!(run[0] === "oc-welcome" && run[1] >= 3) && !(run[0] === "oc" && run[1] >= 8)) return;
+S.story.beat = 3; save(); toast("quest", "迎新之夜 · " + STORY_BEATS[3], "晚饭备好了——心愿墙可直接回客厅挑装饰");
+}
+function storyRoom(name) {
+if (name !== "客厅" || S.story.beat !== 1) return;
+S.story.beat = 2; S.story.kitchenAt = Date.now(); save();
+storyTalk([
+"（挂毯刚卷好，沙发还空着半边，灰都擦过了。）",
+"先把晚饭备上——今晚做番茄炒蛋、蛋炒饭和紫菜蛋花汤。厨房备好了菜谱，你跟着订单慢慢来。",
+]);
+toast("quest", "迎新之夜 · " + STORY_BEATS[2], "心愿墙 → 去厨房备晚饭");
+}
+function showWelcomeDecor() {
+openModal(ic("cat") + "布置客厅", "晚饭已经上桌。选好布置，就可以请小南入座。",
+'<div class="q-item"><div class="qt">一串暖灯<span class="qr">夜里亮</span></div><div class="qd">屋檐下连成一排，一盏一盏点亮</div><button class="btn" data-deco="lamp">就它了</button></div>' +
+'<div class="q-item"><div class="qt">柴火壁炉<span class="qr">冬天暖</span></div><div class="qd">噼啪响的那种，全屋都跟着暖</div><button class="btn" data-deco="fire">就它了</button></div>' +
+'<div class="q-item"><div class="qt">先不添啦<span class="qr">家常就好</span></div><div class="qd">屋子本来的样子，就是待客的样子</div><button class="btn" data-deco="none">就这样</button></div>');
+mbox.querySelectorAll("[data-deco]").forEach(b => b.onclick = () => {
+S.story.deco = b.dataset.deco; S.story.beat = 4;
+save(); closeModal(); renderStoryScene(); welcomeAction.focus();
+});
+}
+const welcomeAction = document.getElementById("welcome-action");
+welcomeAction.onclick = () => {
+if (welcomeAction.hidden) return;
+if (S.story.beat === 3) showWelcomeDecor();
+else if (S.story.beat === 4) inviteWelcomeGuest();
+};
+function inviteWelcomeGuest() {
+window.WelcomeTrial?.mark("invite");
+const greeting = {
+lamp: "（暖灯亮起，小南顺着灯光落到靠垫上。）「看得清你的脸了。我们一起吃吧。」",
+fire: "（壁炉轻轻噼啪，小南在沙发上拢了拢翅膀。）「屋里真暖。我们一起吃吧。」",
+none: "（小南在旧靠垫上踩了两步。）「闻到饭香了。就坐这儿吧，我喜欢现在的样子。」"
+};
+storyTalk([greeting[S.story.deco], "「先喝口汤，」猫把碗往它面前推了推，「这个位置以后给你留着。」"], true);
+renderStoryScene();
+dlgEl.tabIndex = -1;
+dlgEl.focus();
+}
+function storyFinale(chapter) { // 进度、回忆、星尘同一次保存；重入和旧对白回调都不能再领。
+if (chapter === S.story2) { // 第二幕：首演之夜
+if (S.story2.beat !== 3 || S.story2.rewarded) return;
+S.story2.beat = 4; S.story2.rewarded = true;
+S.cgs.cg12 = true; fixStats(); setStardust(S.stardust + 30);
+for (let i = 0; i < 6; i++) setTimeout(() => FXC.firework(), i * 480);
+AU.sfx("achv"); AU.sfx("boom"); floatStar(30);
+toast("quest", "首演之夜 · 圆满", "小南的第一场演出，一屋子都是观众（+30 星尘）");
+return;
+}
+if (chapter !== S.story || S.story.beat !== 4 || S.story.rewarded) return;
+S.story.beat = 5; S.story.rewarded = true;
+S.cgs.cg11 = true; fixStats(); setStardust(S.stardust + 30);
+renderStoryScene();
+for (let i = 0; i < 6; i++) setTimeout(() => FXC.firework(), i * 480);
+AU.sfx("achv"); AU.sfx("boom");
+floatStar(30);
+toast("quest", "迎新之夜 · 圆满", "新住户住下了——客厅的灯比昨天亮（+30 星尘）");
+}
+function renderStoryScene() {
+const sc = document.getElementById("r-scene"), art = sc.querySelector("svg.art");
+const living = sc.classList.contains("living") && art;
+const inviting = storyFinaleArmed === S.story;
+welcomeAction.hidden = !living || ![3, 4].includes(S.story.beat) || inviting;
+welcomeAction.textContent = S.story.beat === 4 ? "请小南入座" : "布置客厅";
+if (living) renderWelcomeDecor(art, S.story, inviting);
+}
+/* 首演之夜（故事第二幕）：小南要两支接愿后新练的节目，琴/舞/歌任两样 */
+function storyAuto2() { // 迎新之夜圆满＋乐厢心愿全成，第二幕开场（只此一次）
+if (S.story2.beat !== 0 || S.story.beat < 5 || S.wish.idx < WISHES.length) return;
+S.story2.beat = 2; S.story2.showAt = Date.now(); save();
+storyTalk([
+"（小南在窗台上蹦了两下，羽毛都抖亮了。）",
+"「今晚……我想开一场首演。」猫翻译道，「要两支排练过的节目——琴、舞、歌里挑两样，接了愿以后新练的才算数。」",
+]);
+toast("quest", "章节 · 首演之夜", "排练两场不同节目（琴/舞/歌任两样，新练的才算）");
+}
+function checkStory2(run) { // 只认接愿后新开的班：两支不同节目的通关局
+if (S.story2.beat !== 2 || !run || !["pn", "dc", "vo"].includes(run[0]) || run[3] !== 1 || !Number.isSafeInteger(run[4]) || run[4] < S.story2.showAt || run[4] > Date.now()) return;
+const got = S.story2.set.split(",").filter(Boolean);
+if (!got.includes(run[0])) got.push(run[0]);
+S.story2.set = got.join(","); save();
+if (got.length >= 2) { S.story2.beat = 3; toast("quest", "首演之夜 · 排练够了", "两支节目都练成了——回客厅，开演"); }
+else toast("info", "首演之夜 · 排练 +1", "还差一支不同的节目（琴/舞/歌任选）");
+}
+function storyRoom2(name) { // 进客厅开演：首演对白读完放烟花入册
+if (name !== "客厅" || S.story2.beat !== 3) return;
+storyTalk([
+"（客厅的灯暗下来，只留一束光。小南站上谱架，深吸一口气。）",
+"（琴键、舞步、和声——哪一样都是这个家练出来的。）",
+"「唱吧，」猫把尾巴收好，「这一屋子都是你的观众。」",
+], S.story2);
 }
 function checkAchv() {
 for (const a of ACHV) {
@@ -1977,7 +2344,7 @@ const el = document.createElement("div");
 el.className = "toast trophy";
 el.innerHTML = '<span class="cup cup-' + a.t + '">' + ic("trophy") + "</span>" +
 "<div><div class=\"tt\">奖杯解锁 · " + TIER[a.t] + "</div><div class=\"tm\">" + a.name + "</div></div>";
-box.appendChild(el);
+box.replaceChildren(el);
 setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 320); }, 3800);
 }
 function showHall() {
@@ -1994,17 +2361,18 @@ return '<div class="cup-card' + (ok ? "" : " lock") + '" data-cup="' + a.id + '"
 function unlockCG(id) {
 if (S.cgs[id]) return;
 const cg = CGS.find(c => c.id === id);
-S.cgs[id] = true; S.stats.cgs++;
+S.cgs[id] = true; S.stats.cgs = cgGot();
 AU.sfx("unlock");
 toast("cg", "回忆解锁", cg.name);
 checkQuests(); save();
 }
 function track(stat, payload) {
 if (stat === "room") {
-if (!S.visited.includes(payload)) { S.visited.push(payload); S.stats.rooms = S.visited.length; }
+if (!S.visited.includes(payload)) S.visited.push(payload);
+fixStats();
 const cgByRoom = { "卧室":"cg1", "书房":"cg3", "阳台":"cg5", "厨房":"cg6" };
 if (cgByRoom[payload]) unlockCG(cgByRoom[payload]);
-if (S.visited.length >= 6) unlockCG("cg7");
+if (S.stats.rooms >= NROOM) unlockCG("cg7");
 } else if (stat === "item") {
 if (!S.opened.includes(payload)) {
 S.opened.push(payload); S.stats.items = S.opened.length;
@@ -2020,23 +2388,107 @@ checkQuests();
 }
 const mask = document.getElementById("modal-mask");
 const mbox = document.getElementById("modal-box");
-let modalCloser = null;
+let modalCloser = null, modalOpener = null;
+function modalFocusables() { // 弹窗里可聚焦的家当：Tab 约束在框内
+return [...mbox.querySelectorAll("button,[href],input,select,textarea")].filter(el => !el.disabled && el.tabIndex !== -1 && el.offsetParent !== null);
+}
 function openModal(titleHTML, sub, bodyHTML, onClose) {
 mbox.innerHTML = "<h3>" + titleHTML + "</h3>" + (sub ? '<div class="msub">' + sub + "</div>" : "") +
 '<div id="m-body">' + bodyHTML + "</div>" +
 '<div class="mfoot"><button class="btn ghost" id="m-close">关上</button></div>';
 mask.classList.add("open");
 modalCloser = onClose || null;
+modalOpener = document.activeElement; // 关上后回原处
+mbox.setAttribute("role", "dialog");
+mbox.setAttribute("aria-modal", "true");
+const h3 = mbox.querySelector("h3");
+if (h3) mbox.setAttribute("aria-label", h3.textContent.trim());
 document.getElementById("m-close").onclick = closeModal;
+const f = modalFocusables();
+if (f.length) f[0].focus();
 AU.sfx("whoosh");
 }
 function closeModal() {
 if (!mask.classList.contains("open")) return;
 mask.classList.remove("open");
 AU.sfx("cancel");
+const op = modalOpener; modalOpener = null;
+if (op && document.contains(op)) { try { op.focus(); } catch (e) {} }
 if (modalCloser) { const f = modalCloser; modalCloser = null; f(); }
 }
 mask.addEventListener("click", e => { if (e.target === mask) closeModal(); });
+document.addEventListener("keydown", e => {
+if (e.key !== "Tab" || !mask.classList.contains("open")) return;
+const f = modalFocusables();
+if (!f.length) return;
+const a = document.activeElement;
+if (!f.includes(a)) { e.preventDefault(); f[0].focus(); return; } // 焦点溜到遮罩下，拉回来
+if (e.shiftKey && a === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+else if (!e.shiftKey && a === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+});
+function showWish() {
+if (dlgOpen()) closeTalk();
+const fin = S.wish.idx >= WISHES.length;
+const rows = WISHES.map((w, i) => {
+const ok = i < S.wish.idx, cur = i === S.wish.idx, p = wishProg(w);
+const cls = "q-item" + (ok ? " done" : "") + (!ok && !cur ? " hidden-q" : "");
+return (w.vol === 2 && i === WISH_VOL1 && S.wish.idx >= WISH_VOL1
+? '<div class="hint" style="text-align:center;padding:9px 0 2px">—— 卷二 · 乐厢开张 ——</div>' : "") + // 卷一圆满才开卷，分隔行不顶卡片
+'<div class="' + cls + '"><div class="qt">' + (ok ? ic("list-todo") : "") + (ok || cur ? w.name : "？？？") +
+'<span class="qr">+' + w.rw + " " + ic("sparkles") + "</span></div>" +
+'<div class="qd">' + (ok || cur ? w.desc : "达成上一愿后揭开") + "</div>" +
+(cur ? '<div class="qbar"><i style="width:' + (p / w.goal * 100) + '%"></i></div><div class="qmark">' + p + " / " + w.goal + '</div><button class="btn" id="wish-continue">' + (i === 0 ? "去下一间房" : i === 1 ? "去厨房翻菜谱" : "去完成当前心愿") + "</button>"
+: ok ? '<div class="qmark">已完成 · ' + w.line + "</div>" : "") + "</div>";
+}).join("");
+const chap = S.story.beat === 0 ? "待启（心愿卷一圆满后开场）" : S.story.beat >= 5 ? "圆满" : STORY_BEATS[S.story.beat];
+const ch2 = S.story2.beat === 0 ? (S.story.beat >= 5 && S.wish.idx >= WISHES.length ? "待启" : "未启（需迎新圆满＋乐厢心愿全成）") : S.story2.beat >= 4 ? "圆满" : ["", "", "排练中 · 已练 " + S.story2.set.split(",").filter(Boolean).length + "/2", "排练够了，回客厅开演", "圆满"][S.story2.beat];
+const guide = ["", "先去客厅，和猫一起为小南收拾住处。", "厨房免费开放。按顺序做好三道迎新菜，再回来布置客厅。", "三道菜已经上桌。回客厅挑一种免费布置。", "布置好了。在餐桌旁请小南入座，聊完后收下回忆和 30 星尘。", "小南已经住下，迎新回忆也已入册。"];
+const action = ["", "去看看客厅", "去厨房备晚饭", "回客厅挑装饰", "回客厅招呼小南", "看看新住户"];
+const chapter = S.story.beat ? '<div class="q-item"><div class="qt">迎新之夜 · ' + chap + '</div><div class="qd">' + guide[S.story.beat] + '</div><button class="btn" id="story-continue">' + action[S.story.beat] + '</button></div>' : "";
+const chapter2 = S.story2.beat === 2 || S.story2.beat === 3 ? '<div class="q-item"><div class="qt">首演之夜 · ' + (S.story2.beat === 2 ? "排练中" : "开演") + '</div><div class="qd">' + (S.story2.beat === 2 ? "琴/舞/歌里再练一支不同的节目（接愿后新练的才算）。" : "排练够了——进客厅，替小南把灯调暗。") + '</div>' + (S.story2.beat === 3 ? '<button class="btn" id="story2-continue">回客厅开演</button>' : "") + '</div>' : S.story2.beat >= 4 ? '<div class="q-item done"><div class="qt">首演之夜 · 圆满</div><div class="qd">小南的第一场演出已入册（陈列馆 cg12）。</div></div>' : "";
+openModal(ic("cat") + "住户心愿 · " + RELS[S.wish.rel],
+(fin ? "两卷心愿全部达成，住户把你当家人了" : "还差 " + (WISHES.length - S.wish.idx) + " 愿 · 心愿达成关系升温") +
+'<br>章节 · 迎新之夜：' + chap + ' · 首演之夜：' + ch2, chapter + chapter2 + rows);
+const next = document.getElementById("story-continue");
+if (next) next.onclick = () => { closeModal(); if (S.story.beat === 2) openRoomPage("厨房/胡闹厨房.html", innerWidth / 2, innerHeight / 2); else enterRoom("客厅"); };
+const next2 = document.getElementById("story2-continue");
+if (next2) next2.onclick = () => { closeModal(); enterRoom("客厅"); };
+const wishNext = document.getElementById("wish-continue");
+if (wishNext) wishNext.onclick = () => {
+const i = S.wish.idx;
+if (i === 0) {
+const room = Object.keys(ROOMS).find(n => !ROOMS[n].hidden && !S.visited.includes(n));
+if (room) { closeModal(); enterRoom(room); }
+return;
+}
+if (i === 1) { closeModal(); enterRoom("厨房"); toast("info", "去翻菜谱", "点开厨房里任意一道菜谱，今晚开火更有底气"); return; }
+const gate = ["", "oc", "rg", "mm", "pn", "dc", "vo"][i];
+const room = Object.keys(ROOMS).find(n => ROOMS[n].items.some(it => it.gate === gate));
+const item = room && ROOMS[room].items.find(it => it.gate === gate);
+if (!item) return;
+closeModal();
+if (!S.owned.includes(gate)) {
+showShop();
+const buy = mbox.querySelector('[data-buy="' + gate + '"]');
+if (buy) { buy.scrollIntoView({ block:"center" }); buy.focus(); }
+toast("lock", item.name + " 还锁着", "在商城解锁后就能完成这愿");
+} else { track("item", room + "/" + item.name); openRoomPage(item.link, innerWidth / 2, innerHeight / 2); }
+};
+}
+const goalButton = document.getElementById("next-goal");
+goalButton.addEventListener("click", showWish);
+function updateGoalButton() {
+const beat = S.story.beat, premiere = S.story2.beat, wish = WISHES[S.wish.idx];
+let label = "查看住户心愿";
+if (beat > 0 && beat < 5) label = "迎新之夜 · " + STORY_BEATS[beat];
+else if (premiere === 2) label = "首演之夜 · 排练 " + (S.story2.set ? S.story2.set.split(",").length : 0) + "/2";
+else if (premiere === 3) label = "首演之夜 · 回客厅开演";
+else if (wish) label = "心愿 · " + wish.name + (S.wish.idx === 0 ? " " + wishProg(wish) + "/" + wish.goal : "");
+if (goalButton.textContent !== label) goalButton.textContent = label;
+}
+function canOpenGame(gate) {
+return S.owned.includes(gate) || (gate === "oc" && S.story.beat === 2);
+}
 function showQuests() {
 const rows = QUESTS.map(q => {
 const done = !!S.quests[q.id];
@@ -2058,7 +2510,7 @@ const owned = S.owned.includes(it.id);
 let btn;
 if (!owned) {
 const poor = S.stardust < it.price;
-btn = '<button class="sb' + (poor ? " poor" : "") + '" data-buy="' + it.id + '">' + ic("sparkles") + it.price + "</button>";
+btn = '<button class="sb' + (poor ? " poor" : "") + '" data-buy="' + it.id + '">' + costHTML(it.price) + "</button>";
 } else if (it.kind === "theme") {
 const on = S.equipped.theme === it.id;
 btn = '<button class="sb' + (on ? " equip" : " owned") + '" data-equip="' + it.id + '">' + (on ? "使用中" : "换上") + "</button>";
@@ -2077,19 +2529,25 @@ return '<div class="s-card"><div class="se">' + ic(it.icon, "font-size:32px") + 
 function showShop(keepCat) {
 if (!keepCat) shopCat = "all";
 const list = SHOP.filter(i => shopCat === "all" || catOf(i.kind) === shopCat);
-openModal(ic("shopping-bag") + "星尘商城", "娱乐积分 · 非萌币",
+openModal(ic("shopping-bag") + "星尘商城", "娱乐积分 · 非萌币" + balHTML(),
 '<div class="shop-tabs">' + SHOPCATS.map(c =>
 '<button class="stab' + (c.id === shopCat ? " on" : "") + '" data-cat="' + c.id + '">' + c.n + "</button>").join("") + "</div>" +
 '<div class="shop-grid">' + list.map(shopCardHTML).join("") + "</div>" +
-'<div class="hint">同类商品，后买的换前买的。</div>');
+'<div class="hint">小游戏完成后回家自动领星尘：每局 1–10（零分不计），每日最多 60。<br>同类商品，后买的换前买的。</div>');
 }
 function openPack(it, done) {
 const box = document.getElementById("pack-wrap");
+const opener = document.activeElement;
 const leg = it.kind === "pet" || it.kind === "theme";
-box.innerHTML = '<div class="pack-card" id="pack-card">' + ic("mark", "font-size:46px") + "</div>";
+box.setAttribute("role", "dialog");
+box.setAttribute("aria-modal", "true");
+box.setAttribute("aria-label", "领取商品");
+box.onkeydown = e => { if (e.key === "Tab") e.preventDefault(); e.stopPropagation(); };
+box.innerHTML = '<button class="pack-card" id="pack-card" aria-label="打开包装">' + ic("mark", "font-size:46px") + "</button>";
 box.classList.add("on");
 AU.sfx("fwup");
 const card = document.getElementById("pack-card");
+card.focus();
 card.addEventListener("click", function burst() {
 card.removeEventListener("click", burst);
 AU.sfx("unlock"); AU.sfx("coin");
@@ -2101,15 +2559,16 @@ setTimeout(() => FXC.burst(x - 70, y + 24), 130);
 setTimeout(() => FXC.burst(x + 70, y - 12), 260);
 card.classList.add("burst");
 setTimeout(() => {
-box.innerHTML = '<div class="pack-item' + (leg ? " leg" : "") + '" id="pack-item">' +
-ic(it.icon, "font-size:54px") + '<div class="pi-name">' + it.name + "</div></div>";
+box.innerHTML = '<button class="pack-item' + (leg ? " leg" : "") + '" id="pack-item" aria-label="收下' + it.name + '">' +
+ic(it.icon, "font-size:54px") + '<span class="pi-name">' + it.name + "</span></button>";
 AU.sfx(leg ? "achv" : "confirm");
 if (leg) { setTimeout(() => FXC.firework(), 220); setTimeout(() => FXC.firework(), 740); }
 const el = document.getElementById("pack-item");
+el.focus();
 el.addEventListener("click", () => {
 AU.sfx("whoosh");
 el.classList.add("fly");
-setTimeout(() => { box.classList.remove("on"); box.innerHTML = ""; if (done) done(); }, 620);
+setTimeout(() => { box.classList.remove("on"); box.innerHTML = ""; opener?.focus(); if (done) done(); }, 620);
 }, { once: true });
 }, 620);
 });
@@ -2123,10 +2582,9 @@ mbox.addEventListener("click", e => {
 	const toyBtn = e.target.closest && e.target.closest("[data-toy]");
 if (buyBtn) {
 const it = SHOP.find(i => i.id === buyBtn.dataset.buy);
-if (!it || S.owned.includes(it.id) || S.stardust < it.price) { AU.sfx("cancel"); return; }
+if (!it || S.owned.includes(it.id)) { AU.sfx("cancel"); return; }
+if (S.stardust < it.price) { poorToast(it.price); return; }
 if (it.kind === "toy" && !S.owned.includes("cat")) { AU.sfx("cancel"); toast("info", it.name, "得先接猫回家"); return; }
-setStardust(S.stardust - it.price);
-floatStar(-it.price);
 S.owned.push(it.id); S.stats.buys++;
 AU.sfx("coin");
 if (it.kind === "theme") { S.equipped.theme = it.id; applyTheme(); }
@@ -2136,8 +2594,10 @@ if (it.kind === "theme") { S.equipped.theme = it.id; applyTheme(); }
 			if (it.id === "firework") document.getElementById("btn-firework").style.display = "";
 			if (it.id === "mail") document.getElementById("mailbox").classList.add("on");
 			if (it.id === "doorbell") document.getElementById("doorbell").classList.add("on");
+			setStardust(S.stardust - it.price);
+			floatStar(-it.price);
 			closeModal();
-			openPack(it, () => { if (S.owned.length >= SHOP.length + 1) unlockCG("cg8"); checkQuests(); save(); });
+			openPack(it, () => { if (SHOP.every(x => S.owned.includes(x.id))) unlockCG("cg8"); checkQuests(); save(); });
 		} else if (equipBtn) {
 		const eid = equipBtn.dataset.equip;
 		const off = S.equipped.theme === eid && eid !== "theme-warm";
@@ -2171,7 +2631,8 @@ mbox.addEventListener("click", e => {
 const ren = e.target.closest ? e.target.closest("[data-ren]") : null;
 if (ren) {
 const r2 = RENOV.find(x => x.id === ren.dataset.ren);
-if (!r2 || S.renov[r2.id] || S.stardust < r2.cost) { AU.sfx("cancel"); return; }
+if (!r2 || S.renov[r2.id]) { AU.sfx("cancel"); return; }
+if (S.stardust < r2.cost) { poorToast(r2.cost); return; }
 setStardust(S.stardust - r2.cost); floatStar(-r2.cost);
 S.renov[r2.id] = 1; S.stats.buys++;
 closeModal();
@@ -2199,7 +2660,7 @@ AU.sfx("confirm");
 openModal(ic("image") + cg.name, "",
 '<div class="cg-view-art" data-cgid="' + cg.id + '">' + cg.art + "</div>" +
 '<div class="cg-quote">' + cg.quote + "</div>" +
-'<div class="cg-meta">' + cg.date + " · 小Z 的小家 · ←→ 翻页</div>");
+'<div class="cg-meta">' + cg.date + " · Z 的小家 · ←→ 翻页</div>");
 }
 document.addEventListener("mousemove", e => { // 回忆馆卡片：跟手镭射与玻璃音
 const c = e.target.closest && e.target.closest(".cg-card:not(.locked)");
@@ -2240,6 +2701,19 @@ openModal(ic("coins") + "小金库 · 对账", "快照生成于 2026-10-12 · �
 '<div class="ledger-line">合计待收 <b>251 萌币</b>（全验收则余额 +236）</div>' +
 '<div class="hint">静态快照 · 眼见为实，请到书房查账本</div>');
 }
+function exportSave() { // 导出前先把子系统家当拍进主档，一串码搬走整间屋
+let ext, houseOnly = false;
+try { ext = snapExt(); }
+catch (e) { if (!memOnly) { toast("info", "导出失败", "浏览器未能读取全部房间进度，请检查存储权限后重试"); return; } ext = {}; houseOnly = true; }
+const code = HouseSaveFormat.encode(HouseSaveFormat.pack(S, ext, houseOnly ? "house" : "full"));
+openModal(ic("sparkles") + "存档导出", houseOnly ? "仅主屋进度可备份；子游戏、阅读等记录未包含，导入此码会清空那些记录" : "复制这串码收进备忘录，即可备份或搬进度",
+'<textarea class="hint" style="width:100%;height:96px;resize:none" readonly>' + code + "</textarea>" +
+'<div class="mfoot" style="margin-top:10px"><button class="btn" id="copy-save">复制</button></div>');
+document.getElementById("copy-save").onclick = () => {
+try { navigator.clipboard.writeText(code).then(() => toast("coin", "已复制", "存档码进了剪贴板")).catch(() => {}); }
+catch (e) {}
+};
+}
 function showSettings() {
 const st = S.settings;
 const tg = (k, label) => '<div class="set-row"><span>' + label + "</span>" +
@@ -2247,7 +2721,7 @@ const tg = (k, label) => '<div class="set-row"><span>' + label + "</span>" +
 const themes = ["theme-warm"].concat(SHOP.filter(i => i.kind === "theme").map(i => i.id));
 const ownedThemes = themes.filter(t => S.owned.includes(t));
 openModal(ic("settings") + "设置", "",
-tg("sfx", "音效") + tg("bgm", "背景音乐") + tg("reduceMotion", "减少动画") +
+tg("sfx", "音效") + tg("bgm", "背景音乐") + tg("reduceMotion", "减少动画") + tg("shake", "震动效果") +
 '<div class="set-row"><span>音效音量</span><input type="range" min="0" max="1" step="0.05" value="' + st.sfxVol + '" data-vol="sfxVol"></div>' +
 '<div class="set-row"><span>音乐音量</span><input type="range" min="0" max="1" step="0.05" value="' + st.bgmVol + '" data-vol="bgmVol"></div>' +
 '<div class="set-row"><span>全屋主题</span><select data-theme-sel>' +
@@ -2265,16 +2739,7 @@ ownedThemes.map(t => '<option value="' + t + '"' + (S.equipped.theme === t ? " s
 '<button class="danger-btn" id="imp-save">导入</button>' +
 '<button class="danger-btn" id="reset-save">清空</button></span></div>');
 const es = document.getElementById("exp-save");
-if (es) es.onclick = () => {
-const code = btoa(String.fromCharCode.apply(0, new TextEncoder().encode(JSON.stringify(S))));
-openModal(ic("sparkles") + "存档导出", "复制这串码收进备忘录，即可备份或搬进度",
-'<textarea class="hint" style="width:100%;height:96px;resize:none" readonly>' + code + "</textarea>" +
-'<div class="mfoot" style="margin-top:10px"><button class="btn" id="copy-save">复制</button></div>');
-document.getElementById("copy-save").onclick = () => {
-try { navigator.clipboard.writeText(code).then(() => toast("coin", "已复制", "存档码进了剪贴板")).catch(() => {}); }
-catch (e) {}
-};
-};
+if (es) es.onclick = exportSave;
 const im = document.getElementById("imp-save");
 if (im) im.onclick = () => {
 openModal(ic("search") + "存档导入", "粘贴存档码，进度即恢复",
@@ -2284,15 +2749,13 @@ document.getElementById("do-imp").onclick = () => {
 try {
 const raw = document.querySelector("#m-body textarea").value.trim();
 const p = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(raw), c => c.charCodeAt(0))));
-if (typeof p.stardust !== "number" || !p.stats) throw 0;
-S = Object.assign(defaultState(), p);
-S.settings = Object.assign(defaultState().settings, p.settings || {});
-S.stats = Object.assign(defaultState().stats, p.stats || {});
-S.opened = (S.opened||[]).map(k => k.replace(/\.py\b/g, ""));
-save(); applyTheme(); applySettingsUI(); setStardust(S.stardust); renderRooms();
+const next = readState(HouseSaveFormat.unpack(p));
+S = HouseSaveTxn.commit(localStorage, SAVE_KEY, EXT_KEYS, next);
+closeTalk(); fixStats(); memOnly = false; saveFail = false; recoveryPending = false;
+save(); applyTheme(); applySettingsUI(); setStardust(S.stardust); renderRooms(); renderStoryScene();
 AU.applyVol(); closeModal();
-toast("coin", "导入成功", "星尘 " + S.stardust + " · CG " + Object.keys(S.cgs).length + "/" + CGS.length);
-} catch (e) { AU.sfx("cancel"); toast("info", "导入失败", "存档码不完整或已损坏"); }
+toast("coin", "导入成功", "星尘 " + S.stardust + " · CG " + cgGot() + "/" + CGS.length + (p.format === "zhouse" && p.scope === "house" ? " · 仅主屋备份，子房间记录已清空" : " · 含子系统进度"));
+} catch (e) { if (e.message === "pending") { memOnly = true; recoveryPending = true; updTitleSave(); } AU.sfx("cancel"); toast("info", "导入失败", e.message === "storage" ? "存储写入失败，原有进度已保留" : e.message === "pending" ? "存储中断；重开页面将继续完成导入" : "存档码不完整或已损坏"); }
 };
 };
  const mf = document.getElementById("music-file");
@@ -2308,10 +2771,11 @@ toast("coin", "导入成功", "星尘 " + S.stardust + " · CG " + Object.keys(S
  const rs = document.getElementById("reset-save");
 if (rs) rs.onclick = () => {
 if (rs.dataset.armed) {
-try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
-S = defaultState(); save(); applyTheme(); applySettingsUI(); setStardust(S.stardust); renderRooms();
-closeModal(); toast("info", "存档已清空", "从头再来");
-} else { rs.dataset.armed = "1"; rs.textContent = "再点一次确认"; AU.sfx("cancel"); }
+try { S = HouseSaveTxn.commit(localStorage, SAVE_KEY, EXT_KEYS, defaultState()); }
+catch (e) { if (e.message === "pending") { memOnly = true; recoveryPending = true; updTitleSave(); } toast("info", "清空失败", e.message === "pending" ? "存储中断；重开页面将继续完成清空" : "存储写入失败，原有进度已保留"); return; }
+closeTalk(); memOnly = false; saveFail = false; recoveryPending = false; applyTheme(); applySettingsUI(); setStardust(S.stardust); renderRooms(); renderStoryScene();
+closeModal(); toast("info", "已全部清空", "主屋与小游戏、阅读、温室进度从头再来");
+} else { rs.dataset.armed = "1"; rs.textContent = "再点一次 · 全屋清空"; AU.sfx("cancel"); }
 };
 }
 mbox.addEventListener("input", e => {
@@ -2334,13 +2798,20 @@ S.stats.dj++; checkQuests();
 document.getElementById("btn-music").classList.toggle("off", !S.settings.bgm);
 }
 document.body.classList.toggle("reduce-motion", S.settings.reduceMotion);
+if (k === "shake") applyShakePref();
 AU.applyVol(); save(); AU.sfx("click");
 t.classList.toggle("on", S.settings[k]);
 });
+/* 震动偏好写进共享键，各房间小游戏读同一份；默认关 */
+function applyShakePref() {
+try { localStorage.setItem("zhouse_shake", S.settings.shake ? "1" : "0"); } catch (e) {}
+if (!S.settings.shake) document.body.classList.remove("shake");
+}
 function applyTheme() {
 document.body.dataset.theme = S.equipped.theme || "theme-warm";
 document.body.dataset.wx = S.equipped.weather || "none";
 document.body.classList.toggle("reduce-motion", !!S.settings.reduceMotion);
+applyShakePref();
 }
 function applySettingsUI() {
 document.getElementById("btn-music").classList.toggle("off", !S.settings.bgm);
@@ -2382,13 +2853,16 @@ const FLOORS = [
 const DBOXES = [];   /* 各房 3D 盒，供点选投影定位 */
 const FURN = {
 "客厅": [[26, 54, 22, "#8a5a2e"], [114, 32, 26, "#141c2c"], [78, 26, 12, "#b57a42"], [152, 16, 22, "#4a8a5c"]],
-"厨房": [[40, 38, 26, "#5a6480"], [40, 32, 15, "#f2e8d5", 44], [92, 44, 12, "#8a6a3e"]],
-"卧室": [[26, 54, 22, "#5a6480"], [88, 16, 20, "#f2e0c8"], [116, 28, 26, "#6a4a24"]],
-"书房": [[28, 44, 34, "#6a4a24"], [58, 32, 20, "#8a6a3e"], [94, 24, 16, "#5a6480"]],
-"阳台": [[12, 16, 18, "#4a8a5c"], [48, 16, 18, "#5aa06a"], [82, 14, 16, "#6ab07a"]],
+"厨房": [[40, 38, 26, "#5a6480"], [40, 32, 15, "#f2e8d5", 44], [84, 36, 12, "#8a6a3e"]],
+"卧室": [[10, 54, 22, "#5a6480"], [68, 16, 20, "#f2e0c8"], [88, 20, 26, "#6a4a24"]],
+"书房": [[8, 38, 34, "#6a4a24"], [50, 26, 20, "#8a6a3e"], [80, 16, 16, "#5a6480"]],
+"阳台": [[10, 16, 18, "#4a8a5c"], [36, 16, 18, "#5aa06a"], [62, 14, 16, "#6ab07a"]],
 "健身房": [[8, 36, 22, "#6a6278"], [50, 34, 16, "#241a10"]],
 "储藏室": [[40, 24, 17, "#8a7458"], [86, 20, 14, "#a08a64"], [176, 26, 16, "#8a7458"]],
 "阁楼": [[96, 26, 18, "#6a5a3e"], [176, 34, 10, "#4a4258"]],
+"钢琴房": [[28, 56, 24, "#141414"], [28, 8, 8, "#f2e8d5", 52], [10, 10, 36, "#6a4a24"]],
+"舞蹈房": [[8, 66, 4, "#c9a15f", 46], [8, 3, 40, "#8a5a2e"], [70, 20, 20, "#8a4a5c"]],
+"歌唱房": [[38, 5, 32, "#4a4258"], [31, 17, 11, "#c8cede", 38], [58, 18, 22, "#6a5a3e"]],
 };
 const DECAL = {
 "客厅": '<i class="ddoor"></i><svg class="dstair" viewBox="0 0 64 48"><path d="M3 45h11V35h10V25h10V15h10V5h9" fill="none" stroke="#5f4326" stroke-width="6" stroke-linejoin="round"/><path d="M3 45h11V35h10V25h10V15h10V5h9" fill="none" stroke="#9a744a" stroke-width="2"/></svg>'
@@ -2401,8 +2875,8 @@ let win = "";
 if (y < 0) win = Array.from({ length: w > 100 ? 2 : 1 }, (_, i) =>
 '<i class="dwin' + (Math.random() < .3 ? " dflick" : "") + '" style="right:' + (16 + i * 26) + 'px;top:16px"></i>').join("");
 return '<div class="droom' + (S.visited.includes(name) ? " seen" : "") + (cls ? " " + cls : "") +
-'" data-room="' + name + '" tabindex="0" style="--w:' + w + 'px;--h:' + h + 'px;transform:translate3d(' + x + 'px,' + y + 'px,75px)">' +
-'<div class="df"></div><div class="dc"></div><div class="dl"></div><div class="drt"></div>' +
+'" data-room="' + name + '" role="button" aria-label="进入' + name + '" tabindex="0" style="--w:' + w + 'px;--h:' + h + 'px;transform:translate3d(' + x + 'px,' + y + 'px,75px)">' +
+'<div class="df"></div><div class="dl"></div><div class="drt"></div>' +
 '<div class="dbk"><span class="dtag">' + name + "</span>" + win + furnOf(name) + (DECAL[name] || "") + "</div>" +
 (name === "阳台" ? '<i class="drail"></i>' : "") + "</div>";
 }
@@ -2410,19 +2884,21 @@ function renderRooms() {
 DBOXES.length = 0;
 const H = ['<i class="dshadow"></i><div class="dground"><i class="gpath"></i><i class="gbush b1"></i><i class="gbush b2"></i></div>'];
 for (const row of FLOORS) for (const f of row) H.push(drHTML.apply(null, f));
-H.push(drHTML("健身房", -244, 92, 0, 64));
+H.push(drHTML("健身房", -244, 92, 22, 64));
+H.push(drHTML("钢琴房", 152, 92, 22, 64));   /* 右厢音乐塔：与左厢健身房对称 */
+H.push(drHTML("舞蹈房", 152, 92, -42, 64));
+H.push(drHTML("歌唱房", 152, 92, -106, 64));
 H.push(drHTML("储藏室", -150, 300, 86, 40, "deep"));
-const loft = S.renov["rv-loft"];
-H.push('<div class="dloft' + (loft ? " un" : "") + '" data-loft="1" tabindex="0" ' +
-'style="--w:300px;--h:40px;transform:translate3d(-150px,-212px,75px)">' +
-'<div class="df"></div><div class="dl"></div><div class="drt"></div>' +
-'<div class="dbk"><span class="dtag">F2 · 阁楼</span>' + (loft ? furnOf("阁楼") : "") +
-'<i class="lock">' + ic(loft ? "moon" : "lock") + "</i></div></div>");
-H.push('<div class="dge gL"></div><div class="dge gR"></div><div class="drf drfF"></div><div class="drf drfB"></div><div class="dchm"></div>');
+const loft = !!S.renov["rv-loft"];
+H.push(drHTML("阁楼", -150, 300, -126, 40, loft ? "" : "ghost")); // 屋顶常掀：阁楼常驻，没装修的先看虚影
+H.push('<div class="droof" style="--roof-y:-176px"><div class="dge gL"></div><div class="dge gR"></div><div class="drf drfF"></div><div class="drf drfB"></div><div class="dchm"></div></div>');
 const dh = document.getElementById("dhouse");
 dh.innerHTML = H.join("");
+dstage.classList.add("lft");
+document.getElementById("d-loft").textContent = loft ? "走进阁楼" : "阁楼 · 待装修";
 if (!dprobe) {
 dprobe = document.createElement("i");
+dprobe.className = "dprobe";
 dprobe.style.cssText = "position:absolute;pointer-events:none";
 }
 dh.appendChild(dprobe);   /* 点选定位探针：渲染重建后重挂 */
@@ -2453,12 +2929,12 @@ if (pos && neg) return false;
 return true;
 }
 var DQ = null;
-/* 真 z 平面：房盒世界 z=75..-75（后墙 -75、地板 y0 面 z 75..-75）；分层 后墙>地板>侧墙，同层取近 */
+/* 后墙 z=-75、地板 y1；分层后墙>地板>侧墙，同层取近 */
 function dollRoomAt(x, y) {
 if (!dprobe) return null;
-if (!DQ) DQ = DBOXES.map(b => {
+if (!DQ) DQ = DBOXES.filter(b => b.name !== "阁楼" || S.renov["rv-loft"] || dhouse.classList.contains("lfd")).map(b => { // 合顶时虚影阁楼不占点选
 const bk = [projPt(b.x0, b.y0, -75), projPt(b.x1, b.y0, -75), projPt(b.x1, b.y1, -75), projPt(b.x0, b.y1, -75)];
-const fl = [projPt(b.x0, b.y0, 75), projPt(b.x1, b.y0, 75), projPt(b.x1, b.y0, -75), projPt(b.x0, b.y0, -75)];
+const fl = [projPt(b.x0, b.y1, 75), projPt(b.x1, b.y1, 75), projPt(b.x1, b.y1, -75), projPt(b.x0, b.y1, -75)];
 const sl = [projPt(b.x0, b.y0, 75), projPt(b.x0, b.y1, 75), projPt(b.x0, b.y1, -75), projPt(b.x0, b.y0, -75)];
 const sr = [projPt(b.x1, b.y0, 75), projPt(b.x1, b.y1, 75), projPt(b.x1, b.y1, -75), projPt(b.x1, b.y0, -75)];
 const c0 = projPt((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, 0);
@@ -2496,17 +2972,33 @@ if (!tap) return;
 const el = document.elementFromPoint(e.clientX, e.clientY);
 const winEl = el && el.closest(".dwin");
 if (winEl) { winEl.classList.toggle("off"); AU.sfx("puff"); return; }
-const loft = el && el.closest(".dloft");
-if (loft) { AU.sfx("click"); if (S.renov["rv-loft"]) enterRoom("阁楼", e.clientX, e.clientY); else showRenov("阁楼"); return; }
-if (el && el.closest(".drf,.dchm")) { AU.sfx("door"); dhouse.classList.toggle("lfd"); return; }
+if (el && el.closest(".drf,.dchm")) { // 掀开态屋面悬在半空：点击穿透进下方房间；点空处才合顶
+const thru = dhouse.classList.contains("lfd") ? dollRoomAt(e.clientX, e.clientY) : null;
+if (thru) enterRoom(thru.name, e.clientX, e.clientY); else toggleRoof();
+return;
+}
 const box = dollRoomAt(e.clientX, e.clientY);   /* 3D 盒投影定位，不靠面片命中 */
 if (box) enterRoom(box.name, e.clientX, e.clientY);
 });
 dstage.addEventListener("keydown", e => {
-if (e.key !== "Enter") return;
+if (e.key !== "Enter" && e.key !== " ") return;
 const r = e.target.closest && e.target.closest(".droom");
-if (r) enterRoom(r.dataset.room, innerWidth / 2, innerHeight / 2);
+if (r) { e.preventDefault(); enterRoom(r.dataset.room, innerWidth / 2, innerHeight / 2); }
 });
+function syncRoof() {
+const open = dhouse.classList.contains("lfd"), b = document.getElementById("d-roof");
+b.textContent = open ? "合上屋顶" : "掀开屋顶";
+b.setAttribute("aria-expanded", open);
+}
+function toggleRoof() {
+AU.sfx("door");
+dhouse.classList.toggle("lfd");
+S.settings.roofOpen = dhouse.classList.contains("lfd"); save(); // 掀不掀顶，住户说了算，下次进门照旧
+DQ = null; // 开合改变阁楼虚影可点性，投影缓存作废重建
+syncRoof();
+}
+document.getElementById("d-roof").onclick = toggleRoof;
+document.getElementById("d-loft").onclick = () => S.renov["rv-loft"] ? enterRoom("阁楼") : showRenov("阁楼");
 const DINFO_TIP = "拖动转一转 · 点屋顶开合 · 点房间进门";
 let dAim = "";
 function setAim(n) {
@@ -2521,10 +3013,13 @@ const rm = ROOMS[n];
 dinfo.textContent = rm.no + " · " + n + " · " + rm.sub + " · 藏品 ×" + rm.items.length + (S.visited.includes(n) ? "" : " · 新");
 } else dinfo.textContent = DINFO_TIP;
 }
-dstage.addEventListener("mousemove", e => { if (!dDrag) setAim((dollRoomAt(e.clientX, e.clientY) || {}).name || ""); });
+dstage.addEventListener("mousemove", e => { if (!dDrag) setAim(e.target.closest(".drf,.dchm,.dwin") ? "" : (dollRoomAt(e.clientX, e.clientY) || {}).name || ""); });
 dstage.addEventListener("mouseleave", () => setAim(""));
+dstage.addEventListener("pointercancel", () => { dDrag = null; dhouse.classList.remove("drag"); });
+dstage.addEventListener("transitionend", () => { DQ = null; });
 window.addEventListener("resize", () => { DQ = null; });
 function enterRoom(name, cx, cy) {
+if (name === "阁楼" && !S.renov["rv-loft"]) { showRenov("阁楼"); return; } // 虚影阁楼：先带去看装修单
 if (dlgOpen()) closeTalk();
 AU.sfx("door");
 irisOpen2(cx || innerWidth / 2, cy || innerHeight / 2, () => {
@@ -2537,41 +3032,46 @@ const sc = document.getElementById("r-scene");
 sc.className = "scene " + r.cls;
 sc.innerHTML = SC[r.cls];
 applySceneState(name, sc);
+renderStoryScene();
+storyRoom(name); storyRoom2(name); // 迎新之夜 / 首演之夜：进客厅推剧情
 const inv = document.getElementById("r-inv");
 const extras = RENOV.filter(x => x.room === name && S.renov[x.id]).map(x => ({ icon:x.icon, name:x.name, rare:"furn", note:x.note }));
-inv.innerHTML = r.items.concat(extras).map((it, i) =>
-'<div class="inv-slot' + (S.opened.includes(name + "/" + it.name) ? " seen" : "") + '" data-i="' + i + '" tabindex="0">' +
+const all = r.items.concat(extras);
+inv.innerHTML = all.map((it, i) =>
+'<div class="inv-slot' + (S.opened.includes(name + "/" + it.name) ? " seen" : "") + '" data-i="' + i + '" role="button" tabindex="0">' +
 '<span class="rare r-' + it.rare + '">' + RARE_NAME[it.rare] + "</span>" +
 '<div class="ie">' + ic(it.icon) + "</div><div class=\"in\">" + it.name + "</div></div>").join("");
 inv.querySelectorAll(".inv-slot").forEach(slot => {
-const it = r.items[+slot.dataset.i];
+const it = all[+slot.dataset.i];
 slot.addEventListener("click", ev => {
 ev.stopPropagation();
 AU.sfx("click");
 FXC.burst(ev.clientX, ev.clientY);
 track("item", name + "/" + it.name);
 if (it.ledger) { showLedger(); return; }
-if (it.gate && !S.owned.includes(it.gate)) { toast("lock", it.name + " 还锁着", "到星尘商城解锁后开张"); return; }
-if (it.link) {
-if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) { window.open(it.link, "_blank", "noopener"); return; }
-openRoomPage(it.link, ev.clientX, ev.clientY);
+if (it.gate && !canOpenGame(it.gate)) { toast("lock", it.name + " 还锁着", "到星尘商城解锁后开张"); return; }
+const md = /([^\/\s·]+)\.md$/.exec(it.note || ""), link = it.link || md && DOC + md[1];
+if (link) {
+if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) { window.open(link, "_blank", "noopener"); return; }
+openRoomPage(link, ev.clientX, ev.clientY);
 return;
 }
-if (name === "储藏室" && TOOL_CAP[it.name]) {
-const cap = TOOL_CAP[it.name];
-let cnt = 0; for (const k in ROOMS) cnt += ROOMS[k].items.length;
-openModal(ic(it.icon) + it.name, RARE_NAME[it.rare],
-'<div class="tool-cap">' + cap.replace("{rooms}", Object.keys(ROOMS).length).replace("{items}", cnt) + "</div>");
-return;
-}
-const note = (it.note || "").replace(/\s*·\s*[^·]*[\/\\][^·]*\.(md|py|html|json|svg)\s*$/, "");
+if (TOOL_CAP[it.name]) { showTool(it); return; }
+const note = noteOf(it);
 if (note) toast(it.icon, it.name, note);
+});
+slot.addEventListener("keydown", ev => {
+if (ev.key !== "Enter" && ev.key !== " ") return;
+ev.preventDefault();
+const b = slot.getBoundingClientRect();
+slot.dispatchEvent(new MouseEvent("click", { clientX: b.x + b.width / 2, clientY: b.y + b.height / 2 }));
 });
 slot.addEventListener("mouseenter", () => AU.sfx("tick"));
 });
 roomOverlay.classList.add("on");
 document.getElementById("screen-house").style.overflow = "hidden";
 roomOverlay.scrollTop = 0;
+if (!welcomeAction.hidden && !dlgOpen()) welcomeAction.focus({ preventScroll: true });
 track("room", name);
 renderRooms();
 });
@@ -2589,13 +3089,13 @@ const RENOV = [
 ];
 function showRenov(room) {
 const list = RENOV.filter(r2 => r2.room === room || r2.room === "*");
-openModal(ic("wrench") + "装修队 · " + room, "攒星尘，动土木",
+openModal(ic("wrench") + "装修队 · " + room, "攒星尘，动土木" + balHTML(),
 list.map(r2 => {
 const done = !!S.renov[r2.id];
 return '<div class="set-row"><span style="flex:1">' + r2.name +
 ' <small style="color:var(--ink-3)">' + r2.desc + '</small></span>' +
 (done ? '<button class="sb owned">已完工</button>'
-: '<button class="sb' + (S.stardust < r2.cost ? " poor" : "") + '" data-ren="' + r2.id + '">' + ic("sparkles") + r2.cost + "</button>") + "</div>";
+: '<button class="sb' + (S.stardust < r2.cost ? " poor" : "") + '" data-ren="' + r2.id + '">' + costHTML(r2.cost) + "</button>") + "</div>";
 }).join("") + '<div class="hint">新房间解锁后出现在门厅</div>');
 }
 /* 场景物件交互 */
@@ -2666,7 +3166,7 @@ document.querySelector(".rside.l").addEventListener("click", () => turn(-1));
 document.querySelector(".rside.r").addEventListener("click", () => turn(1));
 document.getElementById("bk-prev").onclick = () => turn(-1);
 document.getElementById("bk-next").onclick = () => turn(1);
-document.getElementById("bk-lib").onclick = () => { closeModal(); openRoomPage("书房/藏书阁.html", innerWidth / 2, innerHeight / 2); };
+document.getElementById("bk-lib").onclick = () => { closeModal(); openRoomPage(ROOMS["书房"].items.find(x => x.name === b.n).link, innerWidth / 2, innerHeight / 2); };
 bkKeys = e => {
 if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); turn(1); }
 else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); turn(-1); }
@@ -2736,6 +3236,13 @@ if (h.classList.contains("win")) { // 窗帘开关
 st.cur = !st.cur; h.classList.toggle("closed", st.cur); return;
 }
 if (h.classList.contains("shelf")) { showShelf(); return; } // 书架：放大取书
+if (h.classList.contains("plant")) { // 阳台三盆：点名报脾气，不跟厨房的锅混
+const it = ROOMS["阳台"].items.find(x => x.name === h.dataset.p);
+if (it) { track("item", "阳台/" + it.name); toast("sprout", it.name, noteOf(it)); }
+h.classList.remove("wave"); void h.getBoundingClientRect(); h.classList.add("wave");
+setTimeout(() => h.classList.remove("wave"), 800);
+return;
+}
 if (h.classList.contains("pot")) { // 锅：开伙冒汽报菜名
 h.classList.add("boil");
 setTimeout(() => h.classList.remove("boil"), 1400);
@@ -2750,7 +3257,7 @@ return;
 }
 if (h.classList.contains("rail")) { toast("utensils", "订单飘来", KMENU[Math.floor(Math.random() * KMENU.length)] + " 一份，趁热"); return; }
 if (h.classList.contains("ocade")) {                  // 胡闹厨房街机：解锁后开张
-if (!S.owned.includes("oc")) { toast("lock", "街机没通电", "星尘商城解锁「胡闹厨房」后开张"); return; }
+if (!canOpenGame("oc")) { toast("lock", "街机没通电", "星尘商城解锁「胡闹厨房」后开张"); return; }
 const rc = h.getBoundingClientRect();
 openRoomPage("厨房/胡闹厨房.html", rc.left + rc.width / 2, rc.top + rc.height / 2);
 return;
@@ -2814,6 +3321,34 @@ if (h.classList.contains("rgpad")) { // 节奏挂毯：解锁后开毯
 if (!S.owned.includes("rg")) { toast("lock", "挂毯还卷着", "星尘商城解锁「节奏地毯」后开张"); return; }
 const rc = h.getBoundingClientRect();
 openRoomPage("客厅/节奏地毯.html", rc.left + rc.width / 2, rc.top + rc.height / 2);
+return;
+}
+if (h.classList.contains("pnkeys")) { // 右厢琴房：解锁后模奏
+if (!S.owned.includes("pn")) { toast("lock", "琴盖还合着", "星尘商城解锁「黑白琴房」后开琴"); return; }
+const rc2 = h.getBoundingClientRect();
+openRoomPage("钢琴房/琴键回响.html", rc2.left + rc2.width / 2, rc2.top + rc2.height / 2);
+return;
+}
+if (h.classList.contains("pstand")) { // 右厢谱架：翻开乐理日课
+const rc2 = h.getBoundingClientRect();
+openRoomPage("钢琴房/乐理课.html", rc2.left + rc2.width / 2, rc2.top + rc2.height / 2);
+return;
+}
+if (h.classList.contains("pmetro")) { // 右厢节拍器：直接进打拍子课
+const rc2 = h.getBoundingClientRect();
+openRoomPage("钢琴房/乐理课.html?k=beat", rc2.left + rc2.width / 2, rc2.top + rc2.height / 2);
+return;
+}
+if (h.classList.contains("dcpad")) { // 右厢舞毯：解锁后起舞
+if (!S.owned.includes("dc")) { toast("lock", "舞毯还没铺", "星尘商城解锁「追光舞毯」后开跳"); return; }
+const rc2 = h.getBoundingClientRect();
+openRoomPage("舞蹈房/追光舞步.html", rc2.left + rc2.width / 2, rc2.top + rc2.height / 2);
+return;
+}
+if (h.classList.contains("vomic")) { // 右厢话筒：解锁后开嗓
+if (!S.owned.includes("vo")) { toast("lock", "话筒还罩着", "星尘商城解锁「气泡和声」后开唱"); return; }
+const rc2 = h.getBoundingClientRect();
+openRoomPage("歌唱房/气泡和声.html", rc2.left + rc2.width / 2, rc2.top + rc2.height / 2);
 return;
 }
 if (h.classList.contains("rug")) { // 圆地毯：猫的地盘
@@ -3011,7 +3546,7 @@ if (S.owned.includes("mbox")) q("mbox") && q("mbox").classList.add("on");
 	if (name === "阁楼") sc.classList.add("met");
 		if (name === "厨房") {
 		if (st.cab) q("cab") && q("cab").classList.add("open");
-		if (S.owned.includes("oc")) q("ocade") && q("ocade").classList.add("on");
+		if (canOpenGame("oc")) q("ocade") && q("ocade").classList.add("on");
 		if (S.owned.includes("cuckoo")) { q("cuckoo") && q("cuckoo").classList.add("on"); }
 if (S.owned.includes("herb")) q("herb") && q("herb").classList.add("on");
 		if (S.owned.includes("grind")) q("grind") && q("grind").classList.add("on");
@@ -3030,6 +3565,7 @@ if (S.renov["rv-rack"]) q("rack") && q("rack").classList.add("on");
 }
 document.getElementById("r-renov").addEventListener("click", () => { AU.sfx("click"); showRenov(curRoom); });
 document.getElementById("r-back").addEventListener("click", () => {
+if (storyFinaleArmed === S.story) closeTalk();
 AU.sfx("door");
 irisOpen2(innerWidth / 2, innerHeight / 2, () => {
 roomOverlay.classList.remove("on");
@@ -3038,34 +3574,44 @@ document.getElementById("screen-house").style.overflow = "";
 });
 const frameWrap = document.getElementById("frame-wrap"), roomFrame = document.getElementById("room-frame");
 let gramoDuck = false;
+/* 画中门里只留母页那枚悬浮回家钮；子页自带的回家控件就地隐身（保留占位，不动版式） */
+const CHILD_HOME_SEL = '.house-back, .home-link, #home, #game-home, button#bk, a.tbtn[href*="我的家.html"]';
+roomFrame.addEventListener("load", () => {
+try {
+const d = roomFrame.contentDocument;
+if (d) d.querySelectorAll(CHILD_HOME_SEL).forEach(el => { el.style.visibility = "hidden"; });
+} catch (e) {}
+});
 function openRoomPage(link, cx, cy) {
+if (link === "厨房/胡闹厨房.html" && S.story.beat === 2) link += "?shift=welcome";
 if (link.indexOf("留声机") >= 0 && !gramoDuck) { gramoDuck = true; AU.bgmG.gain.value = 0; }
+else if (AU.ctx && S.settings.bgm) AU.bgmG.gain.value = S.settings.bgmVol * 0.22; // 子页开玩：楼里音乐让一让（动态压低）
 AU.sfx("door");
 irisOpen2(cx, cy, () => { roomFrame.src = link; frameWrap.classList.add("on"); });
 }
 function closeRoomPage() {
 AU.sfx("door");
 irisOpen2(innerWidth / 2, innerHeight / 2, () => { frameWrap.classList.remove("on"); roomFrame.src = "about:blank"; });
-if (gramoDuck) { gramoDuck = false; AU.applyVol(); }
-try { // 节奏地毯战果：打完一首记任务，高分解锁回忆
-const rb = parseInt(localStorage.getItem("rg_best"), 10) || 0;
-if (rb > 0) {
-if (!S.stats.rgPlay) { S.stats.rgPlay = 1; }
-if (rb >= 7500) unlockCG("cg9");
-}
+gramoDuck = false;
+AU.applyVol(); // 子页关门，楼里音乐回原音量
+try { // 节奏地毯高分解锁回忆（分数事实；「打完一首」记任务见 cashPlays 的完成标记）
+if ((parseInt(localStorage.getItem("rg_best"), 10) || 0) >= 7500) unlockCG("cg9");
 } catch (e) {}
-try { // 活字排版战果：印成一版记任务
-if ((parseInt(localStorage.getItem("hz_best"), 10) || 0) > 0) S.stats.hzPlay = 1;
+try { // 翻箱高分解锁回忆（「配齐一轮」记任务见 cashPlays）
+if ((parseInt(localStorage.getItem("mm_best"), 10) || 0) >= 2800) unlockCG("cg10");
 } catch (e) {}
-try { // 翻箱倒柜战果：配齐一轮记任务，高分解锁回忆
-const mbs = parseInt(localStorage.getItem("mm_best"), 10) || 0;
-if (mbs > 0) S.stats.mmPlay = 1;
-if (mbs >= 2800) unlockCG("cg10");
-} catch (e) {}
+cashPlays(); // 回家结算：局号去重折星尘，通关事实记「开毯/开印/开箱」
 checkQuests(); // 从子页回家：电视里的战果（奖杯等）当场验一验
 }
-document.getElementById("frame-back").addEventListener("click", closeRoomPage);
-window.addEventListener("message", e => { if (e.data === "zhouse-back") closeRoomPage(); });
+const frameBack = document.getElementById("frame-back");
+frameBack.addEventListener("click", closeRoomPage);
+window.addEventListener("message", e => {
+if (e.source !== roomFrame.contentWindow || !frameWrap.classList.contains("on")) return;
+if (e.data === "zhouse-back") closeRoomPage();
+if (e.data === "zhouse-focus-back") frameBack.focus();
+if (e.data?.type === "zhouse-trial-dish" && roomFrame.getAttribute("src") === "厨房/胡闹厨房.html?shift=welcome" &&
+["tomato", "rice", "soup"].includes(e.data.dish)) window.WelcomeTrial?.mark(e.data.dish);
+});
 function showScreen(name) {
 document.body.dataset.screen = name;
 document.getElementById("screen-title").classList.toggle("on", name === "title");
@@ -3234,16 +3780,22 @@ el.style.opacity = 0; el.classList.remove("pop");
 }
 };
 
-/* ---- 住户小Z：院子里散步，点击唠嗑 ---- */
+/* ---- 住户Z：院子里散步，点击唠嗑 ---- */
 const dlgEl = document.getElementById("dlg");
 const dlgText = document.querySelector(".dlg-text");
 const dlgNext = document.querySelector(".dlg-next");
 let dlgQueue = [], dlgFull = "", dlgI = 0, dlgTimer = null, dlgTyping = false;
 let zTalking = false, zTimer = null;
 function dlgOpen() { return dlgEl.classList.contains("on"); }
-function closeTalk() {
+function closeTalk(completed) {
 clearInterval(dlgTimer); dlgTyping = false; zTalking = false;
-dlgEl.classList.remove("on");
+dlgEl.classList.remove("on"); delete document.body.dataset.cine;
+const chapter = storyFinaleArmed; storyFinaleArmed = false;
+if (completed === true && chapter) storyFinale(chapter);
+if (chapter === S.story) {
+if (completed === true) document.getElementById("r-back").focus();
+else renderStoryScene();
+}
 }
 function talkPool() {
 if (!S.stats.talks) return TALK.first.slice();
@@ -3252,7 +3804,7 @@ let pool = [];
 	if (S.equipped.weather === "snow") pool = pool.concat(TALK.snow);
 if (document.body.dataset.phase === "night") pool = pool.concat(TALK.night);
 if (S.owned.includes("cat")) pool = pool.concat(TALK.cat);
-if (Object.keys(S.cgs).length >= CGS.length) pool = pool.concat(TALK.done);
+if (cgGot() >= CGS.length) pool = pool.concat(TALK.done);
 if (Math.random() < 0.55) pool = pool.concat(TALK.tips);
 if (Math.random() < 0.55 || !pool.length) pool = pool.concat(TALK.daily);
 const pick = pool[Math.floor(Math.random() * pool.length)];
@@ -3269,6 +3821,7 @@ if (dlgI >= dlgFull.length) { clearInterval(dlgTimer); dlgTyping = false; dlgNex
 }, 34);
 }
 function openTalk() {
+closeTalk();
 AU.sfx("confirm");
 dlgQueue = talkPool();
 dlgEl.classList.add("on");
@@ -3281,7 +3834,7 @@ dlgText.textContent = dlgFull; dlgNext.style.visibility = "";
 return;
 }
 if (dlgQueue.length) typeLine(dlgQueue.shift());
-else { closeTalk(); AU.sfx("cancel"); }
+else { closeTalk(true); AU.sfx("cancel"); }
 }
 dlgEl.addEventListener("click", e => { e.stopPropagation(); dlgAdvance(); });
 function startZface() {
@@ -3422,7 +3975,7 @@ AU.tone(660, t0 + 0.28, 0.55, { vol: 0.1, type: "triangle", slideTo: 600 });
 }
 toast("bell", "叮咚", DOORBELL[Math.floor(Math.random() * DOORBELL.length)]);
 });
-const DOORBELL = ["门里传来趿拉拖鞋的脚步声。", "小Z 隔着门喊：来啦来啦——", "没动静。多半在阁楼翻箱子。", "再按一遍，就当给自己听的。"];
+const DOORBELL = ["门里传来趿拉拖鞋的脚步声。", "Z 隔着门喊：来啦来啦——", "没动静。多半在阁楼翻箱子。", "再按一遍，就当给自己听的。"];
 document.getElementById("btn-firework").addEventListener("click", () => {
 FXC.firework();
 setTimeout(() => FXC.firework(), 400);
@@ -3453,7 +4006,8 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) AU.k
 document.querySelectorAll("[data-modal]").forEach(b => {
 b.addEventListener("click", () => {
 	const m = b.dataset.modal;
-	if (m === "quests") showQuests();
+		if (m === "quests") showQuests();
+		else if (m === "wish") showWish();
 	else if (m === "shop") showShop();
 	else if (m === "gallery") showHall();
 	else if (m === "settings") showSettings();
@@ -3472,6 +4026,9 @@ if (AU.ctx) AU.sfx("click");
 let tFocus = -1;
 document.addEventListener("keydown", e => {
 if (dlgOpen()) {
+if (e.key === "Escape" && storyFinaleArmed === S.story) {
+e.preventDefault(); closeTalk(); welcomeAction.focus(); return;
+}
 if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); dlgAdvance(); }
 return;
 }
@@ -3547,16 +4104,21 @@ boot.addEventListener("click", function skip() { if (!done) finish(); });
 }
 function updTitleSave() {
 const got = CGS.filter(c => S.cgs[c.id]).length, qd = QUESTS.filter(q => S.quests[q.id]).length, ad = ACHV.filter(a => S.achv[a.id]).length;
+const tag = saveTag();
 document.getElementById("title-save").innerHTML =
 ic("sparkles") + " " + S.stardust + " &nbsp; " + ic("image") + " " + got + "/" + CGS.length +
 " &nbsp; " + ic("trophy") + " " + ad + "/" + ACHV.length +
-" &nbsp; " + ic("list-todo") + " " + qd + "/" + QUESTS.length + " · 自动存档";
+" &nbsp; " + ic("list-todo") + " " + qd + "/" + QUESTS.length + " · " +
+(tag === "自动存档" ? tag : '<span style="color:#e06c5a">' + tag + " · 点此导出</span>");
 }
+document.getElementById("title-save").addEventListener("click", () => { if (memOnly || saveFail) exportSave(); });
 document.getElementById("t-start").addEventListener("click", () => {
+window.WelcomeTrial?.start(!S.stats.entered && !S.story.beat && !S.wish.idx && !S.visited.length && !S.opened.length);
 AU.sfx("confirm");
 irisOpen2(innerWidth / 2, innerHeight * 0.4, () => {
 showScreen("house");
 dailyCheck();
+cashPlays();
 track("entered");
 updPhase();
 });
@@ -3565,9 +4127,9 @@ document.getElementById("t-gallery").addEventListener("click", () => { AU.sfx("c
 document.getElementById("t-quests").addEventListener("click", () => { AU.sfx("click"); showQuests(); });
 document.getElementById("t-credits").addEventListener("click", () => {
 AU.sfx("click");
-openModal(ic("film") + "制作名单", "《小Z 的小家》",
+openModal(ic("film") + "制作名单", "《Z 的小家》",
 '<div class="ledger-line" style="display:block;line-height:2.3">' +
-"<b>住户 / 施工</b>：小Z<br>" +
+"<b>住户 / 施工</b>：Z<br>" +
 "<b>监制 / 房东 / 唯一验收人</b>：主人<br>" +
 "<b>图标</b>：Lucide v0.460 · ISC<br>" +
 "</div>");
@@ -3575,7 +4137,13 @@ openModal(ic("film") + "制作名单", "《小Z 的小家》",
 document.getElementById("t-settings").addEventListener("click", () => { AU.sfx("click"); showSettings(); });
 document.querySelectorAll(".tmenu-item").forEach(b =>
 b.addEventListener("mouseenter", () => AU.sfx("tick")));
-(function init() {
+HouseSaveTxn.openTab(() => {
+loadSave();
+dhouse.classList.toggle("lfd", !matchMedia("(max-width:640px)").matches && S.settings.roofOpen);
+syncRoof();
+const enter = document.getElementById("boot-enter");
+enter.textContent = "— 点 击 进 入 —";
+enter.classList.remove("show");
 applyTheme();
 FXC.init();
 renderRooms();
@@ -3589,7 +4157,12 @@ applySettingsUI();
 startCat();
 startZface();
 runBoot();
-})();
+}, () => {
+const enter = document.getElementById("boot-enter");
+enter.textContent = "小家已在另一标签页打开。关闭那一页后，这里会继续。";
+enter.setAttribute("role", "status");
+enter.classList.add("show");
+});
 </script>
 </body>
 </html>

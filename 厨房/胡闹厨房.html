@@ -49,7 +49,7 @@ h1 small{ font-size:12px; letter-spacing:.06em; color:#a8895c; font-weight:norma
 .stat b{ display:block; font-size:16px; color:var(--wood-3); }
 canvas#game{ width:100%; border-radius:14px; border:3px solid var(--wood-3);
   box-shadow:0 14px 34px rgba(95,58,28,.28); background:#efe0c2; touch-action:none; }
-.crtwrap{ position:relative; isolation:isolate; }
+.crtwrap{ position:relative; isolation:isolate; width:min(100%,688px); }
 .crtwrap canvas#game{ display:block; }
 .crt{ position:absolute; inset:3px; border-radius:11px; pointer-events:none;
   background:
@@ -58,6 +58,11 @@ canvas#game{ width:100%; border-radius:14px; border:3px solid var(--wood-3);
   animation: crtf 5s steps(50) infinite; }
 @keyframes crtf { 50% { opacity: .86; } }
 .foot{ font-size:12px; color:#8a6d43; text-align:center; line-height:1.8; }
+.welcome-guide{ width:min(100%,688px); display:flex; align-items:center; gap:10px;
+  padding:8px 10px; border:1px solid #b8975f; border-radius:10px; background:var(--cream);
+  font-size:13px; line-height:1.5; }
+.welcome-guide p{ flex:1; }
+.welcome-guide button{ flex-shrink:0; }
 /* 菜谱小抄 */
 .recipes{ width:100%; border-radius:12px; border:2px dashed #b8975f; background:rgba(255,248,236,.8);
   padding:10px 12px; display:none; }
@@ -105,12 +110,13 @@ body.touch .pad{ display:flex; }
 </div>
 <div class="stage">
   <div class="hbar">
-    <div class="stat">剩余<b id="tleft">120</b></div>
+    <div class="stat" id="shift-clock">剩余<b id="tleft">120</b></div>
     <div class="clockbar"><i id="clocki"></i></div>
     <div class="stat">出餐<b id="served">0</b></div>
-    <div class="stat">得分<b id="score">0</b></div>
+    <div class="stat" id="shift-score">得分<b id="score">0</b></div>
   </div>
-  <div class="crtwrap"><canvas id="game"></canvas><div class="crt"></div></div>
+  <div class="welcome-guide hidden" id="welcome-guide"><p id="welcome-step" role="status"></p><button class="tbtn" id="welcome-retry">重做</button></div>
+  <div class="crtwrap"><canvas id="game" tabindex="0" aria-label="厨房棋盘。方向键移动，空格与面前工位互动"></canvas><div class="crt"></div></div>
   <div class="recipes" id="recipes"><h3>灶边小抄（菜谱架上七道，画「切」的要先上砧板）</h3><ul id="rlist"></ul></div>
   <div class="pad" id="pad">
     <div class="dpad">
@@ -122,19 +128,21 @@ body.touch .pad{ display:flex; }
     <button class="act" id="actbtn">动 作</button>
   </div>
   <div class="foot">
-    方向键 / WASD 走位，空格动作：食材箱取料 · 砧板连点四下切菜 · 灶台两口同时开火 · 出餐口交单，垃圾桶清手。<br>
-    做好的菜有四秒出锅窗口，拖久了会烧糊。单班出餐八单，家里的陈列馆会发一座金杯。
+    方向键 / WASD 走位，空格动作。面对砧板放下食材，再切四下，最后按一下取回。也可点击紧邻的工位。<br>
+    <span id="shift-tip">做好的菜有四秒出锅窗口，拖久了会烧糊。单班出餐八单，家里的陈列馆会发一座金杯。</span>
   </div>
 </div>
 <div class="ovl" id="ovl">
   <div class="card">
     <h2 id="ovl-h">开班</h2>
-    <p id="ovl-p">灶台就位，小Z系上围裙。照着墙上的订单备菜：取料、切配、下锅、出餐——两分钟一班，糊锅算我的，慢了算你的。</p>
+    <p id="ovl-p">灶台就位，Z系上围裙。照着墙上的订单备菜：取料、切配、下锅、出餐——两分钟一班，糊锅算我的，慢了算你的。</p>
     <div class="big hidden" id="ovl-b"></div>
     <button class="tbtn" id="ovl-btn" style="font-size:16px;padding:11px 34px;letter-spacing:.3em">开 火</button>
     <div class="tip" id="ovl-t"></div>
+    <p><a class="tbtn" id="ovl-home" href="../我的家.html" onclick="try{if(window.parent!==window){parent.postMessage('zhouse-back','*');return false;}}catch(e){}">回小家</a></p>
   </div>
 </div>
+<script src="../储藏室/结算队列.js"></script>
 <script>
 "use strict";
 /* ================= 菜谱与食材（与厨房菜谱架七道一一对应） ================= */
@@ -161,6 +169,8 @@ var DISHES = [
   { n:"酸辣土豆丝", a:"土豆", b:"辣椒",  col:"#c9a12e" },
   { n:"紫菜蛋花汤", a:"紫菜", b:"蛋",    col:"#3d6b4f" }
 ];
+var welcomeShift = new URLSearchParams(location.search).get("shift") === "welcome";
+var welcomeMenu = [DISHES[0], DISHES[1], DISHES[6]];
 function dishKey(ia, ib){ /* 配方键：要切的带感叹号 */
   var s = function(t){ return t.id + (INGS[t.id].chop ? (t.chopped ? "!" : "") : ""); };
   return [s(ia), s(ib)].sort().join("+");
@@ -172,7 +182,8 @@ DISHES.forEach(function(d){
 var GX = 11, GY = 8;
 var stations = {};          /* "x,y" -> {type, ...} */
 function put(x, y, st){ stations[x + "," + y] = st; st.x = x; st.y = y; }
-/* 北墙：三箱 + 三格出餐 + 三箱 */
+/* 北墙：四箱 + 三格出餐 + 三箱 */
+put(0, 0, { type:"crate", ing:"饭" });
 put(1, 0, { type:"crate", ing:"番茄" });  put(2, 0, { type:"crate", ing:"蛋" });
 put(3, 0, { type:"crate", ing:"葱" });
 put(4, 0, { type:"serve" }); put(5, 0, { type:"serve" }); put(6, 0, { type:"serve" });
@@ -198,10 +209,11 @@ var hand = null;            /* {ing, chopped} 或 {dish:菜名} */
 var orders = [];            /* {dish, t, max, dead, spawnT} */
 var score = 0, served = 0, strikes = 0;
 var shiftT = 120, running = false, over = false;
-var toastMsg = null;        /* 画布内的浮动提示 */
+var runId = "", runStarted = 0, runCount = 0;
 var best = 0;
 try { best = parseInt(localStorage.getItem("oc_best") || "0", 10) || 0; } catch (e) {}
 function saveBest(n){ try { localStorage.setItem("oc_best", String(n)); } catch (e) {} }
+function zhPlay(g, s){ HouseRuns.enqueue(g, s, runId, 1, runStarted); }
 /* ================= 音效（WebAudio 现场合成） ================= */
 var sndOn = true, AC = null;
 function ac(){ if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return AC; }
@@ -240,8 +252,8 @@ var SFX = {
 var cvs = document.getElementById("game"), ctx = cvs.getContext("2d");
 var T = 54, TOP = 74, dpr = 1;
 function resize(){
-  var w = cvs.clientWidth || 640;
-  T = Math.max(34, Math.floor(w / GX));
+  var w = cvs.clientWidth || 1;
+  T = Math.max(1, Math.floor(w / GX));
   dpr = window.devicePixelRatio || 1;
   cvs.width = Math.floor(w * dpr);
   cvs.height = Math.floor((TOP + T * GY + 10) * dpr);
@@ -309,10 +321,8 @@ function render(){
   /* 订单栏 */
   ctx.fillStyle = "#6b4423"; ctx.fillRect(0, 0, W, TOP - 6);
   ctx.fillStyle = "rgba(255,240,210,.16)"; ctx.fillRect(0, 0, W, 3);
-  ctx.font = "bold 12px 'Microsoft YaHei',sans-serif"; ctx.fillStyle = "#e8cf9e"; ctx.textAlign = "left";
-  ctx.fillText("墙上订单", 8, 17);
-  var ow = Math.min(128, (W - 20) / 3 - 8), oh = TOP - 20;
-  for (var i = 0; i < 3; i++){
+  var ow = welcomeShift ? Math.min(260, W - 20) : Math.min(128, (W - 20) / 3 - 8), oh = TOP - 20;
+  for (var i = 0; i < (welcomeShift ? 1 : 3); i++){
     var ox = 10 + i * (ow + 8), oy = 8;
     var o = orders[i];
     ctx.fillStyle = "#fdf3dd"; rr(ctx, ox, oy, ow, oh, 8); ctx.fill();
@@ -320,8 +330,8 @@ function render(){
       ctx.fillStyle = o.dish.col; ctx.fillRect(ox, oy + 4, 4, oh - 8);
       drawDish(ctx, o.dish.n, ox + 22, oy + oh / 2 - 3, 11);
       ctx.fillStyle = "#5a3d1a"; ctx.font = "bold 12.5px 'Microsoft YaHei',sans-serif"; ctx.textAlign = "left";
-      ctx.fillText(o.dish.n, ox + 40, oy + 17);
-      ctx.fillText(o.dish.a + (INGS[o.dish.a].chop ? "切" : "") + " + " + o.dish.b + (INGS[o.dish.b].chop ? "切" : ""), ox + 40, oy + 33);
+      ctx.fillText(o.dish.n, ox + 40, oy + 17, ow - 46);
+      ctx.fillText(o.dish.a + (INGS[o.dish.a].chop ? "切" : "") + " + " + o.dish.b + (INGS[o.dish.b].chop ? "切" : ""), ox + 40, oy + 33, ow - 46);
       var fr = o.t / o.max;
       ctx.fillStyle = "rgba(90,61,26,.2)"; ctx.fillRect(ox + 40, oy + oh - 12, ow - 52, 5);
       ctx.fillStyle = fr > .4 ? "#6fae5c" : "#c94f39"; ctx.fillRect(ox + 40, oy + oh - 12, (ow - 52) * fr, 5);
@@ -425,82 +435,124 @@ function render(){
     if (hand.chopped){ ctx.fillStyle = "#4a8a5c"; ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center"; ctx.fillText("切", hx, hy + 16); }
   }
   ctx.restore();
-  /* 浮动提示 */
-  if (toastMsg && toastMsg.t > 0){
-    ctx.fillStyle = "rgba(60,36,14," + Math.min(.85, toastMsg.t) + ")";
-    ctx.font = "bold 14px 'Microsoft YaHei',sans-serif"; ctx.textAlign = "center";
-    var tw = ctx.measureText(toastMsg.s).width + 24;
-    rr(ctx, W / 2 - tw / 2, TOP + GY * T - 34, tw, 26, 13); ctx.fill();
-    ctx.fillStyle = "#f7ead2"; ctx.fillText(toastMsg.s, W / 2, TOP + GY * T - 16);
-  }
 }
 var steam = [];
-function say(s){ toastMsg = { s: s, t: 1.8 }; }
 /* ================= 玩法 ================= */
 function front(){ return stations[(P.x + P.dir.x) + "," + (P.y + P.dir.y)]; }
+var welcomeStep = document.getElementById("welcome-step");
+function welcomeStove(){
+  return Object.values(stations).find(function(st){ return st.type === "stove" && st.slots.length; });
+}
+function updateWelcomeGuide(note){
+  var dish = welcomeMenu[served];
+  if (!welcomeShift || !dish || !running) return;
+  var stove = welcomeStove();
+  var board = Object.values(stations).find(function(st){ return st.type === "board" && st.ing; });
+  var next = stove && stove.slots.some(function(slot){ return slot.id === dish.a; }) ? dish.b : dish.a;
+  if (!note){
+    if (hand && hand.dish) note = "端到北侧出餐口，空格交单。";
+    else if (stove && stove.state === "ready") note = "菜已熟，面对灶台按空格取菜。";
+    else if (stove && stove.state === "cook") note = "两样菜都下锅了，等提示熟了再取。";
+    else if (hand) note = (INGS[hand.ing].chop && !hand.chopped) ? "到砧板前按空格放下" + hand.ing + "。" : "把" + hand.ing + "带到" + (stove ? "同一口" : "") + "灶台，按空格下锅。";
+    else if (board) note = board.prog === 4 ? "切好了，再按一次空格取回。" : "切" + board.ing + " " + board.prog + "/4，面对砧板继续按空格。";
+    else note = "到食材箱前取" + next + "。";
+  }
+  var text = dish.n + "（" + dish.a + " + " + dish.b + "） · " + note;
+  if (welcomeStep.textContent !== text) welcomeStep.textContent = text;
+}
 function act(){
+  var note = performAction();
+  if (welcomeShift) updateWelcomeGuide(note);
+}
+function performAction(){
   if (!running || over) return;
   var st = front();
-  if (!st){ say("面前没有工位"); return; }
+  if (!st) return "先走到工位旁，转身面对工位再按空格。";
   if (st.type === "crate"){
-    if (hand){ say("手上占着呢，先放下"); SFX.bad(); return; }
-    hand = { ing: st.ing, chopped: false }; SFX.pick(); say("拿了 " + st.ing);
+    if (hand){ SFX.bad(); return "先放下手里的东西。带错食材可用垃圾桶清手。"; }
+    if (welcomeShift){
+      var recipe = welcomeMenu[served];
+      var used = welcomeStove();
+      if (![recipe.a, recipe.b].includes(st.ing) || (used && used.slots.some(function(slot){ return slot.id === st.ing; }))){
+        SFX.bad(); return "看看当前订单需要哪样食材，已下锅的材料只用一份。";
+      }
+    }
+    hand = { ing: st.ing, chopped: false }; SFX.pick();
   } else if (st.type === "board"){
     if (!hand && st.ing){
-      if (st.prog >= 4){ hand = { ing: st.ing, chopped: true }; st.ing = null; st.prog = 0; SFX.pick(); say("切好的 " + hand.ing); }
-      else { st.prog++; st.flash = 1; SFX.chop(); if (st.prog >= 4) say("切好了，取走"); }
+      if (st.prog >= 4){ hand = { ing: st.ing, chopped: true }; st.ing = null; st.prog = 0; SFX.pick(); }
+      else { st.prog++; st.flash = 1; SFX.chop(); }
     } else if (hand && !hand.dish && !hand.chopped){
-      if (!INGS[hand.ing].chop){ say(hand.ing + " 不用切，直接下锅"); SFX.bad(); }
-      else if (st.ing){ say("砧板上有菜"); SFX.bad(); }
-      else { st.ing = hand.ing; st.prog = 0; hand = null; SFX.place(); say("放上去，连点四下切"); }
-    } else if (hand && hand.dish){ say("菜做完了还切什么"); SFX.bad(); }
-    else if (hand && hand.chopped){ say("已经切过了"); SFX.bad(); }
+      if (!INGS[hand.ing].chop){ SFX.bad(); return hand.ing + "不用切，可以直接下锅。"; }
+      else if (st.ing){ SFX.bad(); return "砧板上还有食材，取出后才能放下一份。"; }
+      else { st.ing = hand.ing; st.prog = 0; hand = null; SFX.place(); }
+    } else if (hand && hand.dish){ SFX.bad(); }
+    else if (hand && hand.chopped){ SFX.bad(); }
   } else if (st.type === "stove"){
     if (st.state === "bad"){
       st.slots = []; st.state = "idle"; st.t = 0; st.dish = null; score = Math.max(0, score - 4);
-      SFX.dump(); say("糊锅倒掉，扣 4 分"); return;
+      SFX.dump(); updHud(); return;
     }
     if (st.state === "ready"){
-      if (hand){ say("手上占着呢"); SFX.bad(); return; }
+      if (hand){ SFX.bad(); return "空手才能取出锅里的菜。"; }
       hand = { dish: st.dish }; st.slots = []; st.state = "idle"; st.t = 0; st.dish = null;
-      SFX.pick(); say("出锅，趁热送"); return;
+      SFX.pick(); return;
     }
-    if (hand && hand.dish){ say("这是成品，去出餐口"); SFX.bad(); return; }
+    if (hand && hand.dish){ SFX.bad(); return; }
     if (hand){
-      if (st.slots.length >= 2){ say("锅满了"); SFX.bad(); return; }
-      if (INGS[hand.ing].chop && !hand.chopped){ say(hand.ing + " 得先切了再下锅"); SFX.bad(); return; }
+      if (st.slots.length >= 2){ SFX.bad(); return "这口锅已有两样食材，稍等片刻。"; }
+      if (INGS[hand.ing].chop && !hand.chopped){ SFX.bad(); return "先去砧板切" + hand.ing + "，切好再下锅。"; }
+      if (welcomeShift){
+        var active = welcomeStove();
+        if (active && active !== st){ SFX.bad(); return "另一口锅已有食材，把两样材料放进同一口锅。"; }
+        if (st.slots.some(function(slot){ return slot.id === hand.ing; })){ SFX.bad(); return "锅里已经有这份食材，可去垃圾桶清手。"; }
+      }
       st.slots.push({ id: hand.ing, chopped: !!hand.chopped }); hand = null; SFX.place();
       if (st.slots.length === 2){
         var key = dishKey(st.slots[0], st.slots[1]);
         var hit = null;
         for (var i = 0; i < DISHES.length; i++) if (DISHES[i].key === key) hit = DISHES[i];
-        if (hit){ st.state = "cook"; st.t = 0; st.dish = hit.n; SFX.sizzle(); say(hit.n + " 开炒"); }
-        else { st.state = "bad"; SFX.bad(); say("这俩凑一块不成菜，倒了吧"); }
-      } else say("下了一样，还差一样");
+        if (hit){ st.state = "cook"; st.t = 0; st.dish = hit.n; SFX.sizzle(); }
+        else { st.state = "bad"; SFX.bad(); }
+      }
       return;
     }
     if (!hand && st.slots.length && st.state === "idle"){ /* 空手把最后下的料拿回来 */
       var back = st.slots.pop(); hand = { ing: back.id, chopped: back.chopped };
-      SFX.pick(); say("拿回 " + hand.ing); return;
+      SFX.pick(); return;
     }
-    say("空锅等着呢"); SFX.bad();
+    SFX.bad();
   } else if (st.type === "serve"){
-    if (!hand || !hand.dish){ say("出餐口只收做好的菜"); SFX.bad(); return; }
+    if (!hand || !hand.dish){ SFX.bad(); return "菜熟后先从灶台取出，再到出餐口。"; }
     var o = null;
     for (var j = 0; j < orders.length; j++) if (orders[j] && !orders[j].dead && orders[j].dish.n === hand.dish) o = orders[j];
-    if (!o){ say("墙上没有这单：换个对得上的做"); SFX.bad(); return; }
+    if (!o){ SFX.bad(); return "这盘菜没有对应订单。"; }
     var bonus = 10 + Math.ceil(10 * o.t / o.max);
     score += bonus; served++; hand = null;
     o.dead = true; o.spawnT = 1.4;
-    SFX.serve(); say("出餐 " + o.dish.n + "，加 " + bonus + " 分");
+    SFX.serve();
     updHud();
+    if (welcomeShift){
+      if (parent !== window){
+        const dish = ["tomato", "rice", "soup"][served - 1];
+        parent.postMessage({type:"zhouse-trial-dish", dish}, "*");
+      }
+      if (served === welcomeMenu.length) endShift();
+      else spawnOrder();
+    }
   } else if (st.type === "trash"){
-    if (!hand){ say("垃圾桶：手上没东西"); return; }
-    hand = null; SFX.dump(); say("扔了");
+    if (!hand){ return; }
+    hand = null; SFX.dump();
   }
 }
 /* ================= 订单与计时 ================= */
 function spawnOrder(){
+  if (welcomeShift){
+    if (served < welcomeMenu.length && (!orders[0] || orders[0].dead)){
+      orders[0] = { dish: welcomeMenu[served], t: 1, max: 1, dead: false };
+    }
+    return;
+  }
   var pool = DISHES.filter(function(d){
     return !orders.some(function(o){ return o && !o.dead && o.dish.n === d.n; });
   });
@@ -509,8 +561,9 @@ function spawnOrder(){
   for (var i = 0; i < 3; i++) if (!orders[i]){ orders[i] = { dish: d, t: 34, max: 34, dead: false }; return; }
 }
 function updHud(){
-  document.getElementById("served").textContent = served;
+  document.getElementById("served").textContent = welcomeShift ? served + "/" + welcomeMenu.length : served;
   document.getElementById("score").textContent = score;
+  if (welcomeShift) document.getElementById("clocki").style.transform = "scaleX(" + served / welcomeMenu.length + ")";
 }
 /* ================= 主循环 ================= */
 var lastT = 0;
@@ -518,9 +571,11 @@ function loop(ts){
   requestAnimationFrame(loop);
   var dt = Math.min(0.05, (ts - lastT) / 1000 || 0.016); lastT = ts;
   if (running && !over){
-    shiftT = Math.max(0, shiftT - dt);
-    document.getElementById("tleft").textContent = Math.ceil(shiftT);
-    document.getElementById("clocki").style.transform = "scaleX(" + (shiftT / 120) + ")";
+    if (!welcomeShift){
+      shiftT = Math.max(0, shiftT - dt);
+      document.getElementById("tleft").textContent = Math.ceil(shiftT);
+      document.getElementById("clocki").style.transform = "scaleX(" + (shiftT / 120) + ")";
+    }
     /* 走位 */
     if (P.mv){
       P.bob += dt;
@@ -546,24 +601,23 @@ function loop(ts){
         if (s.state === "cook"){
           s.t += dt / 2.6;
           if (Math.random() < dt * 2) SFX.sizzle();
-          if (s.t >= 1){ s.state = "ready"; s.t = 0; SFX.ding(); }
-        } else if (s.state === "ready"){
+          if (s.t >= 1){ s.state = "ready"; s.t = 0; SFX.ding(); updateWelcomeGuide(); }
+        } else if (s.state === "ready" && !welcomeShift){
           s.t += dt / 4;
           if (s.t >= 1){ s.state = "bad"; SFX.bad(); }
         }
       }
     }
     /* 订单耐心 */
-    for (var i2 = 0; i2 < 3; i2++){
+    for (var i2 = 0; !welcomeShift && i2 < 3; i2++){
       var o = orders[i2];
       if (!o) continue;
       if (o.dead){ o.spawnT -= dt; if (o.spawnT <= 0) orders[i2] = null; continue; }
       o.t -= dt;
-      if (o.t <= 0){ o.dead = true; o.spawnT = 1.6; strikes++; score = Math.max(0, score - 8); SFX.bad(); say("跑了一单，扣 8 分"); updHud(); }
+      if (o.t <= 0){ o.dead = true; o.spawnT = 1.6; strikes++; score = Math.max(0, score - 8); SFX.bad(); updHud(); }
     }
     spawnOrder();
-    if (toastMsg) toastMsg.t -= dt * .8;
-    if (shiftT <= 0) endShift();
+    if (!welcomeShift && shiftT <= 0) endShift();
   }
   render();
 }
@@ -576,7 +630,11 @@ function keyDir(){
   return touchDir;
 }
 var keysDown = {}, touchDir = null;
+function clearInput(){ keysDown = {}; touchDir = null; }
+window.addEventListener("blur", clearInput);
+window.addEventListener("touchcancel", clearInput);
 window.addEventListener("keydown", function(e){
+  if (e.target.closest?.("button,a") && (e.code === "Space" || e.code === "Enter")) return;
   keysDown[e.code] = true;
   if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].indexOf(e.code) >= 0) e.preventDefault();
   if ((e.code === "Space" || e.code === "KeyE" || e.code === "KeyJ" || e.code === "Enter") && !e.repeat) act();
@@ -598,8 +656,8 @@ document.getElementById("actbtn").addEventListener("click", function(){ act(); }
 /* 点画布：点身边的工位 = 面向它做动作 */
 cvs.addEventListener("pointerdown", function(e){
   var r = cvs.getBoundingClientRect();
-  var cx = (e.clientX - r.left) * (cvs.width / dpr / r.width);
-  var cy = (e.clientY - r.top) * (cvs.height / dpr / r.height);
+  var cx = ((e.clientX - r.left) * cvs.offsetWidth / r.width - cvs.clientLeft) * cvs.width / dpr / cvs.clientWidth;
+  var cy = ((e.clientY - r.top) * cvs.offsetHeight / r.height - cvs.clientTop) * cvs.height / dpr / cvs.clientHeight;
   var gx2 = Math.floor(cx / T), gy2 = Math.floor((cy - TOP) / T);
   if (gy2 < 0 || gy2 >= GY) return;
   var dx = gx2 - P.x, dy = gy2 - P.y;
@@ -608,6 +666,10 @@ cvs.addEventListener("pointerdown", function(e){
 /* ================= 开班 / 结算 ================= */
 var ovl = document.getElementById("ovl");
 function startShift(){
+  if (running) return;
+  clearInput();
+  runStarted = Date.now();
+  runId = "oc-" + runStarted.toString(36) + "-" + (++runCount) + "-" + (globalThis.crypto && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
   score = 0; served = 0; strikes = 0; shiftT = 120; over = false; hand = null;
   orders = [];
   for (var k in stations){
@@ -620,12 +682,37 @@ function startShift(){
   ovl.classList.add("hidden");
   spawnOrder();
   running = true;
+  if (welcomeShift){
+    document.getElementById("welcome-guide").classList.remove("hidden");
+    updateWelcomeGuide();
+  }
+  cvs.focus({ preventScroll: true });
   try { if (AC && AC.state === "suspended") AC.resume(); } catch (e) {}
 }
 function endShift(){
+  if (!running || over || !runId) return;
   running = false; over = true;
+  clearInput();
+  if (welcomeShift){
+    var complete = served === welcomeMenu.length;
+    var saved = HouseRuns.enqueue("oc-welcome", served, runId, complete ? 1 : 0, runStarted);
+    document.getElementById("ovl-h").textContent = complete ? "迎新晚饭备好了" : "这班备餐还没做完";
+    document.getElementById("ovl-p").textContent = complete && saved ? "三道家常菜已出齐。回小家布置客厅，准备迎接新住户。" :
+      saved ? "出餐 " + served + "/" + welcomeMenu.length + "。再开一班，从第一道菜做起。" :
+      "浏览器没能保存本班进度。请检查存储权限后再试。";
+    document.getElementById("ovl-btn").textContent = "再做一班";
+    document.getElementById("welcome-guide").classList.add("hidden");
+    ovl.classList.remove("hidden");
+    if (saved && complete && parent !== window){
+      parent.postMessage("zhouse-focus-back", "*");
+    } else {
+      document.getElementById(saved && complete ? "ovl-home" : "ovl-btn").focus();
+    }
+    return;
+  }
   var crown = served >= 8;
   if (served > best){ best = served; saveBest(best); }
+  zhPlay("oc", served);
   document.getElementById("ovl-h").textContent = "收班";
   document.getElementById("ovl-p").innerHTML =
     "两分钟到。出餐 <b>" + served + "</b> 盘，得分 <b>" + score + "</b>，跑了 " + strikes + " 单。" +
@@ -637,6 +724,16 @@ function endShift(){
   ovl.classList.remove("hidden");
 }
 document.getElementById("ovl-btn").addEventListener("click", startShift);
+if (welcomeShift){
+  document.getElementById("shift-clock").classList.add("hidden");
+  document.getElementById("shift-score").classList.add("hidden");
+  document.getElementById("shift-tip").textContent = "迎新备餐不限时，菜熟后可以安心取出。手上拿错东西时，可到垃圾桶清手。";
+  document.getElementById("ovl-h").textContent = "迎新备餐";
+  document.getElementById("ovl-p").textContent = "为新住户做三道家常菜。一次做一道，跟着灶边提示取料、下锅、出餐。";
+  document.getElementById("ovl-btn").textContent = "开始备餐";
+  document.getElementById("welcome-retry").onclick = function(){ running = false; startShift(); };
+  updHud();
+}
 document.getElementById("sndbtn").addEventListener("click", function(){
   sndOn = !sndOn; this.classList.toggle("on", sndOn); this.textContent = sndOn ? "音" : "静";
 });
@@ -647,11 +744,14 @@ document.getElementById("rlist").innerHTML = DISHES.map(function(d){
   function span(id){ return id + (INGS[id].chop ? '<i class="cut">切</i>' : ""); }
   return "<li><b style=\"color:" + d.col + "\">" + d.n + "</b>：" + span(d.a) + " + " + span(d.b) + "</li>";
 }).join("");
-document.getElementById("ovl-t").textContent = "历史最佳出餐：" + best + " 盘。";
+if (!welcomeShift) document.getElementById("ovl-t").textContent = "历史最佳出餐：" + best + " 盘。";
 resize();
 requestAnimationFrame(loop);
 /* 后台标签页别偷跑时间：回来时把主循环时钟对齐 */
-document.addEventListener("visibilitychange", function(){ lastT = performance.now(); });
+document.addEventListener("visibilitychange", function(){
+  lastT = performance.now();
+  if (document.hidden) clearInput();
+});
 </script>
 </body>
 </html>

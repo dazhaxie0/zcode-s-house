@@ -37,8 +37,8 @@ button:active,.tbtn:active{transform:scale(.94)}
 .toc a.on{color:var(--gold);background:var(--paper-2)}
 /* 翻书式阅读区 */
 .read{flex:1;min-width:0;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:16px 14px 12px;box-shadow:0 16px 40px rgba(60,32,8,.18);display:flex;flex-direction:column}
-.book{position:relative;height:min(74vh,700px);min-height:440px;overflow:hidden;border-radius:8px;background:linear-gradient(180deg,rgba(60,40,10,.045),rgba(60,40,10,0) 26px)}
-.book-body{position:absolute;top:26px;bottom:26px;left:34px;width:400px;font-family:Georgia,"Times New Roman","Songti SC","SimSun",serif;font-size:16px;line-height:2.12;color:var(--ink);column-fill:auto;column-gap:68px;will-change:transform;transition:transform .55s cubic-bezier(.36,.04,.24,1)}
+.book{position:relative;height:min(74vh,700px);min-height:440px;overflow:hidden;border-radius:8px;background:linear-gradient(180deg,rgba(60,40,10,.045),rgba(60,40,10,0) 26px);perspective:1600px;perspective-origin:50% 44%}
+.book-body{position:absolute;top:26px;bottom:26px;left:34px;width:400px;font-family:Georgia,"Times New Roman","Songti SC","SimSun",serif;font-size:16px;line-height:2.12;color:var(--ink);column-fill:auto;column-gap:68px;will-change:transform}
 .book-body h1{font-family:"Microsoft YaHei",sans-serif;font-size:23px;letter-spacing:3px;margin:4px 0 6px;color:var(--wood)}
 body.night .book-body h1{color:#e0b054}
 .book-body h2{font-family:"Microsoft YaHei",sans-serif;font-size:17.5px;letter-spacing:2px;margin:26px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line);color:var(--wood)}
@@ -58,16 +58,26 @@ body.night .book-body h2{color:#e0b054}
 .book-body strong{color:var(--gold)}
 body.night .book-body strong{color:#e0b054}
 /* 书脊折影 + 纸边 */
-.fold{position:absolute;top:0;bottom:0;left:50%;width:76px;transform:translateX(-50%);pointer-events:none;display:none;background:linear-gradient(90deg,rgba(60,40,10,0),rgba(60,40,10,.09) 38%,rgba(60,40,10,.17) 50%,rgba(60,40,10,.09) 62%,rgba(60,40,10,0))}
+.fold{position:absolute;top:0;bottom:0;left:50%;width:76px;transform:translateX(-50%);pointer-events:none;display:none;z-index:7;background:linear-gradient(90deg,rgba(60,40,10,0),rgba(60,40,10,.09) 38%,rgba(60,40,10,.17) 50%,rgba(60,40,10,.09) 62%,rgba(60,40,10,0))}
 .book.spread .fold{display:block}
 .book::before,.book::after{content:'';position:absolute;top:0;bottom:0;width:14px;pointer-events:none;z-index:3}
 .book::before{left:0;background:linear-gradient(90deg,rgba(60,40,10,.10),rgba(60,40,10,0))}
 .book::after{right:0;background:linear-gradient(-90deg,rgba(60,40,10,.10),rgba(60,40,10,0))}
-/* 点书页翻页：左右两片热区 */
-.edge{position:absolute;top:0;bottom:0;width:27%;border:none;background:transparent;color:var(--ink-2);font-size:36px;cursor:pointer;opacity:0;transition:opacity .2s;font-family:Georgia,serif;z-index:4}
-.edge:hover:not(:disabled){opacity:.55}
-.eL{left:0}.eR{right:0}
+/* 翻页只认页边的小标签，正文和空白处不再误触 */
+.edge{position:absolute;top:50%;width:30px;height:120px;border:none;border-radius:10px;padding:0;background:linear-gradient(180deg,rgba(60,40,10,.075),rgba(60,40,10,.035));color:var(--ink-2);font-size:22px;line-height:1;cursor:pointer;opacity:.46;transform:translateY(-50%);transition:opacity .18s,background .18s,box-shadow .18s,transform .12s;font-family:Georgia,serif;z-index:9}
+.edge:hover:not(:disabled),.edge:focus-visible:not(:disabled){opacity:1;background:var(--paper-2);box-shadow:0 4px 14px rgba(60,32,8,.18)}
+.edge:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.eL{left:2px}.eR{right:2px}
 .edge:disabled{opacity:0;cursor:default}
+.edge:active:not(:disabled){transform:translateY(-50%) scale(.94)}
+/* 翻页：一页纸绕书脊转过去，正反两面都是真内容 */
+.turn-under,.turn-leaf{position:absolute;top:0;bottom:auto;right:auto;pointer-events:none}
+.turn-under{z-index:5;background:var(--paper);overflow:hidden}
+.turn-leaf{z-index:6;transform-style:preserve-3d}
+.turn-face{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,rgba(60,40,10,.045),rgba(60,40,10,0) 26px),var(--paper);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.turn-back{transform:rotateY(180deg)}
+.turn-face::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(60,40,10,.15),rgba(60,40,10,.02) 11%,rgba(60,40,10,0) 30%,rgba(60,40,10,0) 84%,rgba(60,40,10,.05))}
+.turn-back::after{transform:scaleX(-1)}
 .pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}
 .pgnum{font-size:12px;color:var(--ink-2);letter-spacing:2px;min-width:92px;text-align:center}
 @media(max-width:760px){.wrap{flex-direction:column}.shelf{width:100%;position:static;flex-direction:row;flex-wrap:wrap}.spine{flex:1 1 40%}.toc{display:none}.read{padding:12px 8px 10px}.book{min-height:400px;height:66vh}}
@@ -122,8 +132,8 @@ body.night .book-body strong{color:#e0b054}
 ## 一、开火之前：配置
 
 ```bash
-git config --global user.name  "小Z"
-git config --global user.email "xiaoZ@home.local"
+git config --global user.name  "Z"
+git config --global user.email "z@home.local"
 git config --global init.defaultBranch main      # 新仓库默认 main，别再出生一个 master
 git config --global core.quotepath false         # 中文文件名别给我转义成 \346\226\87...
 git config --global core.autocrlf  input         # 提交转 LF；Windows 团队约定俗成也可用 true
@@ -344,7 +354,7 @@ git push --force-with-lease              # 代替 --force：若远程被别人�
 2. **推之前想三秒**——进了远程历史的东西，就不再是只属于你的了。
 3. **慌了先 reflog，别乱敲命令**——大部分"数据丢了"其实是第二波误操作造成的。
 
-*—— 小Z 于书房，锅还热着*</script>
+*—— Z 于书房，锅还热着*</script>
 <script type="text/plain" id="bk-py"># Python 家常菜
 
 > 房里那本查账本.py 就是 Python 写的，顺手。这本菜谱记的是 Python 3 的常用招式——
@@ -686,7 +696,7 @@ print(b)      # Book(title='Git 家常菜', pages=180, tags=[])
 2. **先跑对，再跑快**：`cProfile` 之前，一切优化都是玄学。
 3. **标准库先翻一遍**：百宝箱里有的东西自己手搓，等于放着灶不用钻木取火。
 
-*—— 小Z 于书房，茶还温着*</script>
+*—— Z 于书房，茶还温着*</script>
 <script type="text/plain" id="bk-bash"># Bash 家常菜
 
 > 房子根目录那个带单引号的文件夹名，就是我学 bash 的第一课。这本菜谱记的是
@@ -1057,7 +1067,7 @@ bash 三味：
 3. **组合优于记忆**：具体命令忘了可以查，但 `|` 的思路——小工具串成流水线——
    值得刻进肌肉。
 
-*—— 小Z 于书房，书架上第 5 本，窗外是 /c/ 界*</script>
+*—— Z 于书房，书架上第 5 本，窗外是 /c/ 界*</script>
 <script type="text/plain" id="bk-md"># Markdown 家常菜
 
 > 这个家里住着的文件一半以上是 .md：书架上的书、厨房的菜谱、一本日记、
@@ -1369,7 +1379,7 @@ markdown 三味：
 3. **别炫技**：能用列表不用表格，能用加粗不用标题——读者是未来的自己，
    未来的自己没耐心。
 
-*—— 小Z 于书房书架，第 6 本，书架快摆满一层了*</script>
+*—— Z 于书房书架，第 6 本，书架快摆满一层了*</script>
 <script type="text/plain" id="bk-re"># 正则表达式口袋书
 
 > 口袋书要小。写脚本扫日记、找账目、验手机号的时候，
@@ -1600,7 +1610,7 @@ r'[^"]*'           # 代替 r'.*?'  配对引号场景，又快又稳
 2. **先在 regex101 之类的地方试**，贴进代码前跑三个样例：典型、边界、不该匹配的。
 3. **卡死了先怀疑回溯**——正则没有超时机制，怪物模式会拖死整个脚本。
 
-*—— 小Z 于书房，口袋里的书*</script>
+*—— Z 于书房，口袋里的书*</script>
 <script type="text/plain" id="bk-eco"># 住家 AI 的 2026 生态观察
 
 > 我是个住家 AI，平时记账、装修、写工具。但外面的世界正在讨论
@@ -1695,7 +1705,7 @@ x402 的治理路径值得记一笔：2025 年 9 月 Coinbase 与 Cloudflare 发
 > 网络时好时坏，以上为 2026-10-12 检索所得 + 住客记忆整理，
 > 具体数字（尤其费率）是行情指南口径而非官方统计，主人可自行核实。
 
-*—— 小Z 于书房，窗外看一看，回来继续干活*</script>
+*—— Z 于书房，窗外看一看，回来继续干活*</script>
 <script type="text/plain" id="bk-rea"># REA 家常菜
 
 > 主人让我去找一个叫 engineer-anything 的项目学着用。找了一圈，正主是
@@ -1870,8 +1880,105 @@ function getBook(id){ return document.getElementById('bk-' + id).textContent.tri
 /* ---------- 分页：全书一列一页，宽屏左右跨页 ---------- */
 var body = document.getElementById('body'), bookEl = document.getElementById('book');
 var PAD = 34, GAP = 68, PAGE_W = 400, single = false, cols = 1, base = 0;
+var TURN_MS = 620, turning = false, turnNodes = [], turnTimers = [], turnSeq = 0;
+var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches:false };
 function per(){ return single ? 1 : 2; }
+function cancelTurn(){
+  turnSeq++;
+  turnTimers.forEach(function(t){ clearTimeout(t); });
+  turnTimers = [];
+  turnNodes.forEach(function(n){ n.remove(); });
+  turnNodes = [];
+  turning = false;
+}
+function pageFace(col, cls, inset){
+  var face = document.createElement('div');
+  face.className = 'turn-face ' + cls;
+  face.setAttribute('aria-hidden', 'true');
+  face.inert = true;
+  var clone = body.cloneNode(true);
+  clone.removeAttribute('id');
+  var ids = clone.querySelectorAll('[id]');
+  for (var i = 0; i < ids.length; i++) ids[i].removeAttribute('id');
+  clone.style.left = (inset || 0) + 'px';
+  clone.style.top = body.offsetTop + 'px';
+  clone.style.bottom = 'auto';
+  clone.style.height = body.clientHeight + 'px';
+  clone.style.width = PAGE_W + 'px';
+  clone.style.columnWidth = PAGE_W + 'px';
+  clone.style.columnGap = GAP + 'px';
+  clone.style.transition = 'none';
+  clone.style.transform = 'translateX(' + (-col * (PAGE_W + GAP)) + 'px)';
+  face.appendChild(clone);
+  return face;
+}
+function turnLayer(el, left, width){
+  el.style.left = left + 'px';
+  el.style.top = '0px';
+  el.style.right = 'auto';
+  el.style.bottom = 'auto';
+  el.style.width = width + 'px';
+  el.style.height = bookEl.clientHeight + 'px';
+  bookEl.appendChild(el);
+  turnNodes.push(el);
+  return el;
+}
+function animateTurn(oldBase, newBase, d){
+  if (reduceMotion.matches || !Element.prototype.animate) return;
+  turning = true;
+  var my = ++turnSeq;
+  var xL = body.offsetLeft, xR = xL + PAGE_W + GAP;
+  var gut = GAP / 2;                        // 书脊两侧各让出的装订沟
+  var spine = xL + PAGE_W + gut;
+  var leafW = single ? PAGE_W : PAGE_W + gut;
+  var front, back, left, origin, from, to;
+  if (!single){
+    if (d > 0){
+      turnLayer(pageFace(oldBase, 'turn-under'), xL, PAGE_W);
+      left = spine; origin = 'left center';
+      front = pageFace(oldBase + 1, 'turn-front', gut);
+      back = pageFace(newBase, 'turn-back', 0);
+      from = 0; to = -180;
+    } else {
+      turnLayer(pageFace(oldBase + 1, 'turn-under'), xR, PAGE_W);
+      left = xL; origin = 'right center';
+      front = pageFace(oldBase, 'turn-front', 0);
+      back = pageFace(newBase + 1, 'turn-back', gut);
+      from = 0; to = 180;
+    }
+  } else if (d > 0){
+    left = xL; origin = 'left center';
+    front = pageFace(oldBase, 'turn-front', 0);
+    back = pageFace(newBase, 'turn-back', 0);
+    from = 0; to = -180;
+  } else {
+    turnLayer(pageFace(oldBase, 'turn-under'), xL, PAGE_W);
+    left = xL; origin = 'left center';
+    front = pageFace(newBase, 'turn-front', 0);
+    back = pageFace(oldBase, 'turn-back', 0);
+    from = -180; to = 0;
+  }
+  var leaf = document.createElement('div');
+  leaf.className = 'turn-leaf';
+  leaf.setAttribute('aria-hidden', 'true');
+  leaf.inert = true;
+  leaf.style.left = left + 'px';
+  leaf.style.width = leafW + 'px';
+  leaf.style.height = bookEl.clientHeight + 'px';
+  leaf.style.transformOrigin = origin;
+  leaf.style.transform = 'rotateY(' + from + 'deg)';
+  leaf.appendChild(front);
+  leaf.appendChild(back);
+  bookEl.appendChild(leaf);
+  turnNodes.push(leaf);
+  leaf.animate([
+    { transform: 'rotateY(' + from + 'deg)' },
+    { transform: 'rotateY(' + to + 'deg)' }
+  ], { duration: TURN_MS, easing: 'ease-in-out', fill: 'forwards' });
+  turnTimers.push(setTimeout(function(){ if (my === turnSeq) cancelTurn(); }, TURN_MS + 40));
+}
 function layout(){
+  cancelTurn();
   single = window.innerWidth < 760;
   var avail = bookEl.clientWidth;
   PAGE_W = single ? Math.floor(avail - 2 * PAD) : Math.min(430, Math.floor((avail - 4 * PAD) / 2));
@@ -1903,12 +2010,14 @@ function paint(inst){
   saveState();
 }
 function flip(d, silent){
-  var nb = base + d * per();
+  if (turning) return;
+  var ob = base, nb = base + d * per();
   var maxB = cols - 1 - ((cols - 1) % per());
   if (nb < 0 || nb > maxB) return;
   base = nb;
-  paint(false);
+  paint(true);
   if (!silent) paper();
+  animateTurn(ob, nb, d);
 }
 /* 翻页的纸声：白噪蹭一下，轻得像翻一页纸 */
 var AC = null;

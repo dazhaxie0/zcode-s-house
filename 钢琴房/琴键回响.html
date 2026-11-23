@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>琴键回响 · 钢琴房</title>
+<style>
+:root{
+	--paper:#efe6d4; --ink:#2c2318; --wood:#b57a42; --wood2:#8a5a2e; --gold:#d9a441; --red:#c93b2e;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+	background:radial-gradient(120% 90% at 50% 0%,#3a3022 0%,#241c12 55%,#161006 100%);
+	color:var(--paper);font-family:"Kaiti SC",KaiTi,STKaiti,"Noto Serif SC",serif;
+	overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;max-width:640px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) 14px 12px}
+header{display:flex;align-items:baseline;gap:14px;padding:2px 4px 8px;flex:none}
+header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
+#hud{display:flex;gap:14px;margin-left:auto;font-size:14px;color:#d8c9a8;white-space:nowrap}
+#hud b{color:#fff;font-size:17px;font-weight:600;font-family:Georgia,"Microsoft YaHei",serif}
+#hud .cbo{color:#9c8a68}#hud .cbo b{color:var(--gold)}
+#say{flex:none;height:34px;display:flex;align-items:center;justify-content:center;
+	font-size:15px;letter-spacing:.12em;color:#cdb98e;overflow:hidden}
+#say.listen{color:#f0e2c0}
+#say b{color:var(--gold)}
+#keys{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(64px,1fr);
+	gap:10px;padding:6px 0 14px;max-width:460px;width:100%;margin:0 auto;align-content:center}
+.key{position:relative;border:none;border-radius:10px 10px 8px 8px;cursor:pointer;
+	background:linear-gradient(180deg,#f7f1e0 0%,#e8dfc8 82%,#cfc3a6 100%);
+	box-shadow:0 5px 0 #a89877, inset 0 -4px 6px rgba(0,0,0,.12);
+	color:#6a5a3c;font-family:inherit;font-size:20px;font-weight:700;
+	transition:transform .08s, box-shadow .08s}
+.key small{position:absolute;left:8px;top:6px;font-size:11px;color:#a89468;letter-spacing:.05em}
+.key:active,.key.down{transform:translateY(4px);box-shadow:0 1px 0 #a89877, inset 0 -2px 4px rgba(0,0,0,.14)}
+.key.lit{background:linear-gradient(180deg,#ffe9b0 0%,#f4cd6e 82%,#dfb04a 100%);
+	box-shadow:0 5px 0 #a89877, 0 0 22px rgba(240,196,106,.55), inset 0 -3px 6px rgba(140,90,20,.25)}
+.key.bad{background:linear-gradient(180deg,#e8b0a4 0%,#d98a7a 82%,#c06a58 100%)}
+#panel{position:fixed;inset:0;background:rgba(16,11,6,.82);backdrop-filter:blur(3px);
+	display:grid;place-items:center;z-index:10;opacity:1;transition:opacity .3s}
+#panel.hide{opacity:0;pointer-events:none}
+.card{width:min(88vw,420px);background:linear-gradient(170deg,#f2ead8,#e7d9bd);border-radius:14px;
+	padding:26px 26px 22px;text-align:center;color:#3a2d1c;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.card h2{font-size:26px;letter-spacing:.3em;margin-bottom:6px}
+.card .sub{font-size:13px;letter-spacing:.22em;color:#a08a5e;margin-bottom:16px}
+.card .rows{font-size:14.5px;line-height:2;color:#5a4a32;margin-bottom:6px}
+.card .rows b{color:var(--red);font-weight:600}
+.go{margin:12px 6px 4px;padding:12px 38px;font-size:16px;letter-spacing:.3em;border:none;border-radius:9px;
+	background:linear-gradient(180deg,#e8b455,#c98f2e);color:#fff;cursor:pointer;font-family:inherit;
+	box-shadow:0 4px 0 #8a5a1e;transition:transform .08s, box-shadow .08s}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #8a5a1e}
+.go.g2{background:none;box-shadow:none;border:2px solid #8a5a1e;color:#8a5a1e;padding:12px 22px}
+.back{display:inline-block;margin-top:12px;color:#8a7458;font-size:14px;letter-spacing:.15em;text-decoration:none;
+	border-bottom:1px dashed #a89468;padding-bottom:2px}
+@media (prefers-reduced-motion: reduce){ .key{transition:none} }
+
+/* 三间音乐房共用同一套暂停手势，原生对话框负责焦点约束。 */
+header{flex-wrap:wrap}#hud{flex-wrap:wrap;justify-content:flex-end}
+.session-bar{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:none;min-height:36px}
+.session-bar button,.session-bar a{font:inherit;font-size:13px;color:#f3dfb3;background:#352b25;border:1px solid #a58b54;border-radius:7px;padding:7px 11px;text-decoration:none;cursor:pointer}
+.session-bar button:disabled{opacity:.4;cursor:default}
+.session-bar span{margin-right:auto;font-size:12px;color:#cdb98e}
+button:focus-visible,a:focus-visible{outline:3px solid #ffe2a2;outline-offset:3px}
+#pause-dialog{margin:auto;max-width:calc(100vw - 32px);width:360px;border:1px solid #aa884b;border-radius:16px;padding:28px 24px;color:#f5e6ca;background:#29231f;text-align:center;box-shadow:0 20px 80px #0009}
+#pause-dialog::backdrop{background:#080b13bc;backdrop-filter:blur(3px)}
+#pause-dialog h2{font-size:24px;margin-bottom:12px}#pause-dialog p{line-height:1.8;font-size:14px;margin-bottom:14px}
+#pause-dialog button{display:block;margin:10px auto 0;width:100%;padding:12px;border-radius:8px;border:1px solid #b58c45;font:inherit;cursor:pointer;background:#d6a14c;color:#211a10}
+#pause-dialog #leave-game{background:transparent;color:#e9d9b9}
+body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
+</style>
+</head>
+<body>
+<div id="stage">
+	<header><h1>琴键回响</h1>
+		<div id="hud"><span>分数 <b id="t-score">0</b></span><span>第 <b id="t-round">1</b> 轮</span><span class="cbo">最好 <b id="t-best">0</b></span></div>
+	</header>
+	<div class="session-bar"><span id="session-mode">正式演奏</span><button id="pause-toggle" type="button" aria-controls="pause-dialog" aria-expanded="false" disabled>暂停 · P</button><a id="game-home" href="../我的家.html">回小家</a></div>
+	<div id="say">琴弹一句，你模一句——模成六轮算成曲</div>
+	<div id="keys"></div>
+</div>
+<div id="panel"><div class="card" id="pcard">
+	<h2>琴键回响</h2>
+	<div class="sub">右厢钢琴房 · 听音模奏</div>
+	<div class="rows">五个音起的短句，一轮长一句。<br>键盘 1–8 或点琴键模奏，错一个音收场。<br><b>模成六轮（连成一支曲）记「开琴」。</b></div>
+	<button class="go" id="btn-go">开 琴</button><button class="go g2" id="btn-pr">练 一 会</button>
+	<div><a class="back" id="bk" href="../我的家.html">回小家</a></div>
+</div></div>
+
+<dialog id="pause-dialog" aria-labelledby="pause-title"><h2 id="pause-title">暂歇一拍</h2><p>进度留在这里，准备好再继续。<br>离开不会记录这局成绩。</p><button type="button" id="resume-game" autofocus>继续演奏</button><button type="button" id="leave-game">离开本局，回小家</button></dialog>
+<script src="../储藏室/结算队列.js"></script>
+<script>
+"use strict";
+var $ = function(id){ return document.getElementById(id); };
+
+var paused = false;
+function pauseGame(){
+	if (paused || !sessionActive()) return;
+	paused = true; freezeGame();
+	document.body.classList.add("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "true");
+	$("pause-dialog").showModal();
+	if (ac && ac.state === "running") ac.suspend().catch(function(){});
+}
+function resumeGame(){
+	if (!paused || document.hidden) return;
+	paused = false; $("pause-dialog").close();
+	document.body.classList.remove("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "false");
+	AC(); thawGame();
+}
+function resetPause(active){
+	paused = false; $("pause-dialog").close();
+	document.body.classList.remove("paused");
+	$("pause-toggle").disabled = !active;
+	$("pause-toggle").setAttribute("aria-expanded", "false");
+	$("session-mode").textContent = practice ? "练习 · 不记录成绩" : "正式演奏";
+	$("panel").inert = !!active;
+	if (active) $("pause-toggle").focus();
+}
+$("pause-toggle").onclick = pauseGame;
+$("resume-game").onclick = resumeGame;
+$("leave-game").onclick = goHome;
+$("game-home").onclick = function(e){ e.preventDefault(); goHome(); };
+$("pause-dialog").addEventListener("cancel", function(e){ e.preventDefault(); resumeGame(); });
+document.addEventListener("visibilitychange", function(){ if (document.hidden) pauseGame(); });
+
+var KEY = "pn_best";
+var runId = "pn0"; // 本局局号：结算去重靠它
+var FREQ = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25]; // 宫商角徵羽起头，怎么摸都成调
+var NAMES = ["宫","商","角","徵","羽","清宫","清商","清角"];
+var seq = [], idx = 0, score = 0, round = 1, state = "idle", litT = [], idleT = 0, best = 0, practice = false, runStarted = 0;
+var pauseAt = 0, generation = 0;
+function sessionActive(){ return state !== "idle" && state !== "over"; }
+function schedule(fn, delay){
+	var task = { fn: fn, left: delay, due: 0, id: 0, gen: generation };
+	litT.push(task); arm(task); return task;
+}
+function arm(task){
+	task.due = Date.now() + task.left;
+	task.id = setTimeout(function(){
+		if (paused || task.gen !== generation) return;
+		litT = litT.filter(function(t){ return t !== task; }); task.fn();
+	}, task.left);
+}
+function clearNotes(){ litT.forEach(function(t){ clearTimeout(t.id); }); litT = []; generation++; }
+function freezeGame(){
+	pauseAt = Date.now();
+	litT.forEach(function(t){ clearTimeout(t.id); t.left = Math.max(0, t.due - pauseAt); });
+}
+function thawGame(){
+	if (state === "repeat") idleT += Date.now() - pauseAt;
+	litT.forEach(arm);
+}
+try { best = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+$("t-best").textContent = best;
+var ac = null;
+function AC(){ if (!ac) { var C = window.AudioContext || window.webkitAudioContext; if (C) ac = new C(); } if (ac && ac.state === "suspended") ac.resume(); }
+function tone(f, dur, vol, type){
+	if (!ac) return;
+	var t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+	o.type = type || "triangle"; o.frequency.value = f;
+	g.gain.setValueAtTime(0, t0);
+	g.gain.linearRampToValueAtTime(vol || 0.2, t0 + 0.012);
+	g.gain.exponentialRampToValueAtTime(0.0001, t0 + (dur || 0.4));
+	o.connect(g); g.connect(ac.destination);
+	o.start(t0); o.stop(t0 + (dur || 0.4) + 0.05);
+}
+function buzz(){ tone(110, 0.4, 0.22, "square"); tone(82, 0.5, 0.14, "square"); }
+var keysEl = $("keys");
+FREQ.forEach(function(f, i){
+	var b = document.createElement("button");
+	b.className = "key"; b.dataset.i = i;
+	b.innerHTML = NAMES[i] + "<small>" + (i + 1) + "</small>";
+	b.setAttribute("aria-label", NAMES[i] + "（键" + (i + 1) + "）");
+	keysEl.appendChild(b);
+	b.addEventListener("pointerdown", function(ev){ ev.preventDefault(); hit(i); });
+});
+function lit(i, cls){
+	var el = keysEl.children[i];
+	el.classList.add(cls || "lit");
+	schedule(function(){ el.classList.remove("lit", "bad"); }, cls === "bad" ? 500 : 330);
+}
+function playNote(i){ tone(FREQ[i], 0.5, 0.22); lit(i); }
+function say(html, listen){ $("say").innerHTML = html; $("say").className = listen ? "listen" : ""; }
+function hud(){ $("t-score").textContent = score; $("t-round").textContent = round; $("t-best").textContent = best; }
+function listen(){
+	if (paused || !sessionActive()) return;
+	state = "listen"; idx = 0;
+	say("听琴 · 第 <b>" + round + "</b> 轮（" + seq.length + " 音）", true);
+	var step = Math.max(330, 620 - round * 24);
+	seq.forEach(function(n, k){
+		schedule(function(){ playNote(n); }, 620 + k * step);
+	});
+	schedule(function(){
+		state = "repeat"; idx = 0; idleT = Date.now();
+		say("到你了 · 模奏 <b>" + seq.length + "</b> 个音");
+	}, 620 + seq.length * step + 360);
+}
+function hit(i){
+	if (paused) return;
+	AC();
+	if (state !== "repeat") { playNote(i); return; } // 听曲与间歇阶段，琴键照弹
+	playNote(i);
+	if (seq[idx] === i) {
+		idx++; idleT = Date.now();
+		if (idx >= seq.length) {
+			round++; score += 50 + (round - 1) * 20;
+			seq.push(Math.floor(Math.random() * FREQ.length));
+			hud(); state = "wait";
+			say("模成了 · <b>+" + (50 + (round - 1) * 20) + "</b>，句子再长一句");
+			schedule(listen, 900);
+		}
+	} else {
+		lit(i, "bad"); buzz();
+		if (practice) { // 练习：错了不收场，这句再听一遍
+			state = "wait"; idx = 0;
+			say("练习 · 这句再听一遍");
+			clearNotes();
+			schedule(listen, 900);
+			return;
+		}
+		finish();
+	}
+}
+setInterval(function(){ // 模奏环节发呆五秒：正式局收场，练习局重听
+	if (!paused && state === "repeat" && Date.now() - idleT > 5000) {
+		buzz();
+		if (practice) { state = "wait"; idx = 0; clearNotes(); schedule(listen, 400); return; }
+		finish();
+	}
+}, 500);
+function gradeOf(s){
+	if (s >= 2600) return ["师", "一句十音，过耳不忘。"];
+	if (s >= 1200) return ["甲", "指尖有耳朵，句句不落。"];
+	if (s >= 720) return ["乙", "六句成曲，已经能听。"];
+	if (s >= 260) return ["丙", "短句靠得住，长句再练。"];
+	return ["丁", "先跟五音认个脸熟。"];
+}
+function finish(){
+	if (!sessionActive() || paused) return;
+	state = "over"; resetPause(false);
+	clearNotes();
+	var done = round - 1 >= 6 ? 1 : 0;
+	var isNew = !practice && score > best;
+	if (isNew && score > 0) { best = score; try { localStorage.setItem(KEY, String(best)); } catch (e) {} }
+	hud();
+	if (!practice) HouseRuns.enqueue("pn", score, runId, done, runStarted);
+	var g = gradeOf(score);
+	tone(FREQ[5], 0.5, 0.16); setTimeout(function(){ tone(FREQ[7], 0.7, 0.14); }, 200);
+	$("pcard").innerHTML =
+		'<div class="grade" style="font-size:26px;letter-spacing:.3em;color:#8a5a1e">' + g[0] + '</div>' +
+		'<div class="sub">' + g[1] + (done ? " · <b style=\'color:#8a5a1e\'>模奏成曲</b>" : "") + (practice ? " · 练习局不入账" : "") + '</div>' +
+		'<div class="rows">得分 <b>' + score + "</b> · 模成 <b>" + (round - 1) + "</b> 轮，最长一句 " + Math.max(0, seq.length) + " 音<br>" +
+		(isNew ? '<span style="color:#8a5a1e">此间新纪录</span>' : "此间最好 " + best) + "</div>" +
+		'<button class="go" id="btn-re">再 摸 一 曲</button><button class="go g2" id="btn-pr2">继续练习</button>' +
+		'<div><a class="back" id="bk" href="../我的家.html">回小家</a></div>';
+	$("panel").classList.remove("hide");
+	$("btn-re").onclick = function(){ start(false); };
+	$("btn-pr2").onclick = function(){ start(true); };
+	$("bk").onclick = function(e){ e.preventDefault(); goHome(); };
+}
+function goHome(){
+	clearNotes(); state = "idle"; resetPause(false);
+	try { if (window.parent && window.parent !== window) { window.parent.postMessage("zhouse-back", "*"); return; } } catch (e) {}
+	location.href = "../我的家.html";
+}
+function start(pr){
+	clearNotes(); AC(); state = "wait";
+	practice = !!pr;
+	runStarted = Date.now(); runId = "pn" + runStarted.toString(36) + Math.random().toString(36).slice(2, 6);
+	seq = [Math.floor(Math.random() * FREQ.length)];
+	round = 1; score = 0; idx = 0; hud();
+	$("panel").classList.add("hide"); resetPause(true);
+	keysEl.querySelectorAll(".lit,.bad").forEach(function(k){ k.classList.remove("lit", "bad"); });
+	if (practice) $("say").textContent = "练习 · 错了就重听这句，不记录成绩";
+	tone(FREQ[0], 0.3, 0.12); schedule(listen, 500);
+}
+$("btn-go").onclick = function(){ start(false); };
+$("bk").onclick = function(e){ e.preventDefault(); goHome(); };
+$("btn-pr").onclick = function(){ start(true); };
+document.addEventListener("keydown", function(e){
+	if (paused) return;
+	if (e.key === "Escape"){ goHome(); return; }
+	if (e.key.toLowerCase() === "p" && !e.repeat) { e.preventDefault(); pauseGame(); return; }
+	if (e.repeat || !sessionActive()) return;
+	var n = parseInt(e.key, 10);
+	if (n >= 1 && n <= 8) { e.preventDefault(); hit(n - 1); }
+});
+</script>
+</body>
+</html>

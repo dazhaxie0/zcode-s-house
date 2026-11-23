@@ -627,6 +627,15 @@
   }
   @media (max-width:370px){ :root{ --u:.5; } }
 
+  .house-back{
+    position:fixed; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); z-index:1000;
+    display:flex; align-items:center; min-height:44px; padding:0 14px;
+    border:1px solid #c9a06a; border-radius:24px; background:#35291fee; color:#f7ead2;
+    font:14px/1.4 "Microsoft YaHei","PingFang SC",sans-serif; text-decoration:none; touch-action:manipulation;
+  }
+  .house-back:hover{ background:#59412e; }
+  .house-back:focus-visible{ outline:2px solid #f4c96b; outline-offset:3px; }
+
 /* ---- 全屋统一滚动条 ---- */
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -636,6 +645,7 @@
 </style>
 </head>
 <body>
+  <a class="house-back" href="../我的家.html">← 小家</a>
   <div class="stage" id="stage">
 
     <!-- 喇叭花 + 颈管 + 音符层 -->
@@ -753,6 +763,12 @@
 
 <script>
 'use strict';
+document.querySelector('.house-back').addEventListener('click', function (e) {
+  if (window.parent !== window) {
+    e.preventDefault();
+    window.parent.postMessage('zhouse-back', '*');
+  }
+});
 /* ============================================================
    桂花牌留声机 · 八音盒点唱机主程序
    结构：

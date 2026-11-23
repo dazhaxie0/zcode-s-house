@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>书房 · 档案柜</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--wood:#6b4f2e;--paper:#f7efdd;--paper-2:#efe4cc;--ink:#4a3a28;--ink-2:#6f5f46;--line:#e2d4b4;--gold:#9a6a12;--code-bg:#f3ecd9}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:linear-gradient(180deg,#efe2c4,#e6d5ae);min-height:100vh;color:var(--ink)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 18px;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:2px solid var(--line)}
+.inframe .topbar{padding-left:76px}
+.tt{font-weight:900;font-size:16px;letter-spacing:3px;color:var(--wood)}
+.ts{font-size:12px;color:var(--ink-2);letter-spacing:1px}
+.sp{flex:1}
+.tbtn{border:2px solid var(--line);background:var(--paper);color:var(--ink-2);border-radius:9px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;letter-spacing:1px;text-decoration:none;transition:.15s;white-space:nowrap}
+.tbtn:hover,.tbtn:focus-visible{border-color:var(--gold);color:var(--gold);outline:none}
+.tbtn:active{transform:scale(.94)}
+.wrap{display:flex;gap:18px;max-width:1040px;margin:0 auto;padding:18px 14px 44px;align-items:flex-start}
+.drawers{width:200px;flex:none;position:sticky;top:66px;display:flex;flex-direction:column;gap:12px}
+.dw{background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px 8px 8px;box-shadow:0 6px 16px rgba(60,32,8,.08)}
+.dw h4{font-size:11px;letter-spacing:3px;color:var(--ink-2);margin:0 4px 6px;font-weight:700}
+.doc{display:block;width:100%;text-align:left;border:none;background:none;font-family:inherit;font-size:13px;color:var(--ink);padding:6px 10px;border-radius:7px;cursor:pointer;letter-spacing:1px}
+.doc:hover,.doc:focus-visible{background:var(--paper-2);outline:none}
+.doc.on{background:var(--gold);color:#fff8e6;font-weight:700}
+.sheet{flex:1;min-width:0;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:28px 36px 20px;box-shadow:0 16px 40px rgba(60,32,8,.16);font-family:Georgia,"Songti SC","SimSun",serif;font-size:15.5px;line-height:2}
+.sheet h1{font-family:"Microsoft YaHei",sans-serif;font-size:24px;letter-spacing:3px;color:var(--wood);margin-bottom:8px}
+.sheet h2{font-family:"Microsoft YaHei",sans-serif;font-size:17px;letter-spacing:2px;color:var(--wood);margin:24px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+.sheet h3{font-family:"Microsoft YaHei",sans-serif;font-size:15px;margin:18px 0 8px}
+.sheet p{margin:8px 0;text-align:justify}
+.sheet blockquote{margin:12px 0;padding:9px 16px;border-left:4px solid var(--gold);background:var(--paper-2);border-radius:0 10px 10px 0;color:var(--ink-2);font-size:14px}
+.sheet table{border-collapse:collapse;margin:12px 0;width:100%;font-size:13.5px;font-family:"Microsoft YaHei",sans-serif}
+.sheet th,.sheet td{border:1px solid var(--line);padding:6px 11px;text-align:left;line-height:1.7;vertical-align:top}
+.sheet th{background:var(--paper-2);letter-spacing:1px}
+.sheet ul,.sheet ol{margin:8px 0 8px 24px}
+.sheet li{margin:4px 0}
+.sheet code{font-family:Consolas,"Courier New",monospace;font-size:.86em;background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+.sheet pre{margin:12px 0;background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;line-height:1.7}
+.sheet pre code{background:none;border:none;padding:0}
+.sheet hr{border:none;border-top:2px dashed var(--line);margin:18px 0}
+.sheet strong{color:var(--wood)}
+.src{margin-top:22px;padding-top:10px;border-top:1px dashed var(--line);font-family:"Microsoft YaHei",sans-serif;font-size:12px;color:var(--ink-2);display:flex;gap:10px;align-items:center;flex-wrap:wrap;letter-spacing:1px}
+@media (max-width:760px){
+.topbar{padding:8px 12px;gap:8px}
+.inframe .topbar{padding-left:68px;flex-wrap:wrap}
+.inframe .tt{flex-basis:100%;font-size:14px}
+.inframe .sp{display:none}
+.inframe .tbtn{padding:6px 8px}
+.ts{display:none}
+.wrap{flex-direction:column;padding:12px 10px 32px;gap:12px}
+.drawers{position:static;width:100%;flex-direction:row;overflow-x:auto;gap:8px;padding-bottom:4px}
+.dw{flex:none;display:flex;align-items:center;gap:2px;padding:5px 6px}
+.dw h4{margin:0 6px 0 4px;white-space:nowrap}
+.doc{width:auto;white-space:nowrap;padding:5px 9px}
+.sheet{width:100%;padding:20px 18px 14px;font-size:15px}
+}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#a8895c;border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+*{scrollbar-width:thin;scrollbar-color:#a8895c transparent}
+</style>
+</head>
+<body>
+<div class="topbar">
+<span class="tt">档案柜</span><span class="ts">菜谱 · 课表 · 纸条，原文照录</span>
+<span class="sp"></span>
+<button class="tbtn" id="prev">‹ 上一份</button><button class="tbtn" id="next">下一份 ›</button>
+<a class="tbtn" href="../我的家.html" id="home">← 小家</a>
+</div>
+<div class="wrap">
+<nav class="drawers" aria-label="抽屉"><div class="dw"><h4>厨房 · 菜谱</h4><button class="doc" data-i="0">番茄炒蛋</button><button class="doc" data-i="1">蛋炒饭</button><button class="doc" data-i="2">葱油拌面</button><button class="doc" data-i="3">可乐鸡翅</button><button class="doc" data-i="4">红烧肉</button><button class="doc" data-i="5">酸辣土豆丝</button><button class="doc" data-i="6">紫菜蛋花汤</button></div><div class="dw"><h4>健身房 · 课表</h4><button class="doc" data-i="7">肩腰日</button><button class="doc" data-i="8">手腰日</button><button class="doc" data-i="9">腿臀日</button><button class="doc" data-i="10">胸上腹日</button><button class="doc" data-i="11">背下腹日</button></div><div class="dw"><h4>卧室 · 纸条</h4><button class="doc" data-i="12">二手地铺床垫</button></div></nav>
+<article class="sheet" id="sheet"></article>
+</div>
+<script type="text/plain" id="doc-0"># 番茄炒蛋
+
+> 国民下饭菜 No.1。红黄配色，端上桌就是一束花。
+> 这份菜谱的核心只有两个执念：蛋要嫩，汁要浓。其他都是细节。
+
+## 难度与耗时
+
+- 难度：★☆☆☆☆（新手第一课，也是一辈子的功课）
+- 准备：5 分钟 / 烹饪：8 分钟
+- 份量：2 人吃两碗饭，1 人吃出幸福感
+
+## 食材表
+
+| 食材       | 用量        | 备注                             |
+|-----------|------------|----------------------------------|
+| 番茄       | 2 个（约 400g）| 挑软一点的，捏起来有弹性的熟番茄 |
+| 鸡蛋       | 3 个       | 冷藏蛋直接用，不用回温           |
+| 小葱       | 1 根       | 切葱花，最后撒                   |
+| 白糖       | 1 小勺（约 5g） | 提鲜去酸，不是让你吃甜口        |
+| 盐         | 1 小勺（约 3g） | 分两次放，蛋里一半，汁里一半    |
+| 食用油     | 2 汤匙     | 炒蛋一次，炒番茄一次             |
+| 清水       | 2 汤匙     | 只在番茄下锅后加，帮助出汁       |
+
+## 步骤
+
+1. **备料**：番茄切滚刀块（随意切大块也行，反正会炒烂）；鸡蛋磕进碗里，加盐的一半，用筷子搅打 30 秒，打到蛋液表面起一层小泡泡——这一步是嫩的第一重保险。
+2. **热锅**：中火把锅烧到冒烟前的样子（滴水进去会"滋啦"乱跳），倒第一汤匙油，晃匀。
+3. **炒蛋**：蛋液倒进去，默数 5 秒别动它，等边缘鼓起来，用锅铲从外往里推，蛋液刚凝固、还带一点流动感的时候就盛出。**宁生勿老**，它等下还要回锅。
+4. **炒番茄**：锅里补第二汤匙油，下番茄块，中火翻炒 1 分钟，压一压让它出汁，沿锅边淋 2 汤匙清水，盖盖焖 2 分钟。
+5. **调味**：开盖，加糖和剩下的盐，翻匀。这时锅里应该有一层浓浓的红色汤汁——汁的浓，全靠这 2 分钟的焖。
+6. **回锅**：把蛋倒回去，用锅铲把蛋切成大块，和番茄汁翻拌 20 秒就关火。蛋是回来吸汁的，不是回来二次受刑的。
+7. **出锅**：装盘，撒葱花。趁热吃，配白米饭，汁浇饭上。
+
+## 新手最容易翻车的点
+
+- **蛋炒老了**：九成翻车都在这。油温不够、炒太久、出锅太晚都是凶手。记住：蛋液下锅 5 秒不动，凝固就走，它看起来"没全熟"才是对的。
+- **番茄不出汁**：买了硬邦邦的生番茄。挑番茄时捏一下，软的才浓。实在买硬了就多焖 2 分钟，加点水救一下。
+- **糖放成两大勺**：这是炒菜不是甜品，1 小勺只是为了让酸味圆润，吃不出甜味才对。
+- **蛋和番茄一起下锅**：蛋会被番茄的水分煮成"蛋花汤碎片"。分两次炒，别偷懒。
+- **全程大火**：番茄会糊底发苦。炒番茄转中小火，稳。
+
+## 一句话感想
+
+番茄炒蛋做得好吃的人，运气都不会太差——因为他们懂得什么叫"恰到好处的离开"。</script>
+<script type="text/plain" id="doc-1"># 蛋炒饭
+
+> 冰箱清道夫，剩饭回收大使，深夜食堂钉子户。
+> 这份菜谱讲的是一条黄金法则：**隔夜饭，才是蛋炒饭的灵魂。**
+
+## 难度与耗时
+
+- 难度：★★☆☆☆（看着简单，炒好要一点手腕）
+- 准备：5 分钟（隔夜饭提前回温 10 分钟更好）/ 烹饪：6 分钟
+- 份量：1 人管饱，2 人抢着吃
+
+## 食材表
+
+| 食材       | 用量         | 备注                                   |
+|-----------|-------------|----------------------------------------|
+| 隔夜米饭   | 1 大碗（约 300g）| 冷藏过夜的剩饭，粒粒分明的关键        |
+| 鸡蛋       | 2 个        | 一个进饭里，一个最后盖顶               |
+| 火腿肠     | 1 根        | 切小丁，没有就换培根、午餐肉或干脆不放 |
+| 小葱       | 2 根        | 葱白葱绿分开，都切成葱花               |
+| 盐         | 1 小勺      | 分两次放                               |
+| 生抽       | 1 汤匙      | 沿锅边淋，只此一次，别倒饭上           |
+| 食用油     | 2 汤匙      | 油要舍得放，饭才润                     |
+
+## 步骤
+
+1. **唤醒隔夜饭**：冷藏饭从冰箱拿出来，用勺子背压散结块，先让它在室温里坐 10 分钟。冷饭直接下锅，外面糊了里面还是硬的。
+2. **金包银（可选高阶版）**：取 1 个鸡蛋打散，倒进米饭里，用手或勺子抓匀，让每粒米都裹上蛋液。炒出来粒粒金黄，这叫"金包银"。赶时间可跳过，直接进第 3 步。
+3. **热锅**：大火把锅烧旺，倒 2 汤匙油，油温上来后先下葱白，爆 10 秒出香味。
+4. **炒配料**：下火腿丁，中火煸炒 1 分钟，煸到边缘微微焦，盛出或扒到锅边。
+5. **下饭**：转大火，米饭倒进去，**用锅铲背面压、剁、翻**，把所有结块打散。这一步要有耐心，炒到米饭在锅里"跳"起来、听见沙沙声，大约 2 分钟。
+6. **调味**：撒一半的盐，翻炒均匀。
+7. **第二个蛋**：把饭扒开中间腾个窝，再倒 1 汤匙油，打入剩下的 1 个鸡蛋（不用提前打散），在窝里快速搅碎，蛋半凝固时和米饭一起翻炒，蛋碎会挂在饭粒上。
+8. **点睛**：沿锅边淋 1 汤匙生抽——滋啦一声，锅气就来了。翻匀，撒葱绿葱花，关火出锅。
+
+## 新手最容易翻车的点
+
+- **用刚煮的饭**：头号翻车现场。新饭水分太大，一炒就黏成一坨"蛋炒糕"。一定要隔夜冷藏饭；实在没有，把新饭摊开晾凉、吹干表面再炒。
+- **饭块没打散就调味**：盐全裹在结块外面，一口咸死一口没味。下锅第一件事是压散，调味之前先确认粒粒分明。
+- **火太小**：小火炒饭等于给饭"蒸桑拿"，越炒越湿。除了炒蛋那一下，全程大火快炒。
+- **酱油直接浇饭上**：饭会立刻染成酱色不均的"地图"。一定沿锅边淋，让高温激出酱香再翻匀。
+- **翻得太勤**：每隔几秒翻一次，饭永远贴不到锅，没有锅气。给它几秒钟贴锅底的时间，再翻。
+
+## 一句话感想
+
+昨天的剩饭不孤单，它只是在等今天的一场大火和两个蛋。</script>
+<script type="text/plain" id="doc-2"># 葱油拌面
+
+> 上海弄堂的深夜味道，成本五块钱，快乐一整晚。
+> 这碗面的灵魂不是面，是那一锅**慢慢熬出来的葱油**。急不得，糊了就得重来。
+
+## 难度与耗时
+
+- 难度：★★☆☆☆（技术简单，考验的是"忍住别关火"和"忍住关火"）
+- 准备：10 分钟 / 熬葱油：15 分钟 / 总计约 30 分钟
+- 份量：1 人一碗，吃完想给老板（自己）涨薪
+
+## 食材表
+
+| 食材       | 用量          | 备注                                  |
+|-----------|--------------|---------------------------------------|
+| 小葱       | 100g（约 1 大把）| 只要葱绿和葱白，葱须切掉，洗净彻底晾干 |
+| 食用油     | 100ml        | 和葱大概 1:1，油多点没事，剩下的能存  |
+| 生抽       | 3 汤匙       | 调味主力                              |
+| 老抽       | 1 汤匙       | 上色用，没有可省                      |
+| 白糖       | 1.5 汤匙     | 葱油拌面的甜是骨架，别手软            |
+| 面条（鲜切面或细面）| 200g | 鲜切面最佳，挂面也凑合               |
+
+## 步骤
+
+1. **处理葱**：小葱洗净，**彻底晾干或用厨房纸擦干**（带水入油锅会炸得到处都是）。切成 4-5cm 的长段，葱白和葱绿分开放。
+2. **冷油下葱**：锅里倒 100ml 油，**冷油**时就下葱白段，开**最小火**。冷油慢熬，葱香才有时间慢慢释放。
+3. **熬 5 分钟后下葱绿**：葱白熬 5 分钟变软后，下葱绿段，继续最小火慢慢熬。
+4. **熬到焦黄**：全程最小火，大约再熬 10 分钟，葱段会从翠绿→深绿→黄褐色。**目标是焦黄带脆，不是焦黑带苦**。颜色到黄褐、葱看起来干瘪酥脆时，立刻关火。锅的余温还会继续加热，宁可早半分钟关。
+5. **调酱汁**：生抽、老抽、白糖在小碗里混好。把热葱油连葱段一起倒进酱汁碗，"滋啦"一声，糖会融化，香气冲脸。搅匀备用。
+6. **煮面**：另起一锅水，大火烧开，下面条，按包装时间煮熟（鲜切面约 2-3 分钟）。**比平时吃汤面煮得稍微硬一点点**，它还要进酱里拌。
+7. **拌面**：面捞出沥干（不用过冷水），放进大碗，浇上 3-4 汤匙葱油酱汁，用筷子迅速上下翻拌，让每根面都挂上酱色。
+8. **开吃**：可以夹几根酥脆的焦葱一起吃，那是这碗面的勋章。
+
+## 新手最容易翻车的点
+
+- **葱没晾干就下油锅**：水遇热油会爆，溅一手油点子。请像对待前任一样把葱的水分彻底清除干净。
+- **火太大，葱熬糊**：全程最小火！最小火！葱从黄到黑只要 30 秒，糊了的葱油发苦，整锅报废，没有后悔药。
+- **熬的时间不够就关火**：葱还是软的、绿的，油就不香。要看颜色说话：黄褐、干瘪、酥脆，三个词都对上了才关火。
+- **酱汁里直接加生葱油**：不对——是把热葱油倒进酱汁，糖遇到热油才能融化出焦香。顺序别反。
+- **面煮太软**：拌面讲究根根弹牙，煮过头一拌就断成面渣，变成"葱油拌面糊"。
+- **酱汁一次全倒进去**：先浇 3 汤匙拌开尝一口，淡了再加。咸了可就捞不出来了。
+
+## 一句话感想
+
+熬葱油的十五分钟，是这碗面教给你的事：好东西都值得小火慢等。</script>
+<script type="text/plain" id="doc-3"># 可乐鸡翅
+
+> 新手宴客神器：名字听起来唬人，做法简单到离谱，成品红亮油润端上桌，客人以为你隐藏了厨艺十年。
+> 一句话概括：煎一煎，倒可乐，收汁，完事。
+
+## 难度与耗时
+
+- 难度：★☆☆☆☆（"零失败"三个字为它而生）
+- 准备：10 分钟（含腌制）/ 烹饪：25 分钟
+- 份量：2-3 人，6-8 只鸡翅刚好一盘
+
+## 食材表
+
+| 食材       | 用量         | 备注                                      |
+|-----------|-------------|-------------------------------------------|
+| 鸡翅中     | 8 个        | 买回来先检查有没有残留的毛，有就拔掉      |
+| 可乐       | 1 罐（330ml）| 普通可乐即可，**别用无糖可乐**，甜味是上色的功臣 |
+| 生姜       | 3 片        | 去腥                                      |
+| 生抽       | 2 汤匙      | 提咸鲜                                    |
+| 老抽       | 1 茶匙      | 上色，没有可用生抽多半勺代替              |
+| 料酒       | 1 汤匙      | 腌制去腥                                  |
+| 食用油     | 1 汤匙      | 煎鸡翅用，鸡翅自己也会出油                |
+| 白芝麻     | 少许        | 出锅撒，没有可以不放，仪式感加分项        |
+
+## 步骤
+
+1. **改刀**：鸡翅正反两面各划两刀，深到骨头。别心疼，这是让味道进去的高速公路。
+2. **腌制**：鸡翅放进大碗，加料酒、姜片、一半的生抽，抓匀，腌 15 分钟以上（盖上保鲜膜冷藏腌过夜更棒）。
+3. **煎鸡翅**：锅烧热倒 1 汤匙油，中火，鸡翅用厨房纸**擦干表面**后下锅。煎 3 分钟别动它，等底面金黄再翻面，另一面也煎 3 分钟，煎到两面焦黄。这一步是香味的地基。
+4. **倒可乐**：把整罐可乐倒进锅——对，就是这么豪迈，不用加水。可乐要基本没过鸡翅，没不过就稍微晃晃锅。
+5. **调味炖煮**：加剩下的一半生抽和老抽，大火烧开后转中小火，盖盖炖 15 分钟。中途翻一两次面。
+6. **收汁**：开盖转大火收汁，用勺子不断把汤汁浇在鸡翅上。汤汁会慢慢变浓稠、冒大泡、能挂在鸡翅上——像给鸡翅刷了一层亮漆。**收到锅里只剩浓稠的一层底就关火**，全程盯着，收汁阶段从"完美"到"糊锅"只要 1 分钟。
+7. **出锅**：装盘，把锅里剩下的浓汁浇上去，撒白芝麻。
+
+## 新手最容易翻车的点
+
+- **鸡翅不擦干就下锅煎**：水遇热油乱溅，而且鸡翅永远煎不出金壳。下锅前请用厨房纸把每个鸡翅擦到干爽。
+- **买了无糖可乐**：代糖熬不出焦糖色和浓稠感，成品又寡又怪。请老老实实用经典款。
+- **收汁时走开刷手机**：可乐含糖量高，收汁后期糊起来不讲道理，锅底能从红亮变成黑炭。最后 5 分钟请站在锅前，专心浇汁。
+- **改刀偷懒**：不划刀的鸡翅，外面咸甜里面没味，像一段没有感情的商业合作。两刀划到位。
+- **老抽手抖倒多了**：成品黑得发苦。老抽只是上色，1 茶匙足矣，宁少勿多。
+- **炖的时候火太大**：可乐泡沫会溢锅，灶台变成灾难现场。烧开后转中小火，稳。
+
+## 一句话感想
+
+可乐鸡翅证明了一个朴素的道理：把一瓶快乐水倒进锅里，快乐会以红烧的形式加倍返还。</script>
+<script type="text/plain" id="doc-4"># 红烧肉
+
+> 中餐硬菜的门面担当：红亮、软糯、颤巍巍，端上桌整个屋子都是香的。
+> 一句话概括：焯水，炒糖色，小火慢炖，剩下的交给时间。
+
+## 难度与耗时
+
+- 难度：★★☆☆☆（唯一需要胆量的步骤是炒糖色，其余全是等待）
+- 准备：15 分钟 / 烹饪：70-80 分钟（其中 40-60 分钟是炖，人可以走开，但别走太远）
+- 份量：2-3 人，500 克五花肉刚好一小锅
+
+## 食材表
+
+| 食材     | 用量            | 备注                                            |
+|---------|-----------------|-------------------------------------------------|
+| 五花肉   | 500 克          | 挑肥瘦三层分明的，纯瘦肉炖出来柴得像橡皮       |
+| 冰糖     | 20 克（5-6 颗） | 炒糖色用；白糖能凑合，但亮度和香气差口气       |
+| 热水     | 适量            | 炖煮用，**必须是热水**，冷水会让肉块急速收缩   |
+| 生姜     | 4 片            | 焯水和炖煮各放两片                              |
+| 大葱     | 1 段            | 切成马蹄段，去腥增香                            |
+| 八角     | 1 颗            | 一颗足矣，多了抢肉味                            |
+| 料酒     | 2 汤匙          | 焯水一半，炖煮一半                              |
+| 生抽     | 2 汤匙          | 咸鲜底味                                        |
+| 老抽     | 1 汤匙          | 辅助上色，主力是糖色，别手抖                    |
+
+## 步骤
+
+1. **切块**：五花肉切成 3 厘米见方的块，宁大勿小——炖完会缩水一圈，切太小最后只剩肉渣。
+2. **焯水**：肉块冷水下锅，加一半料酒和两片姜，大火烧开，撇掉浮沫，再煮 2 分钟捞出，用温水冲净表面。捞出来后面要用热水，先把水壶烧上最从容。
+3. **煸炒出油**：锅烧热不放油（五花肉自己会出油），肉块皮朝下，中小火煎 3-5 分钟，把肥肉里的油逼出来，煎到各面微黄。锅底多出来的油倒出来（留着炒青菜香得很），不倒掉成品会腻。
+4. **炒糖色**：利用锅里的底油，转**小火**下冰糖，用铲子慢慢推。冰糖会经历：融化 → 起小泡 → 变琥珀色。看到琥珀色**立刻**下肉块，快速翻炒让每块肉裹上糖色。从琥珀到焦黑只有几秒，全程盯锅，别走神。
+5. **调味**：肉块裹匀糖色后，沿锅边淋剩下的一半料酒，加生抽、老抽、剩下的姜片、葱段、八角，翻炒半分钟炒出香味。
+6. **加热水炖**：倒入热水，量要没过肉一指节。大火烧开后转最小火，盖盖炖 40-60 分钟，锅里保持微微冒泡就行。中途想翻面可以，补水只允许补热水。
+7. **收汁出锅**：筷子能轻松扎透肉皮，就开盖转大火收汁，不停翻动防止粘底。汤汁浓稠、能像一层釉挂在肉块上时关火，装盘开吃。
+
+## 新手最容易翻车的点
+
+- **糖色炒过头**：琥珀色一出现就下肉，多炒三秒就焦黑发苦，整锅报废。拿不准就把肉提前放在手边；真炒糊了，洗锅重来，别指望炖一炖能救回来。
+- **肉块切太小**：3 厘米以下是灾难现场，炖一小时后缩成肉渣。记住它会缩水，起点要够大。
+- **中途加冷水**：滚烫的肉块遇冷水会急速收缩，油闷在里面出不来，口感又柴又腻。炖之前热水一次加够；实在要补，也只能补热水。
+- **跳过煸炒直接炖**：肥肉里的油没逼出来，汤面浮一层白油，腻到吃两块就放筷子。花 5 分钟把油煸出来，是"入口即化"和"入口即腻"的分界线。
+- **全程大火猛炖**：汤翻滚得太凶，肉块会被煮散，口感发柴。烧开后转最小火，微微冒泡的状态最理想。
+- **老抽当上色主力**：糖色才是主角，老抽只是配角。老抽放多了成品黑得发苦，倒之前默念"1 汤匙封顶"。
+
+## 一句话感想
+
+红烧肉是时间给你的回报：你负责不糊锅，时间负责把肥肉变成温柔。</script>
+<script type="text/plain" id="doc-5"># 酸辣土豆丝
+
+> 最便宜的刀工试金石，也是最下饭的素菜：一盘脆生生的酸辣土豆丝，能干掉两碗白米饭。
+> 一句话概括：切丝泡水，花椒干辣椒炝锅，大火三分钟，出锅前补一勺醋。
+
+## 难度与耗时
+
+- 难度：★★☆☆☆（炒很容易，难的全在刀工和手速上）
+- 准备：15 分钟（含泡土豆丝）/ 烹饪：5 分钟
+- 份量：2 人，两个中等土豆刚好一盘
+
+## 食材表
+
+| 食材   | 用量              | 备注                                          |
+|-------|-------------------|-----------------------------------------------|
+| 土豆   | 2 个（约 400 克） | 黄心土豆更脆；切完立刻泡水                    |
+| 干辣椒 | 6-8 个            | 剪成段，怕辣就把籽抖掉                        |
+| 花椒   | 1 小撮（约 20 粒）| 麻香底味，别省，它是"酸辣"的另一半          |
+| 大蒜   | 3 瓣              | 切片                                          |
+| 生姜   | 2 片              | 切细丝                                        |
+| 香醋   | 2 汤匙            | **分两次放**：炝锅 1 汤匙，出锅前 1 汤匙     |
+| 盐     | 1 茶匙            | 出锅前再放                                    |
+| 食用油 | 2 汤匙            | 炝锅和快炒用，油要舍得烧热                    |
+
+## 步骤
+
+1. **切丝**：土豆去皮，先切 2 毫米左右的薄片，铺平再切成细丝。切得慢没关系，**均匀比细更重要**——粗细不一，下锅后粗的没熟细的已面。
+2. **泡水**：土豆丝切好立刻放进清水里，抓洗两三遍，洗到水变清，再泡 5-10 分钟。这一步洗掉表面淀粉，是"根根分明"的全部秘密。下锅前捞出**彻底沥干**。
+3. **备齐配料**：干辣椒段、蒜片、姜丝、花椒全部码进一个小碟。这道菜下锅后全程大火，中途没有时间现切任何东西。
+4. **炝锅**：锅烧热倒油，油热后转小火，先下花椒炸出麻香，再下干辣椒段、蒜片、姜丝，煸到辣椒微微变色，**沿锅边淋 1 汤匙醋**——"呲啦"一声，酸香窜起来。这勺醋是香味的骨架。
+5. **大火快炒**：土豆丝下锅，转最大火，不停翻炒 1-2 分钟，炒到丝身透亮、断生。挑一根尝：脆，但没有生土豆味，就对了。
+6. **调味出锅**：撒盐翻匀，再沿锅边淋剩下的 1 汤匙醋，翻 10 秒立刻出锅。这勺醋负责酸味明亮，出锅要快，盘子里的余温会把土豆丝送到刚刚好。
+
+## 新手最容易翻车的点
+
+- **土豆丝不泡水**：表面淀粉让丝和丝抱团粘连，炒成一坨面糊，颜色也发暗。泡水去淀粉是这道菜的命根子。
+- **泡完不沥干就下锅**：等于往热油里倒水，锅温骤降，炒出来软塌塌没有镬气。捞出来先在漏篮里甩干水。
+- **炒太久**：土豆丝从"脆"到"面"只隔着 1 分钟。全程最大火，断生就出锅，余温会负责把它焖到全熟。
+- **醋一次全倒进去**：早放的醋在高温里挥发得所剩无几，只剩一点若有若无的酸。分两次——炝锅那次出香，出锅那次提酸，缺一不可。
+- **花椒炸到发黑**：花椒糊了整锅都苦。小火炸，闻到麻香就进行下一步，颜色变深棕就晚了。
+- **切丝只追细不求匀**：切得忽粗忽细，下锅后生熟不一。先练"匀"，再练"细"，这是一条正经的成长路线。
+
+## 一句话感想
+
+酸辣土豆丝是一场五分钟的期末考：考题是刀工和手速，"咔嚓"那一声脆响就是满分盖章。</script>
+<script type="text/plain" id="doc-6"># 紫菜蛋花汤
+
+> 懒人友善度满分的一道汤：五分钟出锅，热汤一冲，蛋花开成一片云。
+> 一句话概括：水开转小火，蛋液画圈淋，盐和香油永远最后放。
+
+## 难度与耗时
+
+- 难度：★☆☆☆☆（唯一的技术点是淋蛋液，剩下的就是把水烧开）
+- 准备：3 分钟 / 烹饪：5 分钟
+- 份量：2 人，一大碗热气腾腾
+
+## 食材表
+
+| 食材     | 用量            | 备注                                  |
+|---------|-----------------|---------------------------------------|
+| 紫菜     | 1 小块（约 5 克）| 买免洗的头水紫菜，直接撕小片，不用洗 |
+| 鸡蛋     | 2 个            | 打散，加 1 汤匙清水更嫩               |
+| 小葱     | 1 根            | 切葱花，最后撒                        |
+| 盐       | 1 茶匙          | **最后放**，先放蛋花会粗              |
+| 香油     | 几滴            | **最后放**，早放香味就跑了            |
+| 白胡椒粉 | 少许            | 可选，去蛋腥提鲜                      |
+| 虾皮     | 1 小撮          | 可选，天然味精，和紫菜一起进碗        |
+
+## 步骤
+
+1. **备碗**：紫菜撕成小片，直接放进大汤碗（免洗，不用过水）；虾皮、葱花和香油也一起进碗，就等热汤来冲。
+2. **打蛋液**：鸡蛋打散，多打 20 秒打到表面起小泡，再加 1 汤匙清水打匀——加了水的蛋液更容易散成云。
+3. **烧水**：锅里烧约 1.2 升清水，大火烧开。
+4. **转小火淋蛋液**：水开后**转小火**，让水面回到将沸未沸的微微冒泡，再把蛋液绕着圈、呈细线状缓缓淋进水里。淋完先别动，默数 5 秒让蛋花定型，再用勺子背轻轻推两下。大滚的水会把蛋液冲成厚蛋块。
+5. **关火调味**：蛋花成型就关火，放盐和白胡椒粉，轻轻搅匀。盐到这时才能出场。
+6. **冲碗**：把汤直接冲进装着紫菜、虾皮、葱花和香油的大碗，热汤一冲紫菜就舒展开，搅一下，尝味补盐，趁热喝。
+
+## 新手最容易翻车的点
+
+- **大火淋蛋液**：水大滚时下蛋液，冲出来的是厚蛋块不是蛋花。淋之前一定转小火，水面"将沸未沸"是黄金状态。
+- **边淋边搅**：刚淋完就拿筷子搅，蛋花碎成渣、汤也变浑。忍住 5 秒，等它定型再用勺背轻轻推。
+- **紫菜下锅久煮**：紫菜多煮一分钟就发腥发黑。干脆不放锅里，用滚汤一冲最保险。
+- **先放盐**：盐会让蛋液还没散开就收紧，冲出来的蛋花又粗又老。盐永远等蛋花成型后再放。
+- **蛋液一股脑倒进去**：那不叫蛋花汤，叫蛋块汤。细线、画圈、慢慢淋，三件套一个都不能少。
+
+## 一句话感想
+
+紫菜蛋花汤证明了温柔的力量：水别太滚，手别太急，蛋花自己会开成一片云。</script>
+<script type="text/plain" id="doc-7"># 肩腰日（肩 · 腰部）
+
+> ## 一句话感想
+> 飞鸟和上举把肩练到力竭，山羊负重下腰紧接着上——腰也是今天的主角。
+
+## 热身
+
+| 动作 | 组数 |
+| --- | --- |
+| 斜举前后转 | 2 组 |
+| 左右头环绕 | 各 1 组 |
+| 夹肘侧平转（弹力绳） | 左右手各 1 组 |
+
+## 正课
+
+| 动作 | 组数 |
+| --- | --- |
+| 微曲肘内转腕飞鸟 | 4~5 组 |
+| 掌心向前飞鸟 | 4~5 组 |
+| 活动手腕 | 组间 |
+| 器械上举（两种） | 各 4~5 组 |
+| 山羊负重下腰（肩部力竭后） | 4~5 组 |
+
+## 收尾
+
+| 动作 | 组数 |
+| --- | --- |
+| 腰部按压 | — |
+| 手臂伸直后拉伸 | — |
+| 左拉伸 | — |
+| 右拉伸 | — |</script>
+<script type="text/plain" id="doc-8"># 手腰日（手 · 腰部）
+
+> ## 一句话感想
+> 双绳下拽练到手力竭，山羊负重下腰收尾——手臂和腰，一天两清。
+
+## 热身
+
+| 动作 | 组数 |
+| --- | --- |
+| 斜举前后转 | 2 组 |
+| 脚踩绳上拉 | 2 组 |
+| 挂杆微前倾小臂W下摆（弹力绳） | 2 组 |
+
+## 正课
+
+| 动作 | 组数 |
+| --- | --- |
+| 双绳背靠柱夹头小臂下拽 | 4~5 组 |
+| 活动手腕 | 组间 |
+| 反手回收小臂（护腕） | 4~5 组 |
+| 双绳正面后倾下拽 | 4~5 组 |
+| 单手下拽 | 4~5 组 |
+| 山羊负重下腰（手部力竭后） | 4~5 组 |
+
+## 收尾
+
+| 动作 | 组数 |
+| --- | --- |
+| 腰部按压 | — |
+| 手臂伸直后拉伸 | — |
+| 左拉伸 | — |
+| 右拉伸 | — |</script>
+<script type="text/plain" id="doc-9"># 腿臀日（腿 · 臀部）
+
+> ## 一句话感想
+> 滚轮先按开，顶胯后蹬练到透，最后四种压腿把腿臀收齐。
+
+## 热身
+
+| 动作 | 组数 |
+| --- | --- |
+| 腿臀滚轮按压（正反都要） | — |
+| 盘腿坐姿髋部后摆/上前摆（滚筒） | — |
+| （站立压腿） | — |
+
+## 正课
+
+| 动作 | 组数 |
+| --- | --- |
+| 斜躺屈膝上顶胯 | 4~5 组 |
+| 站姿直腰屈髋上拉（护腰，下呼气） / 蹲姿肩上顶器械（护腰） | — |
+| 上身前倾扶柱单腿稍高抬山羊后蹬（脚踝套） | 4~5 组 |
+| 坐姿抬小腿 | 4~5 组 |
+
+## 收尾
+
+| 动作 | 组数 |
+| --- | --- |
+| 躺姿屈膝上压腿 | — |
+| 直腿上压 | — |
+| 侧压 | — |
+| 趴姿屈膝上抬 | — |</script>
+<script type="text/plain" id="doc-10"># 胸上腹日（胸 · 上腹）
+
+> ## 一句话感想
+> 下拉、上举、夹胸三件套轮着来，负重仰卧半起上身把上腹补上。
+
+## 热身
+
+| 动作 | 组数 |
+| --- | --- |
+| 肩环绕 | — |
+| 手肩平行扩胸运动（弹力绳） | — |
+
+## 正课
+
+| 动作 | 组数 |
+| --- | --- |
+| 器械坐姿手与肩成45度下拉 / 器械躺平上举 | 4~5 组 |
+| 同一器械坐姿贴胸下拉 / 器械斜躺45度上举 | 4~5 组 |
+| 坐姿前开合 / 小龙门夹胸 | 4~5 组 |
+| 负重仰卧半起上身 | 4~5 组 |</script>
+<script type="text/plain" id="doc-11"># 背下腹日（背 · 下腹）
+
+> ## 一句话感想
+> 下拉划船练背，撑手抬腿练下腹，收尾三压把背松开。
+
+## 热身
+
+| 动作 | 组数 |
+| --- | --- |
+| 肩环绕 | 2 组 |
+| 俯身W字后拉 | 2 组 |
+| 微前倾直臂下摆（弹力绳） | 2 组 |
+
+## 正课
+
+| 动作 | 组数 |
+| --- | --- |
+| 直杆挺胸贴身下拉（大拇指放上面） | 4~5 组 |
+| 侧握快速下拉到胸口 | 4~5 组 |
+| 微屈腿后划船 | 4~5 组 |
+| 撑手抬腿 / 后拉杆卷腹腿上踢 | 4~5 组 |
+
+## 收尾
+
+| 动作 | 组数 |
+| --- | --- |
+| 俯身直臂屈髋下压 | — |
+| 左侧压 | — |
+| 右侧压 | — |</script>
+<script type="text/plain" id="doc-12"># 🛌 二手地铺床垫
+
+- 入手价：15 萌币（二手市场淘的，九成新）
+- 入住时间：2026-10-12
+- 感想：搬家第一天最大的幸福，就是今晚不用直接睡地板了。</script>
+<script>
+'use strict';
+var DOCS = [{"id":"番茄炒蛋","path":"厨房/菜谱/番茄炒蛋.md","dw":0},{"id":"蛋炒饭","path":"厨房/菜谱/蛋炒饭.md","dw":0},{"id":"葱油拌面","path":"厨房/菜谱/葱油拌面.md","dw":0},{"id":"可乐鸡翅","path":"厨房/菜谱/可乐鸡翅.md","dw":0},{"id":"红烧肉","path":"厨房/菜谱/红烧肉.md","dw":0},{"id":"酸辣土豆丝","path":"厨房/菜谱/酸辣土豆丝.md","dw":0},{"id":"紫菜蛋花汤","path":"厨房/菜谱/紫菜蛋花汤.md","dw":0},{"id":"肩腰日","path":"健身房/课表/肩腰日.md","dw":1},{"id":"手腰日","path":"健身房/课表/手腰日.md","dw":1},{"id":"腿臀日","path":"健身房/课表/腿臀日.md","dw":1},{"id":"胸上腹日","path":"健身房/课表/胸上腹日.md","dw":1},{"id":"背下腹日","path":"健身房/课表/背下腹日.md","dw":1},{"id":"二手地铺床垫","path":"卧室/二手地铺床垫.md","dw":2}];
+var cur = 0, sheet = document.getElementById('sheet');
+var want = new URLSearchParams(location.search).get('f');
+try { want = want || localStorage.getItem('archive_last'); } catch (e) {}
+DOCS.forEach(function (d, i) { if (d.id === want) cur = i; });
+var inFrame = false;
+try { inFrame = window.parent !== window; } catch (e) {}
+if (inFrame) document.body.classList.add('inframe');
+function goHome(e) {
+  if (!inFrame) return;
+  if (e) e.preventDefault();
+  try { parent.postMessage('zhouse-back', '*'); } catch (er) {}
+}
+function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inline(t){
+  t = esc(t);
+  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(_, label, href){
+    return /^https?:\/\//i.test(href) ? '<a href="' + href.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener">' + label + '</a>' : label;
+  });
+  return t;
+}
+/* 极简 markdown → HTML（标题/代码块/表格/引用/列表/分隔线/段落），与藏书阁同一套手艺 */
+function md2html(src){
+  var lines = src.split('\n'), out = [], i = 0, m;
+  while (i < lines.length){
+    var L = lines[i];
+    if (/^\s*```/.test(L)){
+      var buf = []; i++;
+      while (i < lines.length && !/^\s*```/.test(lines[i])) buf.push(lines[i++]);
+      i++; out.push('<pre><code>' + esc(buf.join('\n')) + '</code></pre>'); continue;
+    }
+    if (/^\s*\|/.test(L)){
+      var rows = [];
+      while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(lines[i++]);
+      var trs = rows.map(function(r){ return r.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(function(c){ return c.trim(); }); });
+      out.push('<table><tr>' + trs[0].map(function(c){ return '<th>' + inline(c) + '</th>'; }).join('') + '</tr>' +
+        trs.slice(2).map(function(r){ return '<tr>' + r.map(function(c){ return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>');
+      continue;
+    }
+    if ((m = L.match(/^(#{1,3})\s+(.*)$/))){ out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); i++; continue; }
+    if (/^\s*---+\s*$/.test(L)){ out.push('<hr>'); i++; continue; }
+    if (/^\s*>/.test(L)){
+      var q = [];
+      while (i < lines.length && /^\s*>/.test(lines[i])) q.push(lines[i++].replace(/^\s*>\s?/,''));
+      out.push('<blockquote>' + q.map(function(x){ return /^#{1,3}\s/.test(x) ? '<strong>' + inline(x.replace(/^#+\s+/,'')) + '</strong>' : inline(x); }).join('<br>') + '</blockquote>');
+      continue;
+    }
+    if (/^\s*[-*]\s+/.test(L)){
+      var li = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) li.push(lines[i++].replace(/^\s*[-*]\s+/,''));
+      out.push('<ul>' + li.map(function(x){ return '<li>' + inline(x) + '</li>'; }).join('') + '</ul>'); continue;
+    }
+    if (/^\s*\d+\.\s+/.test(L)){
+      var ol = [];
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) ol.push(lines[i++].replace(/^\s*\d+\.\s+/,''));
+      out.push('<ol>' + ol.map(function(x){ return '<li>' + inline(x) + '</li>'; }).join('') + '</ol>'); continue;
+    }
+    if (!L.trim()){ i++; continue; }
+    var para = [L]; i++;
+    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|\s*[|>-]|\s*```|\s*\d+\.\s)/.test(lines[i])) para.push(lines[i++]);
+    out.push('<p>' + para.map(inline).join('<br>') + '</p>');
+  }
+  return out.join('\n');
+}
+function show(i, scroll){
+  cur = (i + DOCS.length) % DOCS.length;
+  var d = DOCS[cur];
+  sheet.innerHTML = md2html(document.getElementById('doc-' + cur).textContent.trim()) +
+    '<div class="src"><span>原件 · ' + esc(d.path) + '</span><span class="sp"></span><span>' + (cur + 1) + ' / ' + DOCS.length + '</span></div>';
+  document.querySelectorAll('.doc').forEach(function (b) {
+    var on = +b.dataset.i === cur;
+    b.classList.toggle('on', on);
+    if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+    if (on && b.scrollIntoView && window.innerWidth <= 760) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+  document.title = d.id + ' · 档案柜';
+  try { localStorage.setItem('archive_last', d.id); } catch (e) {}
+  if (scroll) window.scrollTo(0, 0);
+}
+document.querySelector('.drawers').addEventListener('click', function (e) {
+  var b = e.target.closest('.doc');
+  if (b) show(+b.dataset.i, true);
+});
+document.getElementById('prev').onclick = function () { show(cur - 1, true); };
+document.getElementById('next').onclick = function () { show(cur + 1, true); };
+document.getElementById('home').addEventListener('click', goHome);
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowLeft') show(cur - 1, true);
+  else if (e.key === 'ArrowRight') show(cur + 1, true);
+  else if (e.key === 'Escape') goHome();
+});
+show(cur);
+</script>
+</body>
+</html>

@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>小夜灯 · 小Z 的卧室</title>
+<title>小夜灯 · Z 的卧室</title>
 <style>
 /* ==========================================================
-   小夜灯 —— 小Z 卧室的氛围灯
+   小夜灯 —— Z 卧室的氛围灯
    家训：暗适应、低亮度、不闪眼；动画只动 transform / opacity
    ========================================================== */
 
@@ -185,6 +185,15 @@ body[data-theme="dusk"]   .c-dusk   { opacity: 0.8; }
 }
 #egg.show { opacity: 1; }
 
+  .house-back{
+    position:fixed; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); z-index:1000;
+    display:flex; align-items:center; min-height:44px; padding:0 14px;
+    border:1px solid #c9a06a; border-radius:24px; background:#35291fee; color:#f7ead2;
+    font:14px/1.4 "Microsoft YaHei","PingFang SC",sans-serif; text-decoration:none; touch-action:manipulation;
+  }
+  .house-back:hover{ background:#59412e; }
+  .house-back:focus-visible{ outline:2px solid #f4c96b; outline-offset:3px; }
+
 /* ---- 全屋统一滚动条 ---- */
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -194,6 +203,7 @@ body[data-theme="dusk"]   .c-dusk   { opacity: 0.8; }
 </style>
 </head>
 <body data-theme="moon">
+  <a class="house-back" href="../我的家.html">← 小家</a>
 
   <!-- 三层主题背景（叠放，靠透明度交叉淡换） -->
   <div class="bg-layer bg-moon"></div>
@@ -232,13 +242,19 @@ body[data-theme="dusk"]   .c-dusk   { opacity: 0.8; }
   </footer>
 
   <!-- 彩蛋：连点夜灯 5 次才会亮起来 -->
-  <div id="egg">该睡了，明天的活儿明天干。—— 小Z</div>
+  <div id="egg">该睡了，明天的活儿明天干。—— Z</div>
 
 <script>
 /* ==========================================================
    小夜灯逻辑
    ========================================================== */
 "use strict";
+document.querySelector('.house-back').addEventListener('click', function (e) {
+  if (window.parent !== window) {
+    e.preventDefault();
+    window.parent.postMessage('zhouse-back', '*');
+  }
+});
 
 /* ---------- 晚安语库（11 句，贴着这户人家的日子写的） ---------- */
 const GOOD_NIGHT = [

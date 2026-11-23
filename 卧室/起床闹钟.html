@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<title>起床闹钟 · 小Z 的卧室</title>
+<title>起床闹钟 · Z 的卧室</title>
 <style>
 /* ==========================================================
-   起床闹钟 —— 小Z 卧室的双铃马蹄表
+   起床闹钟 —— Z 卧室的双铃马蹄表
    家训（沿用小夜灯）：深夜蓝配暖黄、不闪眼、动画只动
    transform / opacity、不引任何外部文件、存取必包 try-catch
    ========================================================== */
@@ -436,6 +436,15 @@ body.ringing #status { color: var(--warm); }
 .bell.ping{animation:bellPing .25s ease-in-out 2}
 .hand--alarm{width:2.2%;height:19%;background:linear-gradient(180deg,#d0685c,#a34a40);z-index:4;box-shadow:0 0 5px rgba(208,104,92,.55)}
 .hand--alarm::after{content:"";position:absolute;left:50%;top:-7%;width:330%;height:8%;transform:translateX(-50%);background:#d0685c;border-radius:99px}
+  .house-back{
+    position:fixed; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); z-index:1000;
+    display:flex; align-items:center; min-height:44px; padding:0 14px;
+    border:1px solid #c9a06a; border-radius:24px; background:#35291fee; color:#f7ead2;
+    font:14px/1.4 "Microsoft YaHei","PingFang SC",sans-serif; text-decoration:none; touch-action:manipulation;
+  }
+  .house-back:hover{ background:#59412e; }
+  .house-back:focus-visible{ outline:2px solid #f4c96b; outline-offset:3px; }
+
 /* ---- 全屋统一滚动条 ---- */
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -445,6 +454,7 @@ body.ringing #status { color: var(--warm); }
 </style>
 </head>
 <body>
+  <a class="house-back" href="../我的家.html">← 小家</a>
 
   <!-- 背景两层：深夜蓝渐变 + 地板暖光 -->
   <div class="bg-night"></div>
@@ -507,9 +517,15 @@ body.ringing #status { color: var(--warm); }
 
 <script>
 /* ==========================================================
-   起床闹钟逻辑 —— 小Z 的卧室
+   起床闹钟逻辑 —— Z 的卧室
    ========================================================== */
 "use strict";
+document.querySelector('.house-back').addEventListener('click', function (e) {
+  if (window.parent !== window) {
+    e.preventDefault();
+    window.parent.postMessage('zhouse-back', '*');
+  }
+});
 
 /* ---------- 小工具 ---------- */
 const $ = (sel) => document.querySelector(sel);

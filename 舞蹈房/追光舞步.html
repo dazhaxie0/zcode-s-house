@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>追光舞步 · 舞蹈房</title>
+<style>
+:root{
+	--paper:#efe6d4; --ink:#2c2318; --wood:#b57a42; --wood2:#8a5a2e; --gold:#d9a441; --red:#c93b2e;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+	background:radial-gradient(120% 90% at 50% 0%,#2e2434 0%,#1d1622 55%,#120d16 100%);
+	color:var(--paper);font-family:"Kaiti SC",KaiTi,STKaiti,"Noto Serif SC",serif;
+	overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) 14px 12px}
+header{display:flex;align-items:baseline;gap:13px;padding:2px 4px 8px;flex:none}
+header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
+#hud{display:flex;gap:12px;margin-left:auto;font-size:13.5px;color:#d8c9a8;white-space:nowrap}
+#hud b{color:#fff;font-size:16px;font-weight:600;font-family:Georgia,"Microsoft YaHei",serif}
+#hud .cbo{color:#9c8a68}#hud .cbo b{color:var(--gold)}
+#hud .miss b{color:#e08a7a}
+#say{flex:none;height:30px;display:flex;align-items:center;justify-content:center;font-size:14.5px;letter-spacing:.1em;color:#cdb98e}
+#say b{color:var(--gold)}
+#pad{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(76px,1fr);
+	gap:10px;padding:4px 0 16px;max-width:400px;width:100%;margin:0 auto;align-content:center}
+.cell{position:relative;border:none;border-radius:12px;cursor:pointer;font-family:inherit;
+	background:linear-gradient(180deg,rgba(200,205,225,.09),rgba(200,205,225,.04));
+	border:2px solid rgba(200,205,225,.16);color:rgba(220,214,196,.5);font-size:15px;
+	transition:background .12s, border-color .12s;overflow:hidden}
+.cell small{position:absolute;right:7px;bottom:4px;font-size:11px;color:rgba(220,214,196,.35)}
+.cell.spot{background:radial-gradient(circle at 50% 42%,rgba(255,222,150,.55),rgba(240,196,106,.22) 62%,rgba(240,196,106,.06));
+	border-color:#d9a441;box-shadow:0 0 26px rgba(255,214,140,.35);color:#4a3410}
+.cell.spot .ring{position:absolute;left:50%;top:50%;width:76%;height:76%;
+	margin:-38% 0 0 -38%;border:3px solid rgba(255,235,190,.9);border-radius:50%}
+.cell.hit{animation:cellhit .3s}
+@keyframes cellhit{40%{transform:scale(.94);background:radial-gradient(circle at 50% 42%,rgba(150,224,180,.5),rgba(150,224,180,.15))}}
+.cell.bad{animation:cellbad .34s}
+@keyframes cellbad{30%{transform:translateX(-4px)}60%{transform:translateX(4px)}}
+.cell.bad .ring{border-color:rgba(224,138,122,.9)}
+#panel{position:fixed;inset:0;background:rgba(14,10,18,.84);backdrop-filter:blur(3px);
+	display:grid;place-items:center;z-index:10;opacity:1;transition:opacity .3s}
+#panel.hide{opacity:0;pointer-events:none}
+.card{width:min(88vw,420px);background:linear-gradient(170deg,#efe4f0,#dcc9dc);border-radius:14px;
+	padding:26px 26px 22px;text-align:center;color:#33262e;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.card h2{font-size:26px;letter-spacing:.3em;margin-bottom:6px}
+.card .sub{font-size:13px;letter-spacing:.22em;color:#9c7f94;margin-bottom:16px}
+.card .rows{font-size:14.5px;line-height:2;color:#544048;margin-bottom:6px}
+.card .rows b{color:#a3455a;font-weight:600}
+.go{margin:12px 6px 4px;padding:12px 38px;font-size:16px;letter-spacing:.3em;border:none;border-radius:9px;
+	background:linear-gradient(180deg,#e8b455,#c98f2e);color:#fff;cursor:pointer;font-family:inherit;
+	box-shadow:0 4px 0 #8a5a1e;transition:transform .08s, box-shadow .08s}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #8a5a1e}
+.go.g2{background:none;box-shadow:none;border:2px solid #8a5a1e;color:#8a5a1e;padding:12px 22px}
+.back{display:inline-block;margin-top:12px;color:#7c6474;font-size:14px;letter-spacing:.15em;text-decoration:none;
+	border-bottom:1px dashed #9c8294;padding-bottom:2px}
+@media (prefers-reduced-motion: reduce){ .cell{transition:none} .cell.spot .ring{animation:none !important} }
+
+/* 三间音乐房共用同一套暂停手势，原生对话框负责焦点约束。 */
+header{flex-wrap:wrap}#hud{flex-wrap:wrap;justify-content:flex-end}
+.session-bar{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:none;min-height:36px}
+.session-bar button,.session-bar a{font:inherit;font-size:13px;color:#f3dfb3;background:#352b25;border:1px solid #a58b54;border-radius:7px;padding:7px 11px;text-decoration:none;cursor:pointer}
+.session-bar button:disabled{opacity:.4;cursor:default}
+.session-bar span{margin-right:auto;font-size:12px;color:#cdb98e}
+button:focus-visible,a:focus-visible{outline:3px solid #ffe2a2;outline-offset:3px}
+#pause-dialog{margin:auto;max-width:calc(100vw - 32px);width:360px;border:1px solid #aa884b;border-radius:16px;padding:28px 24px;color:#f5e6ca;background:#29231f;text-align:center;box-shadow:0 20px 80px #0009}
+#pause-dialog::backdrop{background:#080b13bc;backdrop-filter:blur(3px)}
+#pause-dialog h2{font-size:24px;margin-bottom:12px}#pause-dialog p{line-height:1.8;font-size:14px;margin-bottom:14px}
+#pause-dialog button{display:block;margin:10px auto 0;width:100%;padding:12px;border-radius:8px;border:1px solid #b58c45;font:inherit;cursor:pointer;background:#d6a14c;color:#211a10}
+#pause-dialog #leave-game{background:transparent;color:#e9d9b9}
+body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
+</style>
+</head>
+<body>
+<div id="stage">
+	<header><h1>追光舞步</h1>
+		<div id="hud"><span>分数 <b id="t-score">0</b></span><span>步 <b id="t-step">0</b>/40</span>
+		<span>连击 <b id="t-combo">0</b></span><span class="miss">失误 <b id="t-miss">0</b>/3</span>
+		<span class="cbo">最好 <b id="t-best">0</b></span></div>
+	</header>
+	<div class="session-bar"><span id="session-mode">正式演奏</span><button id="pause-toggle" type="button" aria-controls="pause-dialog" aria-expanded="false" disabled>暂停 · P</button><a id="game-home" href="../我的家.html">回小家</a></div>
+	<div id="say">光斑落到哪格，就点到哪格</div>
+	<div id="pad"></div>
+</div>
+<div id="panel"><div class="card" id="pcard">
+	<h2>追光舞步</h2>
+	<div class="sub">右厢舞蹈房 · 踩点跟拍</div>
+	<div class="rows">光斑亮起、金环收紧，环收完前点到算一步。<br>点错格或超时记失误，<b>三次失误谢幕</b>；四十步跳完算成曲。<br>连击越长分越高。键盘 1–9 对应九格。</div>
+	<button class="go" id="btn-go">起 舞</button><button class="go g2" id="btn-pr">练 舞 步</button>
+	<div><a class="back" id="bk" href="../我的家.html">回小家</a></div>
+</div></div>
+
+<dialog id="pause-dialog" aria-labelledby="pause-title"><h2 id="pause-title">暂歇一拍</h2><p>进度留在这里，准备好再继续。<br>离开不会记录这局成绩。</p><button type="button" id="resume-game" autofocus>继续演奏</button><button type="button" id="leave-game">离开本局，回小家</button></dialog>
+<script src="../储藏室/结算队列.js"></script>
+<script>
+"use strict";
+var $ = function(id){ return document.getElementById(id); };
+
+var paused = false;
+function pauseGame(){
+	if (paused || !sessionActive()) return;
+	paused = true; freezeGame();
+	document.body.classList.add("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "true");
+	$("pause-dialog").showModal();
+	if (ac && ac.state === "running") ac.suspend().catch(function(){});
+}
+function resumeGame(){
+	if (!paused || document.hidden) return;
+	paused = false; $("pause-dialog").close();
+	document.body.classList.remove("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "false");
+	AC(); thawGame();
+}
+function resetPause(active){
+	paused = false; $("pause-dialog").close();
+	document.body.classList.remove("paused");
+	$("pause-toggle").disabled = !active;
+	$("pause-toggle").setAttribute("aria-expanded", "false");
+	$("session-mode").textContent = practice ? "练习 · 不记录成绩" : "正式演奏";
+	$("panel").inert = !!active;
+	if (active) $("pause-toggle").focus();
+}
+$("pause-toggle").onclick = pauseGame;
+$("resume-game").onclick = resumeGame;
+$("leave-game").onclick = goHome;
+$("game-home").onclick = function(e){ e.preventDefault(); goHome(); };
+$("pause-dialog").addEventListener("cancel", function(e){ e.preventDefault(); resumeGame(); });
+document.addEventListener("visibilitychange", function(){ if (document.hidden) pauseGame(); });
+
+var KEY = "dc_best";
+var runId = "dc0"; // 本局局号：结算去重靠它
+var TOTAL = 40;
+var step = 0, score = 0, combo = 0, maxCombo = 0, miss = 0, spot = -1, playing = false;
+var spotT = 0, ringEl = null, best = 0, iv = 0, practice = false, runStarted = 0;
+var spotDeadline = 0, waitDeadline = 0, remaining = 0;
+function sessionActive(){ return playing; }
+function armNext(ms){ clearTimeout(iv); waitDeadline = Date.now() + ms; iv = setTimeout(nextSpot, ms); }
+function freezeGame(){
+	remaining = Math.max(0, (spot >= 0 ? spotDeadline : waitDeadline) - Date.now());
+	clearTimeout(spotT); clearTimeout(iv);
+	if (ringEl) { var tr = getComputedStyle(ringEl).transform; ringEl.style.transition = "none"; ringEl.style.transform = tr; }
+}
+function thawGame(){
+	if (spot < 0) { armNext(remaining); return; }
+	spotDeadline = Date.now() + remaining;
+	spotT = setTimeout(function(){ toMiss(); }, remaining);
+	if (ringEl) { void ringEl.offsetWidth; ringEl.style.transition = "transform " + remaining + "ms linear"; ringEl.style.transform = "scale(.3)"; }
+}
+try { best = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+$("t-best").textContent = best;
+var ac = null;
+function AC(){ if (!ac) { var C = window.AudioContext || window.webkitAudioContext; if (C) ac = new C(); } if (ac && ac.state === "suspended") ac.resume(); }
+function tone(f, dur, vol, type){
+	if (!ac) return;
+	var t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+	o.type = type || "triangle"; o.frequency.value = f;
+	g.gain.setValueAtTime(0, t0);
+	g.gain.linearRampToValueAtTime(vol || 0.18, t0 + 0.01);
+	g.gain.exponentialRampToValueAtTime(0.0001, t0 + (dur || 0.25));
+	o.connect(g); g.connect(ac.destination);
+	o.start(t0); o.stop(t0 + (dur || 0.25) + 0.05);
+}
+function buzz(){ tone(120, 0.3, 0.2, "square"); }
+var SCALE = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99];
+var pad = $("pad");
+for (var i = 0; i < 9; i++) {
+	var c = document.createElement("button");
+	c.className = "cell"; c.dataset.i = i;
+	c.innerHTML = "·<small>" + (i + 1) + "</small>";
+	c.setAttribute("aria-label", "舞格 " + (i + 1));
+	pad.appendChild(c);
+	c.addEventListener("pointerdown", function(ev){ ev.preventDefault(); tap(+this.dataset.i); });
+}
+function hud(){ $("t-score").textContent = score; $("t-step").textContent = step; $("t-combo").textContent = combo; $("t-miss").textContent = miss; $("t-best").textContent = best; }
+function windowMs(){ var w = Math.round(1600 - (step / TOTAL) * 750); return practice ? Math.round(w * 1.3) : w; } // 1.6s 收到 0.85s，练习再加三成
+function nextSpot(){
+	if (!playing || paused) return;
+	if (step >= TOTAL) { finish(); return; }
+	var ns = spot;
+	while (ns === spot) ns = Math.floor(Math.random() * 9);
+	spot = ns;
+	var cell = pad.children[spot];
+	cell.classList.remove("hit", "bad");
+	cell.classList.add("spot");
+	var w = windowMs();
+	var ring = document.createElement("i");
+	ring.className = "ring";
+	ring.style.transform = "scale(1.6)";
+	ring.style.transition = "transform " + w + "ms linear";
+	cell.appendChild(ring);
+	ringEl = ring;
+	void ring.offsetWidth; ring.style.transform = "scale(.3)";
+	tone(SCALE[spot], 0.18, 0.1);
+	spotDeadline = Date.now() + w; spotT = setTimeout(function(){ toMiss(cell); }, w);
+}
+function clearSpot(){
+	clearTimeout(spotT);
+	if (ringEl && ringEl.parentNode) ringEl.parentNode.classList.remove("spot"), ringEl.remove();
+	ringEl = null; spot = -1;
+}
+function tap(i){
+	if (paused) return;
+	AC();
+	if (!playing || spot < 0) return;
+	if (i === spot) {
+		var cell = pad.children[spot];
+		clearSpot();
+		step++; combo++; maxCombo = Math.max(maxCombo, combo);
+		score += 30 + Math.min(combo, 10) * 6;
+		cell.classList.add("hit");
+		tone(SCALE[Math.min(2 + combo, 8)], 0.16, 0.16);
+		hud();
+		nextSpot();
+	} else {
+		pad.children[i].classList.add("bad");
+		setTimeout(function(){ pad.children[i].classList.remove("bad"); }, 360);
+		toMiss();
+	}
+}
+function toMiss(cell){
+	if (!playing || paused) return;
+	var c = cell || (spot >= 0 ? pad.children[spot] : null);
+	clearSpot();
+	if (c) { c.classList.add("bad"); setTimeout(function(){ c.classList.remove("bad"); }, 360); }
+	miss++; combo = 0; buzz(); hud();
+	if (practice) { $("say").innerHTML = "练习 · 光斑等你，慢慢来"; armNext(700); return; }
+	$("say").innerHTML = "错拍 · 还剩 <b>" + (3 - miss) + "</b> 次机会";
+	if (miss >= 3) { finish(); return; }
+	armNext(700);
+}
+function gradeOf(s){
+	if (s >= 3200) return ["领舞", "四十步一气呵成，光斑追不上你。"];
+	if (s >= 2400) return ["主角", "步步生风，聚光灯认得你。"];
+	if (s >= 1400) return ["熟练", "拍子在心里，脚下再稳些。"];
+	if (s >= 600) return ["学步", "光斑是善意的，别怕它。"];
+	return ["热身", "先跟光斑认识一下。"];
+}
+function finish(){
+	if (!playing || paused) return;
+	playing = false; resetPause(false);
+	clearSpot(); clearTimeout(iv);
+	var done = step >= TOTAL ? 1 : 0;
+	var isNew = !practice && score > best;
+	if (isNew && score > 0) { best = score; try { localStorage.setItem(KEY, String(best)); } catch (e) {} }
+	hud();
+	if (!practice) HouseRuns.enqueue("dc", score, runId, done, runStarted);
+	var g = gradeOf(score);
+	tone(392, 0.3, 0.14); setTimeout(function(){ tone(523.25, 0.5, 0.12); }, 180);
+	$("pcard").innerHTML =
+		'<div style="font-size:26px;letter-spacing:.3em;color:#8a4a5c">' + g[0] + '</div>' +
+		'<div class="sub">' + g[1] + (done ? " · <b style='color:#8a4a5c'>一曲跳完</b>" : "") + (practice ? " · 练习局不入账" : "") + '</div>' +
+		'<div class="rows">得分 <b>' + score + "</b> · 跳完 <b>" + step + "</b>/" + TOTAL + " 步，最长连击 " + maxCombo +
+		"<br>" + (isNew ? '<span style="color:#8a4a5c">此间新纪录</span>' : "此间最好 " + best) + "</div>" +
+		'<button class="go" id="btn-re">再 跳 一 曲</button><button class="go g2" id="btn-pr2">继续练习</button>' +
+		'<div><a class="back" id="bk" href="../我的家.html">回小家</a></div>';
+	$("panel").classList.remove("hide");
+	$("btn-re").onclick = function(){ start(false); };
+	$("btn-pr2").onclick = function(){ start(true); };
+	$("bk").onclick = function(e){ e.preventDefault(); goHome(); };
+}
+function goHome(){
+	playing = false; clearSpot(); clearTimeout(iv); resetPause(false);
+	try { if (window.parent && window.parent !== window) { window.parent.postMessage("zhouse-back", "*"); return; } } catch (e) {}
+	location.href = "../我的家.html";
+}
+function start(pr){
+	clearSpot(); clearTimeout(iv); AC();
+	practice = !!pr;
+	runStarted = Date.now(); runId = "dc" + runStarted.toString(36) + Math.random().toString(36).slice(2, 6);
+	step = 0; score = 0; combo = 0; maxCombo = 0; miss = 0; spot = -1;
+	hud(); $("say").innerHTML = practice ? "练习 · 光斑慢三成，错了不谢幕" : "跟住光斑 · <b>四十步</b>一曲";
+	$("panel").classList.add("hide"); resetPause(true);
+	playing = true;
+	pad.querySelectorAll(".hit,.bad").forEach(function(c){ c.classList.remove("hit", "bad"); });
+	armNext(600);
+}
+$("btn-go").onclick = function(){ start(false); };
+$("btn-pr").onclick = function(){ start(true); };
+$("bk").onclick = function(e){ e.preventDefault(); goHome(); };
+document.addEventListener("keydown", function(e){
+	if (paused) return;
+	if (e.key === "Escape"){ goHome(); return; }
+	if (e.key.toLowerCase() === "p" && !e.repeat) { e.preventDefault(); pauseGame(); return; }
+	if (e.repeat || !playing) return;
+	var n = parseInt(e.key, 10);
+	if (n >= 1 && n <= 9) { e.preventDefault(); tap(n - 1); }
+});
+</script>
+</body>
+</html>

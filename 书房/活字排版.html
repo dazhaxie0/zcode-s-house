@@ -67,6 +67,7 @@ header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
 .tile.good{animation:fly .34s ease-in forwards}
 @keyframes fly{40%{transform:translateY(-14px) scale(1.08)}100%{transform:translateY(26px) scale(.4);opacity:0}}
 .tile.bad{animation:shake .34s}
+.no-shake .tile.bad{animation:none}
 @keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
 .tile.gone{pointer-events:none;opacity:0}
 #combo{position:fixed;left:50%;top:16%;transform:translateX(-50%);pointer-events:none;
@@ -79,6 +80,11 @@ header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
 #overlay{position:fixed;inset:0;background:rgba(20,15,8,.82);backdrop-filter:blur(3px);
 	display:grid;place-items:center;z-index:10;transition:opacity .3s}
 #overlay.hide{opacity:0;pointer-events:none}
+#pause-dialog{margin:auto;max-width:calc(100vw - 32px);width:360px;border:1px solid #aa884b;border-radius:16px;padding:28px 24px;color:#f5e6ca;background:#29231f;text-align:center;box-shadow:0 20px 80px #0009}
+#pause-dialog::backdrop{background:#080b13bc;backdrop-filter:blur(3px)}
+#pause-dialog h2{font-size:24px;margin-bottom:12px}#pause-dialog p{line-height:1.8;font-size:14px;margin-bottom:14px}
+#pause-dialog button{display:block;margin:10px auto 0;width:100%;padding:12px;border-radius:8px;border:1px solid #b58c45;font:inherit;cursor:pointer;background:#d6a14c;color:#211a10}
+#pause-dialog #leave-game{background:transparent;color:#e9d9b9}
 .panel{width:min(88vw,420px);background:linear-gradient(170deg,#f2ead8,#e7d9bd);border-radius:14px;
 	padding:26px 26px 22px;text-align:center;color:#3a2d1c;box-shadow:0 24px 60px rgba(0,0,0,.6)}
 .panel h2{font-size:26px;letter-spacing:.3em;margin-bottom:6px}
@@ -110,7 +116,7 @@ header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
 <body>
 <div id="stage">
 	<header>
-		<h1>活字排版</h1>
+		<h1>活字排版</h1><button id="pause-toggle" type="button" aria-controls="pause-dialog" aria-expanded="false">暂停 · P</button>
 		<div id="hud">
 			<span>分 <b id="t-score">0</b></span>
 			<span id="t-time">60.0</span>
@@ -126,9 +132,14 @@ header h1{font-size:17px;letter-spacing:.35em;color:var(--gold);font-weight:600}
 </div>
 <div id="combo"></div>
 <div id="float"></div>
+<dialog id="pause-dialog" aria-labelledby="pause-title"><h2 id="pause-title">墨先研着</h2><p>版盘不动，计时也停了。<br>离开不会记录这局成绩。</p><button type="button" id="resume-game" autofocus>继续排版</button><button type="button" id="leave-game">离开本局，回小家</button></dialog>
 <div id="overlay"><div class="panel" id="panel"></div></div>
+<script src="../储藏室/结算队列.js"></script>
 <script>
 "use strict";
+/* 震动默认关：主屋「设置 · 震动效果」打开后才走抖动动画 */
+try { if (localStorage.getItem("zhouse_shake") !== "1") document.documentElement.classList.add("no-shake"); }
+catch (e) { document.documentElement.classList.add("no-shake"); }
 /* 活字排版：把打乱的字模按句序排回版槽，排满一句滚墨印一页。
    计时全用 Date.now 差值，后台节流不丢账；动画走 CSS。 */
 var VERSES = [
@@ -139,6 +150,7 @@ var VERSES = [
 ];
 var POOL = "风花雪云山春秋冬雨露霜灯茶卷帘窗檐雀燕松竹梅亭台楼阁街巷门桥井钟鼓河湖海原野星辰天地人间岁月光朝暮晨昏晴阴凉暖寒冰雪雷虹霞峰峦溪涧岸林丛枝叶花苗芽藤兰菊竹篱笆阶庭径窗棂";
 var LIMIT = 60000, KEY = "hz_best";
+var runId = "", runStarted = 0;
 var score = 0, combo = 0, maxCombo = 0, verseNo = 0, printed = 0, misses = 0;
 var playing = false, need = 0, si = 0, curVerse = "", busy = false;
 var deadline = 0, lastBeep = 99, tickT = null, au = null;
@@ -232,7 +244,7 @@ function comboPop(){
 	c.classList.remove("pop"); void c.offsetWidth; c.classList.add("pop");
 }
 function pick(el){
-	if (!playing || busy || el.classList.contains("gone")) return;
+	if (!playing || paused || busy || el.classList.contains("gone")) return;
 	var r = el.getBoundingClientRect();
 	var ch = el.dataset.ch;
 	if (si < need && ch === curVerse[si]){
@@ -278,6 +290,7 @@ function finishVerse(){
 	}, 1350);
 }
 function tick(){
+	if (paused) return;
 	var left = Math.max(0, deadline - Date.now());
 	var s = left / 1000;
 	$("t-time").textContent = s.toFixed(1);
@@ -286,8 +299,38 @@ function tick(){
 	if (left <= 0){ finish(); return; }
 	clearTimeout(tickT); tickT = setTimeout(tick, 100);
 }
+var paused = false, pausedAt = 0;
+function goHome(){ try { if (parent && parent !== window) { parent.postMessage("zhouse-back", "*"); return; } } catch (e) {} location.href = "../我的家.html"; }
+function pauseGame(){
+	if (paused || !playing) return;
+	paused = true; pausedAt = Date.now(); clearTimeout(tickT);
+	document.body.classList.add("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "true");
+	$("pause-dialog").showModal();
+}
+function resumeGame(){
+	if (!paused || document.hidden) return;
+	paused = false;
+	deadline += Date.now() - pausedAt; // 停多久补多久，字号不亏
+	lastBeep = 99; tickT = setTimeout(tick, 100);
+	document.body.classList.remove("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "false");
+	$("pause-dialog").close();
+}
+function resetPause(){
+	paused = false; $("pause-dialog").close();
+	document.body.classList.remove("paused");
+	$("pause-toggle").setAttribute("aria-expanded", "false");
+}
+$("pause-toggle").onclick = function(){ paused ? resumeGame() : pauseGame(); };
+$("resume-game").onclick = resumeGame;
+$("leave-game").onclick = goHome;
+$("pause-dialog").addEventListener("cancel", function(e){ e.preventDefault(); resumeGame(); });
+document.addEventListener("visibilitychange", function(){ if (document.hidden) pauseGame(); });
 function start(){
-	AC();
+	AC(); resetPause();
+	runStarted = Date.now();
+	runId = HouseRuns.newId("hz");
 	score = 0; combo = 0; maxCombo = 0; verseNo = 0; printed = 0; misses = 0; busy = false;
 	playing = true; lastBeep = 99;
 	$("t-score").textContent = 0; $("t-combo").textContent = 0;
@@ -305,11 +348,13 @@ function gradeOf(s){
 	return ["丁", "字模烫手，先认认门。"];
 }
 function finish(){
-	playing = false; clearTimeout(tickT);
+	if (!playing) return;
+	playing = false; resetPause(); clearTimeout(tickT);
 	var best = 0;
 	try { best = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
 	var isNew = score > best;
 	if (isNew && score > 0){ try { localStorage.setItem(KEY, String(score)); } catch (e) {} }
+	HouseRuns.enqueue("hz", score, runId, printed > 0 ? 1 : 0, runStarted);
 	var g = gradeOf(score);
 	var rows = [
 		["本版得分", score], ["印成", printed + " 版"], ["最长连排", maxCombo + " 字"],
@@ -333,8 +378,9 @@ $("tray").addEventListener("pointerdown", function(e){
 	if (t){ e.preventDefault(); pick(t); }
 });
 document.addEventListener("keydown", function(e){
-	if (e.key === "Escape"){ try { parent.postMessage("zhouse-back", "*"); } catch (err) {} return; }
-	if (!playing) return;
+	if (e.key === "Escape"){ if (paused) { resumeGame(); return; } try { parent.postMessage("zhouse-back", "*"); } catch (err) {} return; }
+	if ((e.key === "p" || e.key === "P") && !e.repeat) { e.preventDefault(); paused ? resumeGame() : pauseGame(); return; }
+	if (!playing || paused) return;
 	var n = parseInt(e.key, 10);
 	if (n >= 1 && n <= 9){
 		var tiles = document.querySelectorAll(".tile:not(.gone)");
