@@ -166,9 +166,12 @@ def check_registry(items):
     linked = sorted({m.group(0) for m in LINK_RE.finditer(html)})
     # 根目录张贴物（接活启事、日记）没有"房间名/"前缀，网页里也写不成
     # 相对路径链接，它们天生过不了本科目——不是欠账，是户口种类不同，跳过。
+    # specs/ 是 SDD 工程文档（见根目录 AGENTS.md）：契约与证据不是家当，
+    # 不出屋也不进站点清单，与根目录张贴物同理豁免。主人 2026-11-24 裁定。
     actual = sorted(p.relative_to(HOUSE).as_posix() for p, _ in items
                     if p.suffix.lower() in REG_EXTS and p.name != REG_PAGE
-                    and p.parent != HOUSE)
+                    and p.parent != HOUSE
+                    and p.relative_to(HOUSE).parts[0] != "specs")
     return {
         "已登记链接": linked,
         "未登记家当": [a for a in actual if a not in linked],
