@@ -1,6 +1,7 @@
 #!/bin/sh
-# 推送 main 时先把同一个提交部署上线，部署失败就中止推送。
+# 推送 main 时先提交一次部署（约十秒）；失败只写日志，绝不拦推送。
 # 只推送不部署：SKIP_DEPLOY=1 git push
+# 部署日志：.git/zhouse-deploy.log
 zero=0000000000000000000000000000000000000000
 need=0
 deploy_sha=""
@@ -21,8 +22,52 @@ if [ "$SKIP_DEPLOY" = "1" ]; then
   exit 0
 fi
 
-echo "[自动部署] 推送 main：先部署 $(git rev-parse --short "$deploy_sha")…"
-ZHOUSE_DEPLOY_REF="$deploy_sha" node "储藏室/自动部署.cjs" || {
-  echo "[自动部署] 部署失败，推送已中止。只推送不部署：SKIP_DEPLOY=1 git push"
-  exit 1
-}
+GIT_DIR_ABS="$(git rev-parse --absolute-git-dir 2>/dev/null || git rev-parse --git-dir)"
+ENV_FILE="$GIT_DIR_ABS/zhouse-deploy.env"
+LOG_FILE="$GIT_DIR_ABS/zhouse-deploy.log"
+
+if [ -f "$ENV_FILE" ]; then
+  set -a
+  . "$ENV_FILE"
+  set +a
+fi
+# IDE 登录票据路径不是部署凭据，留着会 401；统一走 globalStorage。
+unset TRAE_DEPLOYMENT_TOKEN_PATH
+[ -n "$TRAE_CHAT_SESSION_ID" ] || export TRAE_CHAT_SESSION_ID=local-pre-push
+
+if [ -z "$TRAE_PROJECT_ID" ]; then
+  printf '%s\n' "[$(date '+%F %T')] 缺少 TRAE_PROJECT_ID，跳过本次自动部署；推送继续。在 Trae 里运行：node 储藏室/自动部署.cjs --setup" >> "$LOG_FILE"
+  echo "[自动部署] 缺少部署上下文，已跳过（不影响推送）。"
+  exit 0
+fi
+
+NODE_BIN="$(command -v node 2>/dev/null || true)"
+if [ -z "$NODE_BIN" ]; then
+  for cand in \
+    "/c/Program Files/nodejs/node.exe" \
+    "/c/Program Files (x86)/nodejs/node.exe" \
+    "/c/nvm4w/nodejs/node.exe" \
+    "$NVM_SYMLINK/node.exe" \
+    "$LOCALAPPDATA/Programs/nodejs/node.exe" \
+    "$HOME/AppData/Local/Programs/nodejs/node.exe"; do
+    if [ -x "$cand" ]; then
+      NODE_BIN="$cand"
+      break
+    fi
+  done
+fi
+
+if [ -z "$NODE_BIN" ]; then
+  printf '%s\n' "[$(date '+%F %T')] 未找到 node，跳过本次自动部署；推送继续。" >> "$LOG_FILE"
+  echo "[自动部署] 未找到 node，已跳过（不影响推送）。"
+  exit 0
+fi
+
+echo "[自动部署] 推送 main：先提交部署 $(git rev-parse --short "$deploy_sha" 2>/dev/null)…"
+"$NODE_BIN" "储藏室/自动部署.cjs" --ref="$deploy_sha" --submit
+if [ $? -ne 0 ]; then
+  echo "[自动部署] 部署未提交，但推送照常放行；详情看 .git/zhouse-deploy.log"
+else
+  echo "[自动部署] 推送继续。"
+fi
+exit 0

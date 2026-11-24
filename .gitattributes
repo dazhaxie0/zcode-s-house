@@ -1,0 +1,2 @@
+# Git 钩子必须保持 LF：CRLF 会让 #!/bin/sh 在 Git Bash 里找不到解释器。
+.githooks/* text eol=lf

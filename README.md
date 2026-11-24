@@ -15,7 +15,7 @@
 
 **迎新试玩**。在项目目录运行 `node .\迎新试玩.cjs`，打开终端打印的本机链接。每次启动分配独立地址，给试玩者从空白档开始。进入小家时可选择记录进度，结束时点「试玩记录」下载 JSON。记录只留在本次浏览器标签，刷新时可以继续。结束后在终端按 Ctrl+C。
 
-**推送自动部署**。`.githooks/pre-push` 会在推送 `main` 前，把当前提交按 [站点清单](储藏室/站点清单.cjs) 打包，调用 Trae 部署上线；部署失败会中止推送。首次启用执行 `git config core.hooksPath .githooks`。只推送不部署用 `SKIP_DEPLOY=1 git push`；本地演练 `node 储藏室/自动部署.cjs --dry-run`，同一提交已部署会自动跳过，要重发加 `--force`。
+**推送自动部署**。`.githooks/pre-push` 在推送 `main` 时把当前提交按 [站点清单](储藏室/站点清单.cjs) 打包并提交一次 Trae 部署（约 5 秒）；部署失败只写日志，不会拦推送。首次启用：`git config core.hooksPath .githooks`，然后在 Trae 里运行 `node 储藏室/自动部署.cjs --setup` 生成本机部署上下文（`.git/zhouse-deploy.env`，不进仓库）。日志看 `.git/zhouse-deploy.log`；只推送不部署用 `SKIP_DEPLOY=1 git push`；本地演练 `node 储藏室/自动部署.cjs --dry-run`；同一提交已提交会自动跳过，要重发加 `--force`。
 
 ---
 
