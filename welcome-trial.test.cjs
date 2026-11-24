@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const { once } = require('node:events');
 const { readFile } = require('node:fs/promises');
+const { readFileSync } = require('node:fs');
 const path = require('node:path');
 const { after, before, test } = require('node:test');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright-core');
@@ -247,7 +248,7 @@ test('接受同意后可跨刷新续记，真实出餐与入座收尾可导出�
     await page.locator('#welcome-action').click();
     await waitForStage(page, 'invite');
     const dialogue = page.locator('#dlg');
-    for (let i = 0; i < 12 && await dialogue.isVisible(); i++) await dialogue.click();
+    for (let i = 0; i < 30 && await dialogue.isVisible(); i++) await dialogue.click(); // 章节对白七句，逐字时一句两下
     await waitForStage(page, 'complete');
     await page.locator('#r-back').click();
     const report = await downloadReport(page);
@@ -285,4 +286,21 @@ test('浏览器禁用会话存储时仍可入屋、停止并下载当前内存�
   } finally {
     await context.close();
   }
+});
+
+test('站点清单覆盖每个上线页面引用的本地脚本与样式，试玩入口和线上都不会 404', () => {
+  // 演出镜头.js 上线时漏登记过一次：脚本 404 不报运行时错误，只能靠清单对账发现。
+  const manifest = require('./储藏室/站点清单.cjs');
+  const listed = new Set(Object.entries(manifest).flatMap(([dir, names]) => names.map(name => dir ? dir + '/' + name : name)));
+  const missing = [];
+  for (const file of listed) {
+    if (!file.endsWith('.html')) continue;
+    const html = readFileSync(path.join(__dirname, file), 'utf8');
+    for (const [, ref] of html.matchAll(/<(?:script|link)\b[^>]*?\s(?:src|href)="([^"]+)"/g)) {
+      if (/^(?:https?:|data:|about:)/.test(ref)) continue;
+      const target = path.posix.normalize(path.posix.join(path.dirname(file), ref.split('?')[0]));
+      if (!listed.has(target)) missing.push(file + ' → ' + target);
+    }
+  }
+  assert.deepEqual(missing, [], '页面引用的本地文件都要在站点清单里');
 });

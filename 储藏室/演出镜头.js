@@ -154,7 +154,8 @@ body.reduce-motion .welcome-lights > g:last-child circle, body.reduce-motion .we
 
   function caption() {
     if (typeof S === "undefined" || !S.story) return "Z 的小家 · 章节演出";
-    if (S.story.beat >= 5 && S.story2 && !S.story2.rewarded) {
+    if (typeof Stage !== "undefined" && Stage.replaying) return Stage.replaying === "story" ? "迎新之夜 · 重温" : "首演之夜 · 重温";
+    if (S.story.beat >= 5 && S.story2.beat >= 2 && !S.story2.rewarded) {
       return "首演之夜 · " + (S.story2.beat === 3 ? "开演" : "排练");
     }
     const beat = typeof STORY_BEATS !== "undefined" ? STORY_BEATS[S.story.beat] : "";

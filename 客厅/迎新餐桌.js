@@ -66,17 +66,53 @@ const renderWelcomeDecor = (() => {
       <path d="m284 120 15-2m-14 0 13 3" stroke="#6d4231" stroke-width="1.6" stroke-linecap="round"/>
       <rect x="269" y="92" width="47" height="5" rx="2" fill="#cf996d"/>
     </g>`;
+  /* 头、喙、翅膀、眼皮各自成组，表情才能分开动；眼皮盖在眼睛上半，腮红在颊上 */
   const bird = `
     <title>新住户 · 小南</title>
-    <ellipse cx="118" cy="90.5" rx="12" ry="2.8" fill="#574329" opacity=".55"/>
-    <path d="M111 82q-10-2-11-7 7 1 14 5m0 7 1 3m6-3 1 3"
-      fill="#6597a0" stroke="#456772" stroke-width="1.2" stroke-linecap="round"/>
-    <ellipse class="bird-body" cx="118" cy="82" rx="10.5" ry="7.2" fill="#82b3c0" stroke="#4a7482" stroke-width=".9"/>
-    <path d="M114 82q2-5 8-4 1 5-6 7z" fill="#548794"/>
-    <circle cx="126" cy="75" r="6.8" fill="#bfdee1" stroke="#5e8997" stroke-width=".9"/>
-    <path d="m131 76 5 1.5-5 2z" fill="#e9b262"/>
-    <circle class="bird-eye" cx="127.7" cy="74.2" r="1.2" fill="#233c4a"/>
-    <circle cx="128" cy="73.9" r=".35" fill="#fff7ed"/>`;
+    <ellipse class="bird-shadow" cx="118" cy="90.5" rx="12" ry="2.8" fill="#574329" opacity=".55"/>
+    <g class="bird-rig">
+      <path class="bird-tail" d="M111 82q-10-2-11-7 7 1 14 5z" fill="#6597a0" stroke="#456772" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="m114 87 1 3m6-3 1 3" fill="none" stroke="#456772" stroke-width="1.2" stroke-linecap="round"/>
+      <ellipse class="bird-body" cx="118" cy="82" rx="10.5" ry="7.2" fill="#82b3c0" stroke="#4a7482" stroke-width=".9"/>
+      <path class="bird-wing" d="M114 82q2-5 8-4 1 5-6 7z" fill="#548794"/>
+      <g class="bird-head">
+        <circle cx="126" cy="75" r="6.8" fill="#bfdee1" stroke="#5e8997" stroke-width=".9"/>
+        <ellipse class="bird-blush" cx="123.6" cy="78.3" rx="1.9" ry="1.05" fill="#f2a39c"/>
+        <path class="bird-beak" d="m131 76 5 1.5-5 2z" fill="#e9b262"/>
+        <path class="bird-joy" d="M126.4 74.8q1.3-2 2.6 0" fill="none" stroke="#233c4a" stroke-width=".9" stroke-linecap="round"/>
+        <circle class="bird-eye" cx="127.7" cy="74.2" r="1.2" fill="#233c4a"/>
+        <circle class="bird-glare" cx="128" cy="73.9" r=".35" fill="#fff7ed"/>
+        <path class="bird-lid" d="M126.3 74.2a1.4 1.4 0 0 1 2.8 0z" fill="#bfdee1"/>
+      </g>
+    </g>`;
+  /* 猫坐在桌子左边的地板上，脸朝着桌上的碗；配色跟院里那只一致 */
+  const cat = `
+    <g class="story-cat">
+      <title>猫 · 室友</title>
+      <ellipse class="cat-shadow" cx="92" cy="108.2" rx="9" ry="1.9" fill="#1a110b" opacity=".45"/>
+      <g class="cat-rig">
+        <path class="cat-tail" d="M86 104q-7.5-1-7.5-8" fill="none" stroke="#4a3a28" stroke-width="2.6" stroke-linecap="round"/>
+        <ellipse class="cat-body" cx="92" cy="102.8" rx="7.2" ry="4.7" fill="#4a3a28"/>
+        <g class="cat-head">
+          <path d="M92.4 90.2 91 84.6l4.4 2.6z" fill="#4a3a28"/>
+          <path d="M98.8 90 100.8 84.4l-4.5 2.4z" fill="#4a3a28"/>
+          <circle cx="96" cy="93.8" r="4.7" fill="#4a3a28"/>
+          <circle class="cat-eye" cx="94.7" cy="93.2" r=".85" fill="#f7ead2"/>
+          <circle class="cat-eye" cx="97.9" cy="93.2" r=".85" fill="#f7ead2"/>
+          <path d="M95.5 95.8q.7.7 1.4 0" stroke="#f7ead2" stroke-width=".7" fill="none" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>`;
+  /* 首演用的谱架：谱台斜面朝观众，小南站上去唱 */
+  const stand = `
+    <g class="story-stand">
+      <title>谱架</title>
+      <ellipse cx="152" cy="110" rx="10" ry="2" fill="#1a110b" opacity=".4"/>
+      <path d="M152 109V71m-7 1 7-7 7 3m-14 45 7-3 7 3" fill="none" stroke="#8a7458" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M141 66.5l22-3v11.5l-22 3z" fill="#5a4634" stroke="#3a2c1c" stroke-width="1"/>
+      <path d="M144.5 66.8l15-2v8l-15 2z" fill="#f7efdc"/>
+      <path d="M146.5 68.6l11-1.5m-11 3.3 11-1.5m-11 3.3 7-1" stroke="#b9a98c" stroke-width=".6"/>
+    </g>`;
   const entranceStyle = `
     <style>
       @keyframes welcome-perch {
@@ -91,7 +127,8 @@ const renderWelcomeDecor = (() => {
       }
     </style>`;
 
-  return (art, story, seated = false) => {
+  /* stage 传 "premiere" 是首演：饭桌撤下，小南站上谱架 */
+  return (art, story, seated = false, stage = "") => {
     const previous = art.querySelector(".story-decor");
     const wasSeated = !!previous?.querySelector(".story-bird");
     previous?.remove();
@@ -102,15 +139,20 @@ const renderWelcomeDecor = (() => {
     layer.setAttribute("aria-hidden", "true");
     layer.dataset.deco = story.deco;
     if (story.beat >= 3) {
+      const premiere = stage === "premiere";
       let content = "";
       if (story.beat >= 4 && story.deco === "lamp") content += lights;
       if (story.beat >= 4 && story.deco === "fire") content += hearth;
       if (story.beat >= 4 && (seated || story.beat >= 5)) {
-        const arriving = seated && story.beat === 4 && !wasSeated;
+        const arriving = seated && story.beat === 4 && !wasSeated && !premiere;
         if (arriving) content += entranceStyle;
-        content += `<g class="story-bird${arriving ? " welcome-arriving" : ""}">${bird}</g>`;
+        content += premiere
+          ? stand + '<g class="story-bird" transform="translate(33 -24.5)">' + bird + "</g>"
+          : `<g class="story-bird${arriving ? " welcome-arriving" : ""}">${bird}</g>`;
+        content += cat;
       }
-      layer.innerHTML = content + table;
+      if (!premiere) content += table;
+      layer.innerHTML = content;
     }
     art.appendChild(layer);
   };

@@ -1,0 +1,28 @@
+#!/bin/sh
+# 推送 main 时先把同一个提交部署上线，部署失败就中止推送。
+# 只推送不部署：SKIP_DEPLOY=1 git push
+zero=0000000000000000000000000000000000000000
+need=0
+deploy_sha=""
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ] && [ "$local_sha" != "$zero" ]; then
+    need=1
+    deploy_sha="$local_sha"
+  fi
+done
+
+if [ "$need" != "1" ]; then
+  exit 0
+fi
+
+if [ "$SKIP_DEPLOY" = "1" ]; then
+  echo "[自动部署] 已按 SKIP_DEPLOY=1 跳过。"
+  exit 0
+fi
+
+echo "[自动部署] 推送 main：先部署 $(git rev-parse --short "$deploy_sha")…"
+ZHOUSE_DEPLOY_REF="$deploy_sha" node "储藏室/自动部署.cjs" || {
+  echo "[自动部署] 部署失败，推送已中止。只推送不部署：SKIP_DEPLOY=1 git push"
+  exit 1
+}

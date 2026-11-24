@@ -1219,6 +1219,8 @@ transform: translateX(6px); box-shadow: 0 0 22px rgba(240,196,106,.18);
 <script src="储藏室/存档事务.js"></script>
 <script src="客厅/迎新餐桌.js"></script>
 <script src="储藏室/演出镜头.js"></script>
+<script src="储藏室/舞台剧本.js"></script>
+<script src="储藏室/房间声景.js"></script>
 <script src="储藏室/迎新试玩记录.js"></script>
 <script>
 "use strict";
@@ -1623,7 +1625,7 @@ v: 2,
 stardust: 20,
 visited: [], opened: [], quests: {}, cgs: {}, achv: {},
 owned: ["theme-warm"], renov: {}, equipped: { theme: "theme-warm", weather: "none", toy: "none" },
-settings: { sfx: true, bgm: true, sfxVol: 0.5, bgmVol: 0.32, roofOpen: true, shake: false,
+settings: { sfx: true, bgm: true, amb: true, sfxVol: 0.5, bgmVol: 0.32, ambVol: 0.5, voVol: 0.5, roofOpen: true, shake: false, subSize: 0,
 reduceMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches },
 stats: { entered: 0, rooms: 0, items: 0, ledger: 0, buys: 0, cgs: 0, smoke: 0, dj: 0,
 talks: 0, pets: 0, feeds: 0, reads: 0, coaster: 0, coasterDist: 0, phases: [], days: 0, streak: 0, lastDay: "" },
@@ -1644,8 +1646,9 @@ r[k] = { ...defaultState()[k], ...r[k] };
 }
 for (const k of ["quests", "cgs", "achv", "renov"]) if (!Object.values(r[k]).every(v => typeof v === "boolean" || num(v))) fail();
 for (const [k,v] of Object.entries(r.stats)) if (k === "phases" ? !arr(v) : ["lastDay", "playDay"].includes(k) ? typeof v !== "string" : !num(v)) fail();
-for (const k of ["sfx", "bgm", "reduceMotion", "roofOpen", "shake"]) if (typeof r.settings[k] !== "boolean") fail();
-for (const k of ["sfxVol", "bgmVol"]) if (!num(r.settings[k]) || r.settings[k] > 1) fail();
+for (const k of ["sfx", "bgm", "amb", "reduceMotion", "roofOpen", "shake"]) if (typeof r.settings[k] !== "boolean") fail();
+for (const k of ["sfxVol", "bgmVol", "ambVol", "voVol"]) if (!num(r.settings[k]) || r.settings[k] > 1) fail();
+if (!Number.isInteger(r.settings.subSize) || r.settings.subSize < 0 || r.settings.subSize > 2) fail();
 for (const k of ["theme", "weather", "toy"]) if (typeof r.equipped[k] !== "string") fail();
 if (!obj(r.ext)) fail();
 for (const [k, v] of Object.entries(r.ext)) {
@@ -1712,7 +1715,7 @@ function ic(name, style) {
 return '<svg class="ic"' + (style ? ' style="' + style + '"' : "") + '><use href="#i-' + name + '"/></svg>';
 }
 const AU = {
-ctx: null, master: null, sfxG: null, bgmG: null, ducked: false,
+ctx: null, master: null, sfxG: null, bgmG: null, ambG: null, voG: null, wxG: null, out: null, live: null, ducked: false, mood: null,
 bgmTimer: null, barIdx: 0, nextBar: 0,
 init() {
 if (this.ctx) return;
@@ -1722,12 +1725,19 @@ this.ctx = new C();
 this.master = this.ctx.createGain(); this.master.connect(this.ctx.destination);
 this.sfxG = this.ctx.createGain(); this.sfxG.connect(this.master);
 this.bgmG = this.ctx.createGain(); this.bgmG.connect(this.master);
+this.ambG = this.ctx.createGain(); this.ambG.connect(this.master); // 环境总线：天气与各房间声景
+this.voG = this.ctx.createGain(); this.voG.connect(this.master); // 对白总线：出字声与角色的叫声
+this.wxG = this.ctx.createGain(); this.wxG.connect(this.ambG);
+this.out = this.sfxG;
 this.applyVol();
 if (S.equipped.weather === "rain" || S.equipped.weather === "snow") this.setWx(S.equipped.weather);
+Ambi.start();
 },
 applyVol() {
 if (!this.ctx) return;
 this.sfxG.gain.value = S.settings.sfx ? S.settings.sfxVol : 0;
+this.voG.gain.value = S.settings.sfx ? S.settings.voVol : 0;
+this.ambG.gain.value = S.settings.amb ? S.settings.ambVol * (this.ducked ? .7 : 1) : 0; // 对白压低时环境只让三成
 const bgm = (S.settings.bgm ? S.settings.bgmVol : 0) * (this.ducked ? .4 : 1);
 this.bgmG.gain.value = S.settings.bgm && !this.custom.on ? bgm : 0;
 const el = this.custom.el;
@@ -1737,16 +1747,13 @@ else el.pause();
 }
 this.kickBGM();
 },
-duck(on) { // 对白压低：短斜坡，不硬切出爆音
+duck(on) { // 对白压低：短斜坡，不硬切出爆音。音乐让六成，环境只让三成
 this.ducked = !!on;
 if (!this.ctx) return;
-const d = this.ducked ? .4 : 1;
-const target = (S.settings.bgm && !this.custom.on ? S.settings.bgmVol : 0) * d;
-const g = this.bgmG.gain, t = this.ctx.currentTime;
-g.cancelScheduledValues(t);
-g.setValueAtTime(g.value, t);
-g.linearRampToValueAtTime(target, t + .3);
-if (this.custom.el && this.custom.on) this.custom.el.volume = S.settings.bgm ? S.settings.bgmVol * d : 0;
+const t = this.ctx.currentTime, ramp = (p, v) => { p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(v, t + .3); };
+ramp(this.bgmG.gain, (S.settings.bgm && !this.custom.on ? S.settings.bgmVol : 0) * (this.ducked ? .4 : 1));
+ramp(this.ambG.gain, (S.settings.amb ? S.settings.ambVol : 0) * (this.ducked ? .7 : 1));
+if (this.custom.el && this.custom.on) this.custom.el.volume = S.settings.bgm ? S.settings.bgmVol * (this.ducked ? .4 : 1) : 0;
 },
 kickBGM() {
 if (!this.ctx) return;
@@ -1763,7 +1770,7 @@ if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
 g.gain.setValueAtTime(0, t0);
 g.gain.linearRampToValueAtTime(vol, t0 + attack);
 g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-o.connect(g); g.connect(dest || this.sfxG);
+o.connect(g); g.connect(dest || this.live || this.sfxG);
 o.start(t0); o.stop(t0 + dur + 0.05);
 },
 noise(t0, dur, { vol = 0.2, from = 400, to = 2000, q = 1 } = {}) {
@@ -1777,12 +1784,13 @@ f.frequency.setValueAtTime(from, t0);
 f.frequency.exponentialRampToValueAtTime(to, t0 + dur);
 const g = c.createGain();
 g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-src.connect(f); f.connect(g); g.connect(this.sfxG);
+src.connect(f); f.connect(g); g.connect(this.live || this.sfxG);
 src.start(t0);
 },
-sfx(name) {
+sfx(name, vo) { // vo 为真走对白总线；出字声本来就归对白
 if (!this.ctx || !S.settings.sfx) return;
 this.resume();
+this.live = vo || name === "type" ? this.voG : this.sfxG;
 const t = this.ctx.currentTime;
 switch (name) {
 case "tick": this.tone(1800, t, 0.05, { vol: 0.05 }); break;
@@ -1812,7 +1820,10 @@ this.noise(t + 0.06, 0.12, { vol: 0.04, from: 2400, to: 900, q: 2 }); break;
 case "chime": [88, 93, 97].forEach((n, i) => this.tone(this.midi(n + Math.floor(Math.random() * 2)), t + i * 0.09, 0.9, { vol: 0.05, attack: 0.004 })); break;
 case "splash": this.noise(t, 0.25, { vol: 0.1, from: 800, to: 2400, q: 1 }); this.tone(300, t + 0.05, 0.14, { vol: 0.06, slideTo: 620 }); break;
 case "chirp": this.tone(3100, t, 0.06, { vol: 0.05 }); this.tone(2650, t + 0.1, 0.08, { vol: 0.05, slideTo: 3300 }); break;
+case "flap": for (let i = 0; i < 3; i++) this.noise(t + i * 0.09, 0.07, { vol: 0.05, from: 500, to: 1600, q: 0.9 }); break;
+case "plate": this.tone(2100, t, 0.09, { vol: 0.05 }); this.tone(3150, t + 0.01, 0.14, { vol: 0.03 }); break;
 }
+this.live = null;
 },
 /* 天气环境声：循环白噪过低通，挂 BGM 通道 · 雨声亮、雪声密而轻 */
 rainNode: null,
@@ -1826,7 +1837,7 @@ for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
 const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
 const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = cfg.f;
 const g = c.createGain(); g.gain.value = cfg.v;
-src.connect(f); f.connect(g); g.connect(this.bgmG);
+src.connect(f); f.connect(g); g.connect(this.wxG || this.ambG);
 src.start();
 this.rainNode = { src };
 },
@@ -1861,23 +1872,27 @@ el.play().catch(() => { this.defaultMusic(); this.applyVol(); });
  this.custom.urls.forEach(u => { try { URL.revokeObjectURL(u); } catch (e) {} });
  this.custom.urls = []; this.custom.on = false;
  },
- startBGM() {
+ /* 音乐状态：家常 / 迎新入座（更慢更暖）/ 首演（更亮更快）。在小节边界上换，不硬切 */
+MOODS: {
+home: { bar: 4, chords: [[60,64,67,71],[57,60,64,67],[53,57,60,64],[55,59,62,66]], penta: [72,74,76,79,81,84,86], spark: .6 },
+tender: { bar: 5.4, chords: [[53,57,60,64],[48,52,55,59],[50,53,57,60],[55,59,62,65]], penta: [72,76,79,81,84], spark: .3 },
+stage: { bar: 3.2, chords: [[60,64,67,72],[65,69,72,76],[57,60,64,67],[67,71,74,78]], penta: [72,76,79,84,88], spark: .85 } },
+setMood(name) { this.mood = name || null; }, // 状态存在 AU.mood 里，别跟方法重名
+startBGM() {
 if (!this.ctx || this.bgmTimer) return;
 this.nextBar = this.ctx.currentTime + 0.1; this.barIdx = 0;
-const BAR = 4.0;
-const chords = [[60,64,67,71],[57,60,64,67],[53,57,60,64],[55,59,62,66]];
-const penta = [72,74,76,79,81,84,86];
 const tickBar = () => {
 if (this.nextBar < this.ctx.currentTime - 0.5) this.nextBar = this.ctx.currentTime + 0.05;
+const m = this.MOODS[this.mood] || this.MOODS.home, BAR = m.bar;
 while (this.nextBar < this.ctx.currentTime + 1.4) {
-const t0 = this.nextBar, ch = chords[this.barIdx % 4];
+const t0 = this.nextBar, ch = m.chords[this.barIdx % m.chords.length];
 if (S.settings.bgm && !this.custom.on) {
 ch.forEach(n => this.tone(this.midi(n), t0, BAR * 0.96,
 { type: "triangle", vol: 0.028, attack: 0.7, dest: this.bgmG }));
-const notes = 1 + (Math.random() < 0.6 ? 1 : 0);
+const notes = 1 + (Math.random() < m.spark ? 1 : 0);
 for (let i = 0; i < notes; i++) {
 const nt = t0 + Math.random() * (BAR - 1);
-const f = this.midi(penta[Math.floor(Math.random() * penta.length)]);
+const f = this.midi(m.penta[Math.floor(Math.random() * m.penta.length)]);
 this.tone(f, nt, 1.1, { vol: 0.05, attack: 0.004, dest: this.bgmG });
 }
 }
@@ -2214,10 +2229,7 @@ function storyAuto() { // 心愿卷一圆满，章节自动开场（只此一次
 if (S.story.beat === 2 && !S.story.kitchenAt) { S.story.kitchenAt = Date.now(); save(); }
 if (S.story.beat !== 0 || S.wish.idx < WISH_VOL1) return;
 S.story.beat = 1; save();
-storyTalk([
-"（猫在门口坐得笔直。）今晚有位新住户要来住——一只从南边飞来的小鸟，翅膀还没养好。",
-"客厅得先收拾收拾，晚饭也得是热的。先去客厅看看？",
-]);
+storyTalk(Stage.SCENES.open);
 toast("quest", "章节 · 迎新之夜", "第一拍：看看客厅（心愿墙可查章节进度）");
 }
 function checkStory(run) {
@@ -2230,10 +2242,7 @@ S.story.beat = 3; save(); toast("quest", "迎新之夜 · " + STORY_BEATS[3], "�
 function storyRoom(name) {
 if (name !== "客厅" || S.story.beat !== 1) return;
 S.story.beat = 2; S.story.kitchenAt = Date.now(); save();
-storyTalk([
-"（挂毯刚卷好，沙发还空着半边，灰都擦过了。）",
-"先把晚饭备上——今晚做番茄炒蛋、蛋炒饭和紫菜蛋花汤。厨房备好了菜谱，你跟着订单慢慢来。",
-]);
+storyTalk(Stage.SCENES.look);
 toast("quest", "迎新之夜 · " + STORY_BEATS[2], "心愿墙 → 去厨房备晚饭");
 }
 function showWelcomeDecor() {
@@ -2254,12 +2263,7 @@ else if (S.story.beat === 4) inviteWelcomeGuest();
 };
 function inviteWelcomeGuest() {
 window.WelcomeTrial?.mark("invite");
-const greeting = {
-lamp: "（暖灯亮起，小南顺着灯光落到靠垫上。）「看得清你的脸了。我们一起吃吧。」",
-fire: "（壁炉轻轻噼啪，小南在沙发上拢了拢翅膀。）「屋里真暖。我们一起吃吧。」",
-none: "（小南在旧靠垫上踩了两步。）「闻到饭香了。就坐这儿吧，我喜欢现在的样子。」"
-};
-storyTalk([greeting[S.story.deco], "「先喝口汤，」猫把碗往它面前推了推，「这个位置以后给你留着。」"], true);
+storyTalk(Stage.lines("seat"), true); // 台词随布置走，剧本在 舞台剧本.js
 renderStoryScene();
 dlgEl.tabIndex = -1;
 dlgEl.focus();
@@ -2295,10 +2299,7 @@ if (living) renderWelcomeDecor(art, S.story, inviting);
 function storyAuto2() { // 迎新之夜圆满＋乐厢心愿全成，第二幕开场（只此一次）
 if (S.story2.beat !== 0 || S.story.beat < 5 || S.wish.idx < WISHES.length) return;
 S.story2.beat = 2; S.story2.showAt = Date.now(); save();
-storyTalk([
-"（小南在窗台上蹦了两下，羽毛都抖亮了。）",
-"「今晚……我想开一场首演。」猫翻译道，「要两支排练过的节目——琴、舞、歌里挑两样，接了愿以后新练的才算数。」",
-]);
+storyTalk(Stage.SCENES.announce);
 toast("quest", "章节 · 首演之夜", "排练两场不同节目（琴/舞/歌任两样，新练的才算）");
 }
 function checkStory2(run) { // 只认接愿后新开的班：两支不同节目的通关局
@@ -2311,11 +2312,7 @@ else toast("info", "首演之夜 · 排练 +1", "还差一支不同的节目（�
 }
 function storyRoom2(name) { // 进客厅开演：首演对白读完放烟花入册
 if (name !== "客厅" || S.story2.beat !== 3) return;
-storyTalk([
-"（客厅的灯暗下来，只留一束光。小南站上谱架，深吸一口气。）",
-"（琴键、舞步、和声——哪一样都是这个家练出来的。）",
-"「唱吧，」猫把尾巴收好，「这一屋子都是你的观众。」",
-], S.story2);
+storyTalk(Stage.lines("show"), S.story2);
 }
 function checkAchv() {
 for (const a of ACHV) {
@@ -2721,9 +2718,12 @@ const tg = (k, label) => '<div class="set-row"><span>' + label + "</span>" +
 const themes = ["theme-warm"].concat(SHOP.filter(i => i.kind === "theme").map(i => i.id));
 const ownedThemes = themes.filter(t => S.owned.includes(t));
 openModal(ic("settings") + "设置", "",
-tg("sfx", "音效") + tg("bgm", "背景音乐") + tg("reduceMotion", "减少动画") + tg("shake", "震动效果") +
+tg("sfx", "音效") + tg("bgm", "背景音乐") + tg("amb", "环境音") + tg("reduceMotion", "减少动画") + tg("shake", "震动效果") +
 '<div class="set-row"><span>音效音量</span><input type="range" min="0" max="1" step="0.05" value="' + st.sfxVol + '" data-vol="sfxVol"></div>' +
 '<div class="set-row"><span>音乐音量</span><input type="range" min="0" max="1" step="0.05" value="' + st.bgmVol + '" data-vol="bgmVol"></div>' +
+'<div class="set-row"><span>环境音量</span><input type="range" min="0" max="1" step="0.05" value="' + st.ambVol + '" data-vol="ambVol"></div>' +
+'<div class="set-row"><span>对白音量</span><input type="range" min="0" max="1" step="0.05" value="' + st.voVol + '" data-vol="voVol"></div>' +
+'<div class="set-row"><span>字幕字号</span><span style="display:flex;gap:6px">' + ["标准", "大", "特大"].map((n, i) => '<button class="sb' + (st.subSize === i ? "" : " quiet") + '" data-ss="' + i + '" aria-pressed="' + (st.subSize === i) + '">' + n + "</button>").join("") + "</span></div>" +
 '<div class="set-row"><span>全屋主题</span><select data-theme-sel>' +
 ownedThemes.map(t => '<option value="' + t + '"' + (S.equipped.theme === t ? " selected" : "") + ">" +
 ({ "theme-warm": "暖木（默认）", "theme-night": "深夜蓝", "theme-matcha": "抹茶", "theme-rose": "玫瑰" })[t] + "</option>").join("") +
@@ -2740,6 +2740,10 @@ ownedThemes.map(t => '<option value="' + t + '"' + (S.equipped.theme === t ? " s
 '<button class="danger-btn" id="reset-save">清空</button></span></div>');
 const es = document.getElementById("exp-save");
 if (es) es.onclick = exportSave;
+mbox.querySelectorAll("[data-ss]").forEach(b => b.onclick = () => { // 字幕字号三档，随存档走
+S.settings.subSize = +b.dataset.ss; applySettingsUI(); save(); AU.sfx("click");
+mbox.querySelectorAll("[data-ss]").forEach(x => { x.setAttribute("aria-pressed", String(x === b)); x.classList.toggle("quiet", x !== b); });
+});
 const im = document.getElementById("imp-save");
 if (im) im.onclick = () => {
 openModal(ic("search") + "存档导入", "粘贴存档码，进度即恢复",
@@ -2814,6 +2818,7 @@ document.body.classList.toggle("reduce-motion", !!S.settings.reduceMotion);
 applyShakePref();
 }
 function applySettingsUI() {
+document.body.dataset.sub = S.settings.subSize;
 document.getElementById("btn-music").classList.toggle("off", !S.settings.bgm);
 document.getElementById("btn-firework").style.display = S.owned.includes("firework") ? "" : "none";
 document.getElementById("mailbox").classList.toggle("on", S.owned.includes("mail"));
@@ -3034,6 +3039,7 @@ sc.innerHTML = SC[r.cls];
 applySceneState(name, sc);
 renderStoryScene();
 storyRoom(name); storyRoom2(name); // 迎新之夜 / 首演之夜：进客厅推剧情
+Stage.room(name); // 陈列馆点「重温对白」：进客厅后开演
 const inv = document.getElementById("r-inv");
 const extras = RENOV.filter(x => x.room === name && S.renov[x.id]).map(x => ({ icon:x.icon, name:x.name, rare:"furn", note:x.note }));
 const all = r.items.concat(extras);
@@ -3069,6 +3075,7 @@ slot.dispatchEvent(new MouseEvent("click", { clientX: b.x + b.width / 2, clientY
 slot.addEventListener("mouseenter", () => AU.sfx("tick"));
 });
 roomOverlay.classList.add("on");
+Ambi.room(name); // 这个房间响什么
 document.getElementById("screen-house").style.overflow = "hidden";
 roomOverlay.scrollTop = 0;
 if (!welcomeAction.hidden && !dlgOpen()) welcomeAction.focus({ preventScroll: true });
@@ -3198,6 +3205,7 @@ if (st.tv === 1) { AU.sfx("fwup"); AU.noise(t, 0.7, { vol: 0.045, from: 900, to:
 if (st.tv === 2) [72, 76, 79].forEach((n, i) => AU.tone(AU.midi(n), t + i * 0.07, 0.2, { vol: 0.09, type: "triangle" }));
 if (st.tv === 3) [79, 84, 88, 91].forEach((n, i) => AU.tone(AU.midi(n), t + i * 0.12, 0.55, { vol: 0.06, attack: 0.04 }));
 }
+Ambi.update(); // 电视开着：客厅声景添一层电流声
 if (!st.tv) AU.sfx("door"); return;
 }
 if (h.classList.contains("sofa")) { // 沙发晃；八下鼓包再八下收
@@ -3565,10 +3573,11 @@ if (S.renov["rv-rack"]) q("rack") && q("rack").classList.add("on");
 }
 document.getElementById("r-renov").addEventListener("click", () => { AU.sfx("click"); showRenov(curRoom); });
 document.getElementById("r-back").addEventListener("click", () => {
-if (storyFinaleArmed === S.story) closeTalk();
+if (storyFinaleArmed || Stage.replaying) closeTalk(); // 对白没读完就走：收场，不留半截在门厅上空
 AU.sfx("door");
 irisOpen2(innerWidth / 2, innerHeight / 2, () => {
 roomOverlay.classList.remove("on");
+Ambi.room(null); // 回门厅，换回院子的声音
 document.getElementById("screen-house").style.overflow = "";
 });
 });
@@ -3586,6 +3595,7 @@ function openRoomPage(link, cx, cy) {
 if (link === "厨房/胡闹厨房.html" && S.story.beat === 2) link += "?shift=welcome";
 if (link.indexOf("留声机") >= 0 && !gramoDuck) { gramoDuck = true; AU.bgmG.gain.value = 0; }
 else if (AU.ctx && S.settings.bgm) AU.bgmG.gain.value = S.settings.bgmVol * 0.22; // 子页开玩：楼里音乐让一让（动态压低）
+Ambi.yield(true); // 环境声也让一让
 AU.sfx("door");
 irisOpen2(cx, cy, () => { roomFrame.src = link; frameWrap.classList.add("on"); });
 }
@@ -3594,6 +3604,7 @@ AU.sfx("door");
 irisOpen2(innerWidth / 2, innerHeight / 2, () => { frameWrap.classList.remove("on"); roomFrame.src = "about:blank"; });
 gramoDuck = false;
 AU.applyVol(); // 子页关门，楼里音乐回原音量
+Ambi.yield(false);
 try { // 节奏地毯高分解锁回忆（分数事实；「打完一首」记任务见 cashPlays 的完成标记）
 if ((parseInt(localStorage.getItem("rg_best"), 10) || 0) >= 7500) unlockCG("cg9");
 } catch (e) {}
@@ -3624,6 +3635,7 @@ applyPhase(h >= 5 && h < 8 ? "dawn" : h >= 8 && h < 17 ? "day" : h >= 17 && h < 
 }
 function applyPhase(p) {
 document.body.dataset.phase = p;
+Ambi.update(); // 天亮天黑，屋外的活物换班
 const greets = { dawn: "清晨好", day: "日安", dusk: "傍晚好", night: "夜深了" };
 const g = document.getElementById("greet-line");
 if (g) g.textContent = greets[p];
@@ -3791,11 +3803,10 @@ function closeTalk(completed) {
 clearInterval(dlgTimer); dlgTyping = false; zTalking = false;
 dlgEl.classList.remove("on"); delete document.body.dataset.cine;
 const chapter = storyFinaleArmed; storyFinaleArmed = false;
+const replayed = Stage.leave(completed === true);
 if (completed === true && chapter) storyFinale(chapter);
-if (chapter === S.story) {
-if (completed === true) document.getElementById("r-back").focus();
-else renderStoryScene();
-}
+if (chapter === S.story && completed !== true) renderStoryScene(); // 入座那场没读完：小南退场，回到待邀请
+if (completed === true && (chapter || replayed)) document.getElementById("r-back").focus(); // 读完焦点有去处
 }
 function talkPool() {
 if (!S.stats.talks) return TALK.first.slice();
@@ -3811,14 +3822,17 @@ const pick = pool[Math.floor(Math.random() * pool.length)];
 return Math.random() < 0.3 ? [pick, TALK.daily[Math.floor(Math.random() * TALK.daily.length)]] : [pick];
 }
 function typeLine(s) {
-dlgFull = s; dlgI = 0; dlgTyping = true;
-dlgText.textContent = ""; dlgNext.style.visibility = "hidden";
+s = Stage.enter(s); // 章节对白：换名牌、换表情，见 舞台剧本.js
+const ms = Stage.ms(); // 减少动画：不出字，整句直接给
+dlgFull = s; dlgI = 0; dlgTyping = ms > 0;
+dlgText.textContent = ms ? "" : s; dlgNext.style.visibility = ms ? "hidden" : "";
 clearInterval(dlgTimer);
+if (!ms) { Stage.done(); return; }
 dlgTimer = setInterval(() => {
 dlgText.textContent = dlgFull.slice(0, ++dlgI);
 if (dlgI % 3 === 0) AU.sfx("type");
-if (dlgI >= dlgFull.length) { clearInterval(dlgTimer); dlgTyping = false; dlgNext.style.visibility = ""; }
-}, 34);
+if (dlgI >= dlgFull.length) { clearInterval(dlgTimer); dlgTyping = false; dlgNext.style.visibility = ""; Stage.done(); }
+}, ms);
 }
 function openTalk() {
 closeTalk();
@@ -3830,7 +3844,7 @@ typeLine(dlgQueue.shift());
 function dlgAdvance() {
 if (dlgTyping) {
 clearInterval(dlgTimer); dlgTyping = false;
-dlgText.textContent = dlgFull; dlgNext.style.visibility = "";
+dlgText.textContent = dlgFull; dlgNext.style.visibility = ""; Stage.done();
 return;
 }
 if (dlgQueue.length) typeLine(dlgQueue.shift());
@@ -4026,8 +4040,9 @@ if (AU.ctx) AU.sfx("click");
 let tFocus = -1;
 document.addEventListener("keydown", e => {
 if (dlgOpen()) {
-if (e.key === "Escape" && storyFinaleArmed === S.story) {
-e.preventDefault(); closeTalk(); welcomeAction.focus(); return;
+if ((e.key === "Enter" || e.key === " ") && e.target.closest && e.target.closest("#dlg button")) return; // 字幕上的「自动」「跳过」自己响应
+if (e.key === "Escape" && (storyFinaleArmed || Stage.replaying)) { // 取消不算读完，两幕同一个规矩
+e.preventDefault(); closeTalk(); (welcomeAction.hidden ? document.getElementById("r-back") : welcomeAction).focus(); return;
 }
 if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); dlgAdvance(); }
 return;

@@ -56,7 +56,7 @@ async function importSave(page, value) {
 async function readDialogue(page, method = 'click') {
   const dialogue = page.locator('#dlg');
   await page.locator('#dlg.on').waitFor();
-  for (let i = 0; i < 12 && await dialogue.isVisible(); i++) await dialogue[method]();
+  for (let i = 0; i < 30 && await dialogue.isVisible(); i++) await dialogue[method](); // 章节对白七句，逐字时一句两下
   await dialogue.waitFor({ state: 'hidden' });
 }
 async function main() {
@@ -996,6 +996,411 @@ async function main() {
   await test('file URL entry works without a web server', async () => {
     const p = await ctx.newPage(); observe(p, 'file-url');
     try { await p.goto(pathToFileURL(path.join(root, '我的家.html')).href); await p.locator('.droom').first().waitFor({ state: 'attached' }); assert.equal(await p.locator('.droom').count(), 11); } finally { await p.close(); }
+  });
+  /* ---- 舞台剧本（3A 三阶段 · 叙事与演出纵深）：名牌、表演、字幕与跳过规则、首演舞台 ---- */
+  const stageSeed = (p, story, story2) => p.evaluate(({ story, story2 }) => {
+    S.story = { kitchenAt: 1, rewarded: false, deco: '', ...story };
+    S.story2 = { beat: 0, showAt: 0, set: '', rewarded: false, ...story2 };
+    S.wish = { idx: WISH_VOL1, rel: 4 };
+    S.quests = Object.fromEntries(QUESTS.map(q => [q.id, true]));
+    S.achv = Object.fromEntries(ACHV.map(a => [a.id, 1]));
+    delete S.cgs.cg11; delete S.cgs.cg12;
+    if (S.story.rewarded) S.cgs.cg11 = true;
+    save();
+  }, { story, story2 });
+  const enterLivingStage = async p => {
+    await p.evaluate(() => enterRoom('客厅', innerWidth / 2, innerHeight / 2));
+    await p.locator('#room-overlay.on').waitFor();
+  };
+  const stageLine = p => p.evaluate(() => {
+    const d = document.getElementById('dlg'), b = document.querySelector('#r-scene .story-bird'), c = document.querySelector('#r-scene .story-cat');
+    const cls = el => el ? [...el.classList].filter(x => /^(speaking|listening|talking)$/.test(x)).sort().join('+') : null;
+    return {
+      who: d.querySelector('.dlg-ava').dataset.who, name: d.querySelector('.stage-name').textContent,
+      narr: d.classList.contains('narr'), ava: getComputedStyle(d.querySelector('.dlg-ava')).display !== 'none',
+      kind: d.querySelector('.dlg-ava svg')?.getAttribute('class') || '', text: d.querySelector('.dlg-text').textContent,
+      sr: d.querySelector('.stage-sr').textContent, ctl: getComputedStyle(d.querySelector('.stage-ctl')).display,
+      emo: b?.dataset.emo || '', bird: cls(b), cat: cls(c), typing: dlgTyping,
+    };
+  });
+  const readStage = async p => { // 减少动画下整句即出：一下回车一句
+    const seen = [];
+    for (let i = 0; i < 12 && await p.locator('#dlg').isVisible(); i++) {
+      await p.waitForTimeout(120); // 等下一帧的表演对位落定
+      seen.push(await stageLine(p));
+      await p.keyboard.press('Enter');
+    }
+    await p.locator('#dlg').waitFor({ state: 'hidden' });
+    return seen;
+  };
+  const seatFor = async (p, deco) => { // 布置 → 请小南入座，真实点击与回车
+    await p.locator('#welcome-action').click();
+    await p.locator('[data-deco="' + deco + '"]').press('Enter');
+    await p.locator('#modal-mask').waitFor({ state: 'hidden' });
+    await p.keyboard.press('Enter');
+    await p.locator('#dlg.on').waitFor();
+  };
+  await test('stage script: plates, portraits and performance follow each scripted line (lamp)', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'stage-script');
+    try {
+      await boot(p);
+      await stageSeed(p, { beat: 3, deco: '' });
+      await enterLivingStage(p);
+      await seatFor(p, 'lamp');
+      const seen = await readStage(p);
+      const script = await p.evaluate(() => Stage.SCENES.seat.lamp);
+      assert.deepEqual(seen.map(l => l.who), ['narr', 'bird', 'z', 'cat', 'narr', 'bird', 'cat'], 'seven lines with the scripted speakers');
+      assert.deepEqual(seen.map(l => l.name), ['', '小南 · 新住户', 'Z · 住户', '猫 · 室友', '', '小南 · 新住户', '猫 · 室友'], 'name plate names the real speaker');
+      assert.deepEqual(seen.map(l => l.ava), [false, true, true, true, false, true, true], 'narration carries no portrait');
+      assert.deepEqual(seen.map(l => l.kind), ['', 'ava-bird', '', 'ava-cat', '', 'ava-bird', 'ava-cat'], 'bird and cat get their own portraits');
+      assert.deepEqual(seen.map(l => l.text), script.map(l => l.t), 'shown text is the script');
+      assert.deepEqual(seen.map(l => l.sr), seen.map((l, i) => l.name ? l.name + '：' + script[i].t : script[i].t), 'screen readers get each whole line once, attributed');
+      assert.deepEqual(seen.map(l => l.emo), ['nervous', 'calm', 'calm', 'calm', 'happy', 'shy', 'happy'], 'emotion arc: nervous, at ease, happy, shy, reassured');
+      assert.deepEqual(seen.map(l => l.bird), ['', 'speaking', 'listening', 'listening', '', 'speaking', 'listening'], 'bird speaks or listens as scripted');
+      assert.deepEqual(seen.map(l => l.cat), ['', 'listening', 'listening', 'speaking', '', 'listening', 'speaking'], 'cat speaks or listens as scripted');
+      assert.ok(seen.every(l => l.typing === false), 'reduced motion prints each whole line at once');
+      assert.deepEqual(seen.map(l => l.ctl), Array(7).fill('flex'), 'chapter dialogue offers 自动 and 跳过');
+      assert.deepEqual(await p.evaluate(() => [S.story.beat, S.story.rewarded, !!S.cgs.cg11, document.activeElement.id, document.body.classList.contains('cine'), Stage.replaying]), [5, true, true, 'r-back', false, '']);
+      const chatter = await p.evaluate(() => {
+        openTalk();
+        return { who: document.querySelector('#dlg .dlg-ava').dataset.who, name: document.querySelector('#dlg .stage-name').textContent, ctl: getComputedStyle(document.querySelector('#dlg .stage-ctl')).display, cine: document.body.classList.contains('cine') };
+      });
+      assert.deepEqual(chatter, { who: 'z', name: 'Z · 住户', ctl: 'none', cine: false }, 'yard chatter is Z again and hides the stage controls');
+    } finally { await c.close(); }
+  });
+  await test('stage script: fire and plain rooms play their own opening, question and answer', async () => {
+    const c = await browser.newContext({ viewport: { width: 1024, height: 768 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'stage-branches');
+    const texts = {};
+    try {
+      await boot(p);
+      for (const deco of ['fire', 'none']) {
+        await p.evaluate(() => { S.story = { beat: 3, deco: '', kitchenAt: 1, rewarded: false }; S.story2 = { beat: 0, showAt: 0, set: '', rewarded: false }; save(); });
+        await enterLivingStage(p);
+        await seatFor(p, deco);
+        const seen = await readStage(p);
+        texts[deco] = seen.map(l => l.text);
+        assert.deepEqual(texts[deco], (await p.evaluate(d => Stage.SCENES.seat[d], deco)).map(l => l.t), deco + ': plays its own script');
+        assert.deepEqual(await p.evaluate(() => [S.story.deco, S.story.beat, S.story.rewarded]), [deco, 5, true]);
+      }
+      assert.deepEqual([0, 1, 5, 6].map(i => texts.fire[i] === texts.none[i]), [false, false, false, false], 'opening, greeting, question and answer differ per decoration');
+      assert.deepEqual([2, 3, 4].map(i => texts.fire[i] === texts.none[i]), [true, true, true], 'the shared middle is identical');
+      assert.match(texts.fire[0], /壁炉/); assert.match(texts.none[0], /旧靠垫/);
+    } finally { await c.close(); }
+  });
+  await test('skip rule: first viewing asks twice, counts as read and pays once; a replay skips in one press', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'stage-skip');
+    const skip = p.locator('#dlg [data-stage="skip"]');
+    const story = () => p.evaluate(() => [S.story.beat, S.story.rewarded, !!S.cgs.cg11, S.stardust]);
+    try {
+      await boot(p);
+      await stageSeed(p, { beat: 3, deco: '' });
+      const before = await p.evaluate(() => S.stardust);
+      await enterLivingStage(p);
+      await seatFor(p, 'lamp');
+      await skip.click();
+      assert.deepEqual([await skip.innerText(), await p.locator('#dlg').isVisible(), ...(await story())], ['确定跳过', true, 4, false, false, before], 'one press only arms the skip');
+      await p.waitForTimeout(2700);
+      assert.equal(await skip.innerText(), '跳过', 'arming wears off after 2.5 seconds');
+      await skip.click(); await skip.click();
+      await p.locator('#dlg').waitFor({ state: 'hidden' });
+      assert.deepEqual(await story(), [5, true, true, before + 30], 'skipping counts as reading: the reward is paid exactly once');
+      assert.equal(await p.evaluate(() => document.activeElement.id), 'r-back', 'focus lands on the room return button');
+      await p.locator('#r-back').click();
+      await p.locator('#room-overlay').waitFor({ state: 'hidden' });
+      await p.evaluate(() => showHall());
+      await p.locator('.cg-card[data-cg="cg11"]').click();
+      await p.locator('.cg-view-art[data-cgid="cg11"]').waitFor();
+      const replay = p.locator('.stage-replay button');
+      assert.equal(await replay.innerText(), '重温对白');
+      await replay.click();
+      await p.locator('#modal-mask').waitFor({ state: 'hidden' });
+      await p.locator('#dlg.on').waitFor();
+      const lampOpen = (await p.evaluate(() => Stage.SCENES.seat.lamp))[0].t;
+      assert.deepEqual(await p.evaluate(() => [Stage.replaying, document.querySelector('.cine-cap').textContent, document.querySelector('#dlg .dlg-text').textContent, document.querySelector('#r-scene .story-bird')?.dataset.emo, document.activeElement.id, dlgFull]),
+        ['story', '迎新之夜 · 重温', lampOpen, 'nervous', 'dlg', lampOpen], 'replay opens in the living room with its own caption and takes keyboard focus');
+      assert.equal(await skip.innerText(), '跳过', 'a replay is not guarded');
+      await skip.click();
+      await p.locator('#dlg').waitFor({ state: 'hidden' });
+      assert.deepEqual(await story(), [5, true, true, before + 30], 'replay changes nothing and pays nothing');
+      assert.deepEqual(await p.evaluate(() => [Stage.replaying, document.activeElement.id]), ['', 'r-back']);
+    } finally { await c.close(); }
+  });
+  await test('stage controls by keyboard: Tab reaches them and Enter works the focused one', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'stage-keys');
+    const auto = p.locator('#dlg [data-stage="auto"]');
+    try {
+      await boot(p);
+      await stageSeed(p, { beat: 3, deco: '' });
+      await enterLivingStage(p);
+      await seatFor(p, 'lamp');
+      const first = (await p.evaluate(() => Stage.SCENES.seat.lamp))[0].t;
+      await p.keyboard.press('Tab');
+      assert.deepEqual(await p.evaluate(() => [document.activeElement.dataset.stage, document.activeElement.textContent, dlgFull]), ['auto', '自动', first], 'Tab moves from the dialogue to 自动');
+      await p.keyboard.press('Enter');
+      assert.deepEqual([await auto.getAttribute('aria-pressed'), await auto.innerText(), await p.evaluate(() => dlgFull)], ['true', '自动 · 开', first], 'Enter works the focused control instead of advancing');
+      await p.keyboard.press('Tab');
+      assert.equal(await p.evaluate(() => document.activeElement.dataset.stage), 'skip');
+      await p.keyboard.press('Enter');
+      assert.equal(await p.locator('#dlg [data-stage="skip"]').innerText(), '确定跳过');
+      await p.keyboard.press('Enter');
+      await p.locator('#dlg').waitFor({ state: 'hidden' });
+      assert.deepEqual(await p.evaluate(() => [S.story.beat, S.story.rewarded, document.activeElement.id]), [5, true, 'r-back']);
+    } finally { await c.close(); }
+  });
+  await test('auto-advance plays the welcome scene to its finale without input, then switches itself off', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'stage-auto');
+    const auto = p.locator('#dlg [data-stage="auto"]');
+    try {
+      await boot(p);
+      await stageSeed(p, { beat: 3, deco: '' });
+      const before = await p.evaluate(() => S.stardust);
+      await enterLivingStage(p);
+      await seatFor(p, 'none');
+      await auto.click();
+      assert.deepEqual([await auto.innerText(), await auto.getAttribute('aria-pressed'), await p.evaluate(() => document.activeElement.id)], ['自动 · 开', 'true', ''], 'auto is on, and a mouse click hands focus back to the dialogue');
+      const total = await p.evaluate(() => Stage.SCENES.seat.none.reduce((ms, l) => ms + 1500 + 65 * l.t.length, 0));
+      await p.locator('#dlg').waitFor({ state: 'hidden', timeout: total + 8000 });
+      assert.deepEqual(await p.evaluate(() => [S.story.beat, S.story.rewarded, S.stardust, Stage.SCENES.seat.none.length]), [5, true, before + 30, 7], 'all seven lines advanced by the clock and the finale paid once');
+      assert.deepEqual([await auto.innerText(), await auto.getAttribute('aria-pressed')], ['自动', 'false'], 'auto does not carry into the next dialogue');
+    } finally { await c.close(); }
+  });
+  await test('normal motion types the line; one press completes it and stops the talking cue', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const p = await c.newPage(); observe(p, 'stage-typing');
+    try {
+      await boot(p);
+      await stageSeed(p, { beat: 3, deco: '' });
+      await enterLivingStage(p);
+      await seatFor(p, 'fire');
+      await p.evaluate(() => typeLine({ who: 'bird', emo: 'shy', t: '测'.repeat(80) }));
+      await p.waitForTimeout(220);
+      const typing = await stageLine(p);
+      assert.deepEqual([typing.typing, typing.name, typing.emo], [true, '小南 · 新住户', 'shy']);
+      assert.ok(typing.text.length >= 1 && typing.text.length < 80, 'characters appear one by one');
+      assert.match(typing.bird, /talking/);
+      await p.keyboard.press('Enter');
+      const whole = await stageLine(p);
+      assert.deepEqual([whole.typing, whole.text.length, whole.bird, await p.evaluate(() => document.querySelector('.dlg-next').style.visibility)], [false, 80, 'speaking', ''], 'one press completes the line and stops the talking cue');
+      await p.keyboard.press('Enter');
+      assert.deepEqual(await p.evaluate(() => [dlgFull, dlgTyping]), [(await p.evaluate(() => Stage.SCENES.seat.fire))[1].t, true], 'the next press moves to the next line');
+    } finally { await c.close(); }
+  });
+  await test('premiere stage: stand, spotlight and rehearsed programs; cancel and leave rules match act one', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'stage-premiere');
+    const stage = () => p.evaluate(() => {
+      const sc = document.getElementById('r-scene'), light = sc.querySelector('.stage-light'), bird = sc.querySelector('.story-bird');
+      return { premiere: sc.classList.contains('premiere'), light: light ? getComputedStyle(light).opacity : null,
+        spot: [parseFloat(sc.style.getPropertyValue('--spot-x')), parseFloat(sc.style.getPropertyValue('--spot-y'))],
+        stand: sc.querySelectorAll('.story-stand').length, table: sc.querySelectorAll('.welcome-table').length,
+        bird: bird ? bird.getAttribute('transform') : null };
+    });
+    const state2 = () => p.evaluate(() => [S.story2.beat, S.story2.rewarded, !!S.cgs.cg12]);
+    try {
+      await boot(p);
+      await stageSeed(p, { beat: 5, deco: 'lamp', rewarded: true }, { beat: 3, set: 'vo,pn', showAt: 1 });
+      const before = await p.evaluate(() => S.stardust);
+      await enterLivingStage(p);
+      await p.locator('#dlg.on').waitFor();
+      const lit = await stage();
+      assert.deepEqual([lit.premiere, lit.stand, lit.table, lit.bird, lit.light], [true, 1, 0, 'translate(33 -24.5)', '1'], 'dinner table yields to the music stand, the bird mounts it, lights dim to one spotlight');
+      assert.ok(lit.spot[0] > 20 && lit.spot[0] < 60 && lit.spot[1] > 30 && lit.spot[1] < 90, 'spotlight is aimed inside the scene: ' + lit.spot);
+      assert.match(await p.locator('.cine-cap').innerText(), /首演之夜 · 开演/);
+      assert.match(await p.locator('#dlg .dlg-text').innerText(), /谱架/, 'first line keeps the music-stand cue');
+      await p.screenshot({ path: path.join(out, 'stage-premiere.png') });
+      await p.locator('#r-back').click(); // 对白没读完就走：对白跟着收，不留半截在门厅上空
+      await p.locator('#dlg').waitFor({ state: 'hidden' });
+      await p.locator('#room-overlay').waitFor({ state: 'hidden' });
+      assert.deepEqual([...(await state2()), await p.evaluate(() => document.body.classList.contains('cine'))], [3, false, false, false], 'leaving cancels cleanly and keeps the show pending');
+      await enterLivingStage(p);
+      await p.locator('#dlg.on').waitFor();
+      await p.keyboard.press('Escape');
+      await p.locator('#dlg').waitFor({ state: 'hidden' });
+      assert.deepEqual([...(await state2()), await p.evaluate(() => document.activeElement.id), (await stage()).premiere], [3, false, false, 'r-back', false], 'Escape cancels without paying, focus follows and the lights come back');
+      await enterLivingStage(p);
+      await p.locator('#dlg.on').waitFor();
+      const seen = await readStage(p);
+      assert.deepEqual(seen.map(l => l.who), ['narr', 'cat', 'narr']);
+      assert.deepEqual(seen.map(l => l.emo), ['nervous', 'sing', 'sing']);
+      assert.match(seen[2].text, /和声、琴键——哪一样都是这个家练出来的/, 'names the programs actually rehearsed');
+      assert.deepEqual([...(await state2()), ...(await p.evaluate(() => [S.stardust, document.activeElement.id]))], [4, true, true, before + 30, 'r-back']);
+      await p.waitForFunction(() => !document.getElementById('r-scene').classList.contains('premiere'), null, { timeout: 8000 });
+      assert.equal((await stage()).table, 1, 'lights return after the fireworks and dinner is back');
+    } finally { await c.close(); }
+  });
+  await test('subtitle size: three sizes persist, resize dialogue and caption, and fit a 390px screen', async () => {
+    const c = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'stage-subsize');
+    const font = () => p.evaluate(() => [getComputedStyle(document.querySelector('#dlg .dlg-text')).fontSize, getComputedStyle(document.querySelector('.cine-cap')).fontSize, document.body.dataset.sub]);
+    try {
+      await boot(p);
+      assert.deepEqual(await font(), ['14.5px', '11px', '0'], 'default is the standard size');
+      assert.deepEqual(await p.evaluate(() => {
+        const copy = () => JSON.parse(JSON.stringify(S));
+        const bad = v => { try { readState({ ...copy(), settings: { ...S.settings, subSize: v } }); return false; } catch (e) { return true; } };
+        const ok = v => { try { return readState({ ...copy(), settings: { ...S.settings, subSize: v } }).settings.subSize; } catch (e) { return 'rejected'; } };
+        const { subSize, ...older } = S.settings;
+        return { bad: [-1, 3, 1.5, '1', null].map(bad), ok: [0, 1, 2].map(ok), legacy: readState({ ...copy(), settings: older }).settings.subSize };
+      }), { bad: [true, true, true, true, true], ok: [0, 1, 2], legacy: 0 }, 'save validation rejects out-of-range sizes and defaults older saves');
+      for (const [i, px, cap] of [[2, '21px', '15px'], [1, '17.5px', '13px'], [0, '14.5px', '11px']]) {
+        await p.evaluate(() => showSettings());
+        await p.locator('[data-ss="' + i + '"]').tap();
+        assert.deepEqual(await p.locator('[data-ss]').evaluateAll(bs => bs.map(b => [b.textContent, b.getAttribute('aria-pressed'), b.classList.contains('quiet')])), [['标准', String(i === 0), i !== 0], ['大', String(i === 1), i !== 1], ['特大', String(i === 2), i !== 2]], 'size ' + i + ' is the pressed one');
+        await p.locator('#m-close').tap();
+        assert.deepEqual(await font(), [px, cap, String(i)], 'size ' + i + ' applies to dialogue and caption');
+      }
+      await p.evaluate(() => showSettings());
+      await p.locator('[data-ss="2"]').tap();
+      await p.locator('#m-close').tap();
+      await p.reload();
+      await boot(p);
+      assert.deepEqual(await font(), ['21px', '15px', '2'], 'largest size survives a reload');
+      await stageSeed(p, { beat: 1 });
+      await enterLivingStage(p);
+      await p.locator('#dlg.on').waitFor();
+      const fit = await p.evaluate(() => {
+        const dlg = document.getElementById('dlg').getBoundingClientRect(), bar = document.querySelector('.cine-bottom').getBoundingClientRect();
+        const btn = document.querySelector('#dlg [data-stage="skip"]').getBoundingClientRect();
+        return { overflow: document.documentElement.scrollWidth > innerWidth, top: Math.round(dlg.top), bottom: Math.round(dlg.bottom), barTop: Math.round(bar.top), vh: innerHeight, btnH: Math.round(btn.height) };
+      });
+      assert.equal(fit.overflow, false, 'no horizontal overflow with the largest subtitles');
+      assert.ok(fit.top > 0 && fit.bottom <= fit.barTop + 1 && fit.barTop > fit.vh * .8, 'dialogue stays on screen above the letterbox: ' + JSON.stringify(fit));
+      assert.ok(fit.btnH >= 30, 'touch-sized stage controls');
+      await p.screenshot({ path: path.join(out, 'stage-mobile-large.png') });
+    } finally { await c.close(); }
+  });
+  /* ---- 声景与总线（3A 三阶段 · 音频纵深）：四总线、通道分离、逐房间实测响度、音乐状态 ---- */
+  const rmsOf = (p, node) => p.evaluate(node => new Promise(resolve => { // 量某个节点送出去的声音
+    const an = AU.ctx.createAnalyser(); an.fftSize = 2048; node.connect(an);
+    const wave = new Float32Array(an.fftSize), seen = [];
+    const iv = setInterval(() => { an.getFloatTimeDomainData(wave); let s = 0; for (const x of wave) s += x * x; seen.push(Math.sqrt(s / wave.length)); }, 40);
+    setTimeout(() => { clearInterval(iv); node.disconnect(an); resolve(Math.max(...seen)); }, 520);
+  }), node);
+  const busGains = p => p.evaluate(() => [AU.sfxG, AU.bgmG, AU.ambG, AU.voG].map(g => +g.gain.value.toFixed(3)));
+  await test('audio buses: four gains follow their own toggles and sliders, persist, and are validated', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'audio-buses');
+    try {
+      await boot(p);
+      assert.deepEqual(await busGains(p), [0.5, 0.32, 0.5, 0.5], 'defaults: interaction .5, music .32, ambient .5, dialogue .5');
+      assert.deepEqual(await p.evaluate(() => [AU.ctx.state, !!AU.wxG, typeof Ambi.state().key]), ['running', true, 'string'], 'audio runs and the soundscape is on the ambient bus');
+      assert.ok(await rmsOf(p, await p.evaluate(() => AU.voG)) === 0, 'dialogue bus is quiet until someone speaks');
+      await p.evaluate(() => AU.sfx('click'));
+      assert.ok(await rmsOf(p, await p.evaluate(() => AU.voG)) === 0, 'an interaction sound leaves the dialogue bus alone');
+      await p.evaluate(() => AU.sfx('type'));
+      assert.ok(await rmsOf(p, await p.evaluate(() => AU.voG)) > 0, 'typing blips travel on the dialogue bus');
+      await p.evaluate(() => showSettings());
+      assert.deepEqual(await p.locator('#m-body [data-vol]').evaluateAll(es => es.map(e => e.dataset.vol)), ['sfxVol', 'bgmVol', 'ambVol', 'voVol'], 'settings expose four volumes');
+      await p.locator('[data-set="amb"]').click();
+      assert.deepEqual(await busGains(p), [0.5, 0.32, 0, 0.5], 'the ambient toggle touches only the ambient bus');
+      await p.locator('[data-set="amb"]').click();
+      await p.locator('[data-vol="ambVol"]').fill('0.8');
+      await p.locator('[data-vol="voVol"]').fill('0.25');
+      assert.deepEqual(await busGains(p), [0.5, 0.32, 0.8, 0.25], 'each slider drives its own bus');
+      await p.locator('[data-set="sfx"]').click();
+      assert.deepEqual(await busGains(p), [0, 0.32, 0.8, 0], 'sound effects off silences interaction and dialogue blips; music and ambience stay');
+      await p.locator('[data-set="sfx"]').click();
+      await p.locator('#m-close').click();
+      await p.reload(); await boot(p);
+      assert.deepEqual(await busGains(p), [0.5, 0.32, 0.8, 0.25], 'all four volumes survive a reload');
+      assert.deepEqual(await p.evaluate(() => {
+        const withS = o => { try { return readState({ ...JSON.parse(JSON.stringify(S)), settings: { ...S.settings, ...o } }).settings; } catch (e) { return 'rejected'; } };
+        const older = readState({ ...JSON.parse(JSON.stringify(S)), settings: { sfx: true, bgm: true, sfxVol: .5, bgmVol: .32, roofOpen: true, shake: false, subSize: 0 } }).settings;
+        return { bad: [{ amb: 'yes' }, { ambVol: 1.2 }, { ambVol: -0.1 }, { voVol: 'x' }, { voVol: null }].map(withS), older: [older.amb, older.ambVol, older.voVol] };
+      }), { bad: ['rejected', 'rejected', 'rejected', 'rejected', 'rejected'], older: [true, 0.5, 0.5] }, 'out-of-range audio settings are rejected; older saves get the defaults');
+    } finally { await c.close(); }
+  });
+  await test('weather rides the ambient bus: music off keeps the rain, dialogue ducking spares the ambience', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'audio-weather');
+    try {
+      await boot(p);
+      const amb = () => p.evaluate(() => AU.ambG);
+      await p.evaluate(() => { S.settings.bgm = false; AU.applyVol(); AU.setWx('none'); });
+      await p.waitForTimeout(300);
+      const dry = await rmsOf(p, await amb());
+      await p.evaluate(() => AU.setWx('rain'));
+      await p.waitForTimeout(400);
+      const rain = await rmsOf(p, await amb());
+      assert.equal((await busGains(p))[1], 0, 'music is off');
+      assert.ok(rain > dry * 1.5 && rain > 0.01, 'rain still sounds with music off: ' + dry.toFixed(4) + ' → ' + rain.toFixed(4));
+      await p.evaluate(() => { S.settings.amb = false; AU.applyVol(); });
+      assert.equal((await busGains(p))[2], 0, 'the ambient switch is what mutes the weather');
+      await p.evaluate(() => { S.settings.amb = true; S.settings.bgm = true; AU.applyVol(); AU.setWx('none'); AU.duck(true); });
+      await p.waitForTimeout(450);
+      const ducked = await busGains(p);
+      assert.deepEqual(ducked, [0.5, 0.128, 0.35, 0.5], 'dialogue ducking: music to 40%, ambience only to 70%');
+      await p.evaluate(() => AU.duck(false));
+      await p.waitForTimeout(450);
+      assert.deepEqual(await busGains(p), [0.5, 0.32, 0.5, 0.5], 'both buses return after the dialogue');
+    } finally { await c.close(); }
+  });
+  await test('soundscape follows each room, reacts to hearth, TV and daylight, yields to child pages, and stays a quiet bed', async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const p = await c.newPage(); observe(p, 'soundscape');
+    const peak = () => p.evaluate(() => new Promise(resolve => { const v = []; const iv = setInterval(() => v.push(Ambi.level()), 50); setTimeout(() => { clearInterval(iv); resolve(+Math.max(...v).toFixed(4)); }, 900); }));
+    const where = async () => (await p.evaluate(() => Ambi.state().key)).split('|')[0];
+    try {
+      await boot(p);
+      await p.evaluate(() => { S.renov['rv-loft'] = 1; save(); });
+      assert.equal(await where(), '', 'the yard has its own soundscape');
+      const levels = {};
+      for (const name of ['客厅', '厨房', '卧室', '书房', '阳台', '健身房', '储藏室', '阁楼', '钢琴房', '舞蹈房', '歌唱房']) {
+        await p.locator('.droom[data-room="' + name + '"]').focus();
+        await p.keyboard.press('Enter');
+        await p.locator('#room-overlay.on').waitFor();
+        await p.waitForTimeout(1000); // 交叉淡入走完
+        const st = await p.evaluate(() => Ambi.state());
+        assert.equal(await where(), name, name + ': soundscape switched');
+        assert.ok(st.voices > 0, name + ': has voices');
+        levels[name] = await peak();
+        assert.ok(levels[name] > 0.001 && levels[name] < 0.08, name + ': audible but a bed, not a solo (peak ' + levels[name] + ')');
+        if (name === '客厅') {
+          await p.evaluate(() => { S.story.beat = 4; S.story.deco = 'fire'; Ambi.update(); });
+          await p.waitForTimeout(1100);
+          assert.match(await p.evaluate(() => Ambi.state().key), /客厅\|[ndy]\|fire$/, 'a lit hearth joins the living room');
+          const hearth = await peak();
+          assert.ok(hearth > levels[name] * 1.5, 'the hearth crackles above the room tone: ' + levels[name] + ' → ' + hearth);
+          await p.evaluate(() => { S.story.deco = 'lamp'; SCST['客厅'] = { tv: 1 }; Ambi.update(); });
+          await p.waitForTimeout(1100);
+          assert.match(await p.evaluate(() => Ambi.state().key), /\/tv1$/, 'a switched-on TV joins too');
+          await p.evaluate(() => { SCST['客厅'] = {}; S.story = { beat: 0, deco: '', kitchenAt: 0, rewarded: false }; applyPhase('day'); });
+          await p.waitForTimeout(1100);
+          assert.match(await p.evaluate(() => Ambi.state().key), /^客厅\|y\|$/, 'daylight swaps the night creatures for birds');
+          assert.ok((await p.evaluate(() => Ambi.state())).events >= 1, 'birds are scheduled by day');
+          await p.evaluate(() => updPhase());
+        }
+        if (name === '厨房') {
+          await p.evaluate(() => openRoomPage('厨房/胡闹厨房.html', 500, 400));
+          await p.waitForFunction(() => document.querySelector('#frame-wrap').classList.contains('on'));
+          assert.deepEqual(await p.evaluate(() => [Ambi.state().yielding, +Ambi.level().toFixed(5)]), [true, 0], hmm
+```
+Wait: `Ambi.level()` measures `mix` output (pre yield gain; the yield gain is ON the mix node itself: `mix.gain` → the meter is connected from `mix` output → after the gain ✓ so level drops to ~22%). So assert `Ambi.state().yielding === true` and after close false; and the mix gain: expose in state: add `gain: mix.gain.value` to state for a precise assertion. Let me add `trim: mix ? +mix.gain.value.toFixed(3) : 0` to `Ambi.state()`.
+
+Continue:
+```js
+          await p.evaluate(() => openRoomPage('厨房/胡闹厨房.html', 500, 400));
+          await p.waitForFunction(() => document.querySelector('#frame-wrap').classList.contains('on'));
+          await p.waitForTimeout(700);
+          assert.ok(await p.evaluate(g => Ambi.state().yielding && Ambi.state().gain < g * .3, TRIM), 'a child page open: the soundscape steps back');
+          await p.locator('#frame-back').click();
+          await p.waitForFunction(() => !document.querySelector('#frame-wrap').classList.contains('on'));
+          await p.waitForTimeout(700);
+          assert.ok(await p.evaluate(g => !Ambi.state().yielding && Math.abs(Ambi.state().gain - g) < .05, TRIM), 'closing the child page brings it back');
+        }
+        await p.locator('#r-back').click();
+        await p.locator('#room-overlay').waitFor({ state: 'hidden' });
+        await p.waitForTimeout(1000);
+        assert.equal(await where(), '', name + ': back in the yard');
+      }
+      assert.ok(new Set(Object.values(levels)).size >= 8, 'rooms are not one blanket noise: ' + JSON.stringify(levels));
+      return { levels };
+    } finally { await c.close(); }
   });
   await test('zero browser runtime errors and failed HTTP resources', () => { assert.deepEqual(runtime, []); assert.deepEqual(responses, []); });
 }

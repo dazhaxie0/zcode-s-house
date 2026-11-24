@@ -13,29 +13,8 @@ const MIME = {
   '.svg': 'image/svg+xml',
 };
 
-// 只装入游戏会用到的页面、脚本和房间资料。
-const ASSETS = {
-  '': ['我的家.html', '图标库.svg'],
-  客厅: ['电视游戏机.html', '留声机.html', '节奏地毯.html', '迎新餐桌.js'],
-  卧室: ['小夜灯.html', '起床闹钟.html', '二手地铺床垫.md'],
-  书房: ['藏书阁.html', '活字排版.html', '档案柜.html'],
-  '书房/书架': [
-    'Git 家常菜.md', 'Python 家常菜.md', 'Bash 家常菜.md', 'Markdown 家常菜.md',
-    '正则表达式口袋书.md', '住家 AI 的 2026 生态观察.md', 'REA 家常菜.md',
-  ],
-  厨房: ['胡闹厨房.html'],
-  '厨房/菜谱': [
-    '番茄炒蛋.md', '蛋炒饭.md', '葱油拌面.md', '可乐鸡翅.md', '红烧肉.md',
-    '酸辣土豆丝.md', '紫菜蛋花汤.md',
-  ],
-  阳台: ['温室.html', '捕萤.html', '星图.html'],
-  '阳台/绿植档案': ['绿萝.md', '薄荷.md', '多肉.md'],
-  '健身房/课表': ['肩腰日.md', '手腰日.md', '腿臀日.md', '胸上腹日.md', '背下腹日.md'],
-  储藏室: ['翻箱倒柜.html', '存档格式.js', '存档事务.js', '结算队列.js', '迎新试玩记录.js'],
-  钢琴房: ['琴键回响.html', '乐理课.html'],
-  舞蹈房: ['追光舞步.html'],
-  歌唱房: ['气泡和声.html'],
-};
+// 只装入游戏会用到的页面、脚本和房间资料；清单与自动部署共用。
+const ASSETS = require('./储藏室/站点清单.cjs');
 
 async function loadAssets() {
   const root = await fs.realpath(__dirname);
